@@ -4,8 +4,17 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.kapt")
+    id("org.owasp.dependencycheck")
 }
-
+dependencyCheck {
+    failBuildOnCVSS = 7.0f
+    suppressionFile = "/home/poppa/giglens/dependency-check-suppressions.xml"
+    analyzers {
+        ossIndex {
+            enabled = false
+        }
+    }
+}
 android {
     namespace = "com.augusteenterprise.giglens"
     compileSdk = 34
@@ -14,8 +23,8 @@ android {
         applicationId = "com.augusteenterprise.giglens"
         minSdk = 26
         targetSdk = 34
-        versionCode = 3
-        versionName = "0.1.2"
+        versionCode = 4
+        versionName = "0.1.3"
     }
 
     buildTypes {

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+
+    <!-- FALSE POSITIVE: androidx.sqlite version number 2.4.0 misidentified as SQLite engine v2.4.0 -->
+    <suppress>
+        <notes>androidx.sqlite is the AndroidX wrapper library, not the SQLite engine. Version 2.4.0 is the wrapper version, not SQLite engine version.</notes>
+        <packageUrl regex="true">^pkg:maven/androidx\.sqlite/.*$</packageUrl>
+        <cpe>cpe:/a:sqlite:sqlite:2.4.0</cpe>
+    </suppress>
+
+    <!-- FALSE POSITIVE: sqlite-jdbc is OWASP's own internal tool dependency, not shipped in APK -->
+    <suppress>
+        <notes>sqlite-jdbc is used internally by the OWASP dependency-check tool itself, not included in the GigLens APK.</notes>
+        <packageUrl regex="true">^pkg:maven/org\.xerial/sqlite-jdbc.*$</packageUrl>
+        <vulnerabilityName regex="true">.*</vulnerabilityName>
+    </suppress>
+
+    <!-- FALSE POSITIVE: Kotlin build tools are compile-time only, not shipped in APK -->
+    <suppress>
+        <notes>Kotlin compiler/build tools are compile-time dependencies only. Not included in shipped APK.</notes>
+        <packageUrl regex="true">^pkg:maven/org\.jetbrains\.kotlin/kotlin-(annotation-processing|build-|compiler|daemon|klib|script).*$</packageUrl>
+        <vulnerabilityName regex="true">.*</vulnerabilityName>
+    </suppress>
+
+    <!-- FALSE POSITIVE: room-compiler-processing version misread as Processing IDE version -->
+    <suppress>
+        <notes>room-compiler-processing version 2.6.1 misidentified as Processing IDE v2.6.1. These are unrelated projects.</notes>
+        <packageUrl regex="true">^pkg:maven/androidx\.room/room-compiler-processing.*$</packageUrl>
+        <vulnerabilityName regex="true">.*</vulnerabilityName>
+    </suppress>
+
+    <!-- FALSE POSITIVE: symbol-processing-api version misread as Processing IDE version -->
+    <suppress>
+        <notes>symbol-processing-api version misidentified as Processing IDE. These are unrelated projects.</notes>
+        <packageUrl regex="true">^pkg:maven/com\.google\.devtools\.ksp/symbol-processing-api.*$</packageUrl>
+        <vulnerabilityName regex="true">.*</vulnerabilityName>
+    </suppress>
+
+    <!-- KNOWN: guava transitive dependency from ML Kit - not used directly, monitor for update -->
+    <suppress until="2026-12-01">
+        <notes>Guava is a transitive dependency from ML Kit text-recognition. GigLens does not call Guava APIs directly. Monitor for ML Kit update that bumps Guava.</notes>
+        <packageUrl regex="true">^pkg:maven/com\.google\.guava/guava.*$</packageUrl>
+        <cve>CVE-2023-2976</cve>
+    </suppress>
+
+</suppressions>
