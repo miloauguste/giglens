@@ -1,0 +1,182 @@
+/home/poppa/giglens/app/src/main/AndroidManifest.xml:33: Warning: Redundant label can be removed [RedundantLabel]
+            android:label="GigLens">
+            ~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "RedundantLabel":
+   When an activity does not have a label attribute, it will use the one from
+   the application tag. Since the application has already specified the same
+   label, the label on this activity can be omitted.
+
+/home/poppa/giglens/app/build.gradle.kts:47: Warning: A newer version of androidx.core:core-ktx than 1.12.0 is available: 1.18.0 [GradleDependency]
+    implementation("androidx.core:core-ktx:1.12.0")
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/build.gradle.kts:48: Warning: A newer version of androidx.appcompat:appcompat than 1.6.1 is available: 1.7.1 [GradleDependency]
+    implementation("androidx.appcompat:appcompat:1.6.1")
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/build.gradle.kts:49: Warning: A newer version of com.google.android.material:material than 1.11.0 is available: 1.14.0 [GradleDependency]
+    implementation("com.google.android.material:material:1.11.0")
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/build.gradle.kts:50: Warning: A newer version of androidx.constraintlayout:constraintlayout than 2.1.4 is available: 2.2.1 [GradleDependency]
+    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/build.gradle.kts:51: Warning: A newer version of androidx.lifecycle:lifecycle-runtime-ktx than 2.7.0 is available: 2.10.0 [GradleDependency]
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/build.gradle.kts:52: Warning: A newer version of androidx.lifecycle:lifecycle-viewmodel-ktx than 2.7.0 is available: 2.10.0 [GradleDependency]
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/build.gradle.kts:55: Warning: A newer version of com.google.mlkit:text-recognition than 16.0.0 is available: 16.0.1 [GradleDependency]
+    implementation("com.google.mlkit:text-recognition:16.0.0")
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/build.gradle.kts:58: Warning: A newer version of androidx.room:room-runtime than 2.6.1 is available: 2.8.4 [GradleDependency]
+    implementation("androidx.room:room-runtime:2.6.1")
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/build.gradle.kts:59: Warning: A newer version of androidx.room:room-ktx than 2.6.1 is available: 2.8.4 [GradleDependency]
+    implementation("androidx.room:room-ktx:2.6.1")
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/build.gradle.kts:60: Warning: A newer version of androidx.room:room-compiler than 2.6.1 is available: 2.8.4 [GradleDependency]
+    kapt("androidx.room:room-compiler:2.6.1")
+          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/build.gradle.kts:63: Warning: A newer version of androidx.recyclerview:recyclerview than 1.3.2 is available: 1.4.0 [GradleDependency]
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "GradleDependency":
+   This detector looks for usages of libraries where the version you are using
+   is not the current stable release. Using older versions is fine, and there
+   are cases where you deliberately want to stick with an older version.
+   However, you may simply not be aware that a more recent version is
+   available, and that is what this lint check helps find.
+
+/home/poppa/giglens/app/src/main/java/com/augusteenterprise/giglens/GigLensApp.kt:24: Warning: Unnecessary; SDK_INT is always >= 26 [ObsoleteSdkInt]
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/java/com/augusteenterprise/giglens/ui/MainActivity.kt:112: Warning: Unnecessary; SDK_INT is always >= 26 [ObsoleteSdkInt]
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "ObsoleteSdkInt":
+   This check flags version checks that are not necessary, because the
+   minSdkVersion (or surrounding known API level) is already at least as high
+   as the version checked for.
+
+   Similarly, it also looks for resources in -vNN folders, such as values-v14
+   where the version qualifier is less than or equal to the minSdkVersion,
+   where the contents should be merged into the best folder.
+
+/home/poppa/giglens/app/build.gradle.kts:60: Warning: This library supports using KSP instead of kapt, which greatly improves performance. Learn more: https://developer.android.com/studio/build/migrate-to-ksp [KaptUsageInsteadOfKsp]
+    kapt("androidx.room:room-compiler:2.6.1")
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "KaptUsageInsteadOfKsp":
+   KSP is a more efficient replacement for kapt. For libraries that support
+   both, KSP should be used to improve build times.
+
+   https://developer.android.com/studio/build/migrate-to-ksp
+
+/home/poppa/giglens/app/src/main/res/layout/activity_main.xml:68: Warning: Set android:baselineAligned="false" on this element for better performance [DisableBaselineAlignment]
+    <LinearLayout
+     ~~~~~~~~~~~~
+
+   Explanation for issues of type "DisableBaselineAlignment":
+   When a LinearLayout is used to distribute the space proportionally between
+   nested layouts, the baseline alignment property should be turned off to
+   make the layout computation faster.
+
+/home/poppa/giglens/app/src/main/res/mipmap-hdpi/ic_launcher.png: Warning: The resource R.mipmap.ic_launcher appears to be unused [UnusedResources]
+/home/poppa/giglens/app/src/main/res/values/strings.xml:4: Warning: The resource R.string.app_name appears to be unused [UnusedResources]
+    <string name="app_name">GigLens</string>
+            ~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/res/values/strings.xml:7: Warning: The resource R.string.btn_stop_capture appears to be unused [UnusedResources]
+    <string name="btn_stop_capture">Stop Capturing</string>
+            ~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/res/values/strings.xml:10: Warning: The resource R.string.status_active appears to be unused [UnusedResources]
+    <string name="status_active">Monitoring for offers…</string>
+            ~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/res/values/strings.xml:11: Warning: The resource R.string.status_no_accessibility appears to be unused [UnusedResources]
+    <string name="status_no_accessibility">Accessibility Service not enabled</string>
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "UnusedResources":
+   Unused resources make applications larger and slow down builds.
+
+
+   The unused resource check can ignore tests. If you want to include
+   resources that are only referenced from tests, consider packaging them in a
+   test source set instead.
+
+   You can include test sources in the unused resource check by setting the
+   system property lint.unused-resources.include-tests =true, and to exclude
+   them (usually for performance reasons), use
+   lint.unused-resources.exclude-tests =true.
+   ,
+
+/home/poppa/giglens/app/src/main/res/mipmap-hdpi/ic_launcher.png: Warning: Launcher icons should not fill every pixel of their square region; see the design guide for details [IconLauncherShape]
+
+   Explanation for issues of type "IconLauncherShape":
+   According to the Android Design Guide
+   (https://d.android.com/r/studio-ui/designer/material/iconography) your
+   launcher icons should "use a distinct silhouette", a "three-dimensional,
+   front view, with a slight perspective as if viewed from above, so that
+   users perceive some depth."
+
+   The unique silhouette implies that your launcher icon should not be a
+   filled square.
+
+/home/poppa/giglens/app/src/main/java/com/augusteenterprise/giglens/ui/MainActivity.kt:127: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+                binding.tvCaptureCount.text = "$count offers captured"
+                                              ~~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/java/com/augusteenterprise/giglens/ui/MainActivity.kt:127: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+                binding.tvCaptureCount.text = "$count offers captured"
+                                                     ~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "SetTextI18n":
+   When calling TextView#setText
+   * Never call Number#toString() to format numbers; it will not handle
+   fraction separators and locale-specific digits properly. Consider using
+   String#format with proper format specifications (%d or %f) instead.
+   * Do not pass a string literal (e.g. "Hello") to display text. Hardcoded
+   text can not be properly translated to other languages. Consider using
+   Android resource strings instead.
+   * Do not build messages by concatenating text chunks. Such messages can not
+   be properly translated.
+
+   https://developer.android.com/guide/topics/resources/localization.html
+
+/home/poppa/giglens/app/src/main/res/layout/activity_main.xml:14: Warning: Hardcoded string "GigLens", should use @string resource [HardcodedText]
+        android:text="GigLens"
+        ~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/res/layout/activity_main.xml:23: Warning: Hardcoded string "Auto-capture delivery offers", should use @string resource [HardcodedText]
+        android:text="Auto-capture delivery offers"
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/res/layout/activity_main.xml:43: Warning: Hardcoded string "0 offers captured", should use @string resource [HardcodedText]
+        android:text="0 offers captured"
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/res/layout/activity_main.xml:86: Warning: Hardcoded string "--", should use @string resource [HardcodedText]
+                android:text="--"
+                ~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/res/layout/activity_main.xml:94: Warning: Hardcoded string "Avg Pay", should use @string resource [HardcodedText]
+                android:text="Avg Pay"
+                ~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/res/layout/activity_main.xml:110: Warning: Hardcoded string "--", should use @string resource [HardcodedText]
+                android:text="--"
+                ~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/res/layout/activity_main.xml:118: Warning: Hardcoded string "Avg $/mi", should use @string resource [HardcodedText]
+                android:text="Avg $/mi"
+                ~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "HardcodedText":
+   Hardcoding text attributes directly in layout files is bad for several
+   reasons:
+
+   * When creating configuration variations (for example for landscape or
+   portrait) you have to repeat the actual text (and keep it up to date when
+   making changes)
+
+   * The application cannot be translated to other languages by just adding
+   new translations for existing string resources.
+
+   There are quickfixes to automatically extract this hardcoded string into a
+   resource lookup.
+
+0 errors, 31 warnings

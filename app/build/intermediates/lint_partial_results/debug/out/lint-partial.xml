@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<incidents format="6" by="lint 8.2.2" type="partial_results">
+    <map id="UnsafeIntentLaunch">
+            <map id="unprotected">
+                <entry
+                    name="com.augusteenterprise.giglens.ui.ShareReceiverActivity"
+                    boolean="true"/>
+                <entry
+                    name="com.augusteenterprise.giglens.ui.MainActivity"
+                    boolean="true"/>
+            </map>
+    </map>
+    <map id="UnsafeImplicitIntentLaunch">
+            <map id="actionsSent">
+                    <map id="android.settings.ACCESSIBILITY_SETTINGS (used to start an activity)">
+                        <location id="0"
+                            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/augusteenterprise/giglens/ui/MainActivity.kt"
+                            line="101"
+                            column="31"
+                            startOffset="3714"
+                            endLine="101"
+                            endColumn="77"
+                            endOffset="3760"/>
+                    </map>
+            </map>
+            <map id="actionsRegisteredNonExported">
+                <entry
+                    name="com.augusteenterprise.giglens.OFFER_DETECTED (used to send a broadcast)"
+                    boolean="true"/>
+            </map>
+    </map>
+    <map id="UnusedResources">
+        <location id="R.mipmap.ic_launcher"
+            file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/mipmap-hdpi/ic_launcher.png"/>
+        <location id="R.string.app_name"
+            file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/values/strings.xml"
+            line="4"
+            column="13"
+            startOffset="99"
+            endLine="4"
+            endColumn="28"
+            endOffset="114"/>
+        <location id="R.string.status_active"
+            file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/values/strings.xml"
+            line="10"
+            column="13"
+            startOffset="595"
+            endLine="10"
+            endColumn="33"
+            endOffset="615"/>
+        <location id="R.string.status_no_accessibility"
+            file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/values/strings.xml"
+            line="11"
+            column="13"
+            startOffset="660"
+            endLine="11"
+            endColumn="43"
+            endOffset="690"/>
+        <entry
+            name="model"
+            string="attr[colorPrimary(R)],id[btnViewHistory(U),tvAvgPerMile(U),tvStatus(U),tvCaptureCount(U),btnToggleCapture(U),tvAvgPay(U)],layout[activity_main(U)],mipmap[ic_launcher(D)],string[status_active(D),btn_stop_capture(D),btn_view_history(U),btn_start_capture(U),notification_channel_description(U),notification_text(U),app_name(D),status_no_accessibility(D),notification_title(U),notification_channel_name(U),accessibility_service_description(U),status_idle(U)],style[Theme_GigLens(U),Theme_GigLens_Transparent(U),Theme_MaterialComponents_DayNight_DarkActionBar(R),Widget_MaterialComponents_Button_OutlinedButton(R)],xml[accessibility_service_config(U)];7^0^14^c^b^18,15^17,16^15,19^13;;;"/>
+        <location id="R.string.btn_stop_capture"
+            file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/values/strings.xml"
+            line="7"
+            column="13"
+            startOffset="405"
+            endLine="7"
+            endColumn="36"
+            endOffset="428"/>
+    </map>
+
+</incidents>

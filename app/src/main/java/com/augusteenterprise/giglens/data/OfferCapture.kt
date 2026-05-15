@@ -1,5 +1,4 @@
 package com.augusteenterprise.giglens.data
-
 // Author: Claude (Anthropic)
 // Room entity representing a single captured delivery offer
 
@@ -10,12 +9,17 @@ import androidx.room.PrimaryKey
 data class OfferCapture(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val timestamp: Long = System.currentTimeMillis(),
-    val platform: String = "DoorDash",      // Phase 1: DoorDash only
-    val payAmount: Double? = null,           // Extracted dollar amount
-    val distance: Double? = null,            // Extracted mileage
-    val distanceUnit: String = "mi",         // mi or km
-    val restaurant: String? = null,          // Extracted restaurant name
-    val screenshotPath: String? = null,      // Path to saved screenshot
-    val rawOcrText: String? = null,          // Full OCR output for debugging
-    val accepted: Boolean? = null            // null = unknown, true/false if detected
+    val platform: String = "DoorDash",
+    val payAmount: Double? = null,
+    val distance: Double? = null,
+    val distanceUnit: String = "mi",
+    val restaurant: String? = null,
+    val screenshotPath: String? = null,
+    val rawOcrText: String? = null,
+    val accepted: Boolean? = null,
+    // ─── Scoring fields (added v2) ────────────────────────────────────────────
+    val score: Int? = null,              // 0–100 composite score
+    val verdict: String? = null,         // TAKE / BORDERLINE / SKIP
+    val payPerMile: Double? = null,      // computed $/mile at capture time
+    val vsPersonalAvg: Double? = null    // % above/below driver's rolling avg
 )

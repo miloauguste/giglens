@@ -90,11 +90,9 @@ class ScreenCaptureService : Service() {
 
         // Register broadcast receiver for offer detection signals
         val filter = IntentFilter(OfferDetectorService.ACTION_OFFER_DETECTED)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(captureReceiver, filter, RECEIVER_NOT_EXPORTED)
-        } else {
-            registerReceiver(captureReceiver, filter)
-        }
+        androidx.core.content.ContextCompat.registerReceiver(
+            this, captureReceiver, filter, androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED
+        )
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
