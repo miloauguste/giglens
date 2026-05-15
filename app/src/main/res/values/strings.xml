@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Author: Claude (Anthropic) -->
+<resources>
+    <string name="app_name">GigLens</string>
+    <string name="accessibility_service_description">GigLens monitors delivery app offer screens to automatically capture and log offer details (pay, distance, restaurant) for your records.</string>
+    <string name="btn_start_capture">Start Capturing</string>
+    <string name="btn_stop_capture">Stop Capturing</string>
+    <string name="btn_view_history">View Offer History</string>
+    <string name="status_idle">Idle — tap Start to begin</string>
+    <string name="status_active">Monitoring for offers…</string>
+    <string name="status_no_accessibility">Accessibility Service not enabled</string>
+    <string name="notification_channel_name">GigLens Capture</string>
+    <string name="notification_channel_description">Shows when GigLens is actively monitoring for offers</string>
+    <string name="notification_title">GigLens Active</string>
+    <string name="notification_text">Monitoring for delivery offers</string>
+</resources>
