@@ -1,5 +1,4 @@
 package com.augusteenterprise.giglens.data
-
 // Author: Claude (Anthropic)
 // Data Access Object for offer capture CRUD operations
 
@@ -9,7 +8,6 @@ import androidx.room.Query
 
 @Dao
 interface OfferCaptureDao {
-
     @Insert
     suspend fun insert(capture: OfferCapture): Long
 
@@ -30,6 +28,9 @@ interface OfferCaptureDao {
 
     @Query("SELECT AVG(CASE WHEN distance > 0 THEN payAmount / distance ELSE NULL END) FROM offer_captures WHERE payAmount IS NOT NULL AND distance IS NOT NULL AND distance > 0")
     suspend fun getAveragePayPerMile(): Double?
+
+    @Query("SELECT AVG(score) FROM (SELECT score FROM offer_captures WHERE score IS NOT NULL ORDER BY timestamp DESC LIMIT 30)")
+    suspend fun getAverageScore(): Double?
 
     @Query("DELETE FROM offer_captures WHERE id = :id")
     suspend fun deleteById(id: Long)

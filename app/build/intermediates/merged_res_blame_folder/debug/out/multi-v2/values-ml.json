@@ -4,24 +4,7 @@
             "outputFile": "com.augusteenterprise.giglens.app-mergeDebugResources-39:/values-ml/values-ml.xml",
             "map": [
                 {
-                    "source": "/home/poppa/.gradle/caches/transforms-4/b2ec663025df32ebd8b6e2d5c4cc5bf6/transformed/play-services-basement-18.1.0/res/values-ml/values.xml",
-                    "from": {
-                        "startLines": "4",
-                        "startColumns": "0",
-                        "startOffsets": "195",
-                        "endColumns": "155",
-                        "endOffsets": "350"
-                    },
-                    "to": {
-                        "startLines": "56",
-                        "startColumns": "4",
-                        "startOffsets": "5616",
-                        "endColumns": "159",
-                        "endOffsets": "5771"
-                    }
-                },
-                {
-                    "source": "/home/poppa/.gradle/caches/transforms-4/3e9cd825f72e098334e92c7359cae4e1/transformed/play-services-base-18.1.0/res/values-ml/values.xml",
+                    "source": "/home/poppa/.gradle/caches/transforms-4/a24c36c987d3426211406c45bf7f11cf/transformed/play-services-base-18.3.0/res/values-ml/values.xml",
                     "from": {
                         "startLines": "4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20",
                         "startColumns": "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0",
@@ -54,6 +37,23 @@
                         "endLines": "5,33,34,35,36,37,45,46,47,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125",
                         "endColumns": "12,79,82,86,105,98,93,109,91,64,98,65,59,101,61,75,57,77,64,53,116,63,63,53,79,133,85,88,135,84,87,151,94,82,57,51,65,78,81,90,86,75,76,76,70,109,106,79,96,99,73,80,104,57,87,66,90,91,61,63,62,68,102,106,104,104,61,55,83",
                         "endOffsets": "316,3145,3228,3315,3421,3520,4351,4461,4553,6979,7078,7144,7204,7306,7368,7444,7502,7580,7645,7699,7816,7880,7944,7998,8078,8212,8298,8387,8523,8608,8696,8848,8943,9026,9084,9136,9202,9281,9363,9454,9541,9617,9694,9771,9842,9952,10059,10139,10236,10336,10410,10491,10596,10654,10742,10809,10900,10992,11054,11118,11181,11250,11353,11460,11565,11670,11732,11788,11872"
+                    }
+                },
+                {
+                    "source": "/home/poppa/.gradle/caches/transforms-4/965c4b9aec6fa917f9d5493922749e78/transformed/play-services-basement-18.3.0/res/values-ml/values.xml",
+                    "from": {
+                        "startLines": "4",
+                        "startColumns": "0",
+                        "startOffsets": "195",
+                        "endColumns": "155",
+                        "endOffsets": "350"
+                    },
+                    "to": {
+                        "startLines": "56",
+                        "startColumns": "4",
+                        "startOffsets": "5616",
+                        "endColumns": "159",
+                        "endOffsets": "5771"
                     }
                 },
                 {

@@ -1,10 +1,9 @@
 package com.augusteenterprise.giglens.ui
 
 // Author: Claude (Anthropic)
-// Receives shared screenshots from other apps, runs OCR, saves offer data.
+// Receives shared screenshots from other apps, runs OCR, scores offer, saves data.
 
 import android.content.Intent
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -14,6 +13,9 @@ import androidx.lifecycle.lifecycleScope
 import com.augusteenterprise.giglens.GigLensApp
 import com.augusteenterprise.giglens.data.OfferCapture
 import com.augusteenterprise.giglens.ocr.OfferParser
+import com.augusteenterprise.giglens.scoring.OfferScorer
+import com.augusteenterprise.giglens.location.LocationHelper
+import com.augusteenterprise.giglens.scoring.Verdict
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
@@ -51,8 +53,6 @@ class ShareReceiverActivity : AppCompatActivity() {
 
         try {
             val inputImage = InputImage.fromFilePath(this, uri)
-
-            // Save a copy of the screenshot
             val savedPath = saveImageCopy(uri)
 
             textRecognizer.process(inputImage)
@@ -66,23 +66,82 @@ class ShareReceiverActivity : AppCompatActivity() {
                         Log.i(TAG, "Offer: \$${parsed.payAmount} | ${parsed.distance} mi | ${parsed.restaurant}")
 
                         lifecycleScope.launch {
-                            val capture = OfferCapture(
-                                payAmount = parsed.payAmount,
-                                distance = parsed.distance,
-                                restaurant = parsed.restaurant,
-                                screenshotPath = savedPath,
-                                rawOcrText = rawText,
-                                platform = detectPlatform(rawText)
-                            )
-                            val id = GigLensApp.instance.database.offerCaptureDao().insert(capture)
-                            Log.i(TAG, "Offer saved with id=$id")
+                            val db = GigLensApp.instance.database
+                            val captureDao = db.offerCaptureDao()
+                            val configDao = db.scorerConfigDao()
 
+                            // ── Score the offer ───────────────────────────────
+			    val scorer = OfferScorer(configDao)
+
+			   // Get driver GPS location for pickup distance calculation
+				val location = LocationHelper.getCurrentLocation(applicationContext)
+				val pickupDistance = location?.let {
+				Log.d(TAG, "Driver location: ${it.latitude}, ${it.longitude}")
+    			// Straight-line estimate — good enough until Maps API is added
+   			 // TODO: replace with Maps Distance Matrix API for road distance
+			    null // placeholder until restaurant geocoding is implemented
+			}
+
+			// Get driver's personal average score from last 30 offers
+			val personalAvg = captureDao.getAverageScore()	
+                            Log.d(TAG, "Personal avg score: $personalAvg")
+
+			    val result = scorer.score(
+				    payAmount        = parsed.payAmount,
+				    deliveryDistance = parsed.distance,
+				    pickupDistance   = pickupDistance,
+			    	personalAvgScore = personalAvg
+				)	
+                            if (result != null) {
+                                Log.i(TAG, "Score: ${result.score} | Verdict: ${result.verdict} | " +
+                                    "\$/mi: ${"%.2f".format(result.payPerMile)} | " +
+                                    "vs avg: ${result.vsPersonalAvg?.let { "${"%.1f".format(it)}%" } ?: "n/a"} | " +
+                                    "failedFloor: ${result.failedFloor}")
+                            } else {
+                                Log.d(TAG, "Score: null (missing pay or distance)")
+                            }
+
+                            // ── Save to DB with score fields ──────────────────
+                            val capture = OfferCapture(
+                                payAmount      = parsed.payAmount,
+                                distance       = parsed.distance,
+                                restaurant     = parsed.restaurant,
+                                screenshotPath = savedPath,
+                                rawOcrText     = rawText,
+                                platform       = detectPlatform(rawText),
+                                score          = result?.score,
+                                verdict        = result?.verdict?.name,
+                                payPerMile     = result?.payPerMile,
+                                vsPersonalAvg  = result?.vsPersonalAvg,
+				driverLat      = location?.latitude,
+				driverLon      = location?.longitude,
+    				pickupDistance = result?.pickupDistance,
+    				deliveryDistance = parsed.distance,
+    				totalDistance  = result?.totalDistance,
+    				truePayPerMile = result?.truePayPerMile,
+				vehicleCost    = result?.vehicleCost,
+				netValue       = result?.netValue
+                            )
+                            val id = captureDao.insert(capture)
+                            Log.i(TAG, "Offer saved with id=$id score=${result?.score} verdict=${result?.verdict?.name}")
+
+                            // ── Build toast with verdict ──────────────────────
                             runOnUiThread {
+                                val verdictEmoji = when (result?.verdict) {
+                                    Verdict.TAKE       -> "🟢"
+                                    Verdict.BORDERLINE -> "🟡"
+                                    Verdict.SKIP       -> "🔴"
+                                    null               -> "📋"
+                                }
                                 val msg = buildString {
-                                    append("Offer captured!")
+                                    append("$verdictEmoji Offer captured!")
                                     parsed.payAmount?.let { append(" \$${"%.2f".format(it)}") }
                                     parsed.distance?.let { append(" • ${it} mi") }
-                                    parsed.restaurant?.let { append(" • $it") }
+                                    result?.let {
+                                        append(" • Net: ${"%.2f".format(it.netValue)}")
+                                        append(" • Score: ${it.score}")
+                                if (it.failedFloor) append(" ⚠️")
+                                }
                                 }
                                 Toast.makeText(this@ShareReceiverActivity, msg, Toast.LENGTH_LONG).show()
                                 finish()
@@ -91,7 +150,6 @@ class ShareReceiverActivity : AppCompatActivity() {
                     } else {
                         Log.d(TAG, "Not recognized as an offer screen")
                         Toast.makeText(this, "Couldn't detect an offer in this screenshot", Toast.LENGTH_LONG).show()
-                        // Delete the saved copy if not an offer
                         savedPath?.let { File(it).delete() }
                         finish()
                     }
@@ -108,23 +166,17 @@ class ShareReceiverActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Saves a copy of the shared image to app storage.
-     */
     private fun saveImageCopy(uri: Uri): String? {
         return try {
             val dir = File(getExternalFilesDir(null), "GigLens/screenshots")
             dir.mkdirs()
-
             val timestamp = System.currentTimeMillis()
             val file = File(dir, "offer_$timestamp.png")
-
             contentResolver.openInputStream(uri)?.use { input ->
                 FileOutputStream(file).use { output ->
                     input.copyTo(output)
                 }
             }
-
             Log.d(TAG, "Screenshot saved: ${file.absolutePath}")
             file.absolutePath
         } catch (e: Exception) {
@@ -133,18 +185,15 @@ class ShareReceiverActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Detects which gig platform the screenshot is from based on OCR text.
-     */
     private fun detectPlatform(text: String): String {
         val lower = text.lowercase()
         return when {
             lower.contains("doordash") || lower.contains("dasher") -> "DoorDash"
-            lower.contains("uber eats") || lower.contains("uber") -> "Uber Eats"
-            lower.contains("grubhub") -> "Grubhub"
-            lower.contains("instacart") -> "Instacart"
-            lower.contains("amazon flex") -> "Amazon Flex"
-            else -> "Unknown"
+            lower.contains("uber eats") || lower.contains("uber")  -> "Uber Eats"
+            lower.contains("grubhub")                              -> "Grubhub"
+            lower.contains("instacart")                            -> "Instacart"
+            lower.contains("amazon flex")                          -> "Amazon Flex"
+            else                                                   -> "Unknown"
         }
     }
 }

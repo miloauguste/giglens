@@ -47,7 +47,7 @@ public final class OfferCaptureDao_Impl implements OfferCaptureDao {
       @Override
       @NonNull
       protected String createQuery() {
-        return "INSERT OR ABORT INTO `offer_captures` (`id`,`timestamp`,`platform`,`payAmount`,`distance`,`distanceUnit`,`restaurant`,`screenshotPath`,`rawOcrText`,`accepted`,`score`,`verdict`,`payPerMile`,`vsPersonalAvg`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        return "INSERT OR ABORT INTO `offer_captures` (`id`,`timestamp`,`platform`,`payAmount`,`distance`,`distanceUnit`,`restaurant`,`screenshotPath`,`rawOcrText`,`accepted`,`score`,`verdict`,`payPerMile`,`vsPersonalAvg`,`driverLat`,`driverLon`,`pickupDistance`,`deliveryDistance`,`totalDistance`,`truePayPerMile`,`vehicleCost`,`netValue`,`estimatedMinutes`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
       }
 
       @Override
@@ -115,6 +115,51 @@ public final class OfferCaptureDao_Impl implements OfferCaptureDao {
           statement.bindNull(14);
         } else {
           statement.bindDouble(14, entity.getVsPersonalAvg());
+        }
+        if (entity.getDriverLat() == null) {
+          statement.bindNull(15);
+        } else {
+          statement.bindDouble(15, entity.getDriverLat());
+        }
+        if (entity.getDriverLon() == null) {
+          statement.bindNull(16);
+        } else {
+          statement.bindDouble(16, entity.getDriverLon());
+        }
+        if (entity.getPickupDistance() == null) {
+          statement.bindNull(17);
+        } else {
+          statement.bindDouble(17, entity.getPickupDistance());
+        }
+        if (entity.getDeliveryDistance() == null) {
+          statement.bindNull(18);
+        } else {
+          statement.bindDouble(18, entity.getDeliveryDistance());
+        }
+        if (entity.getTotalDistance() == null) {
+          statement.bindNull(19);
+        } else {
+          statement.bindDouble(19, entity.getTotalDistance());
+        }
+        if (entity.getTruePayPerMile() == null) {
+          statement.bindNull(20);
+        } else {
+          statement.bindDouble(20, entity.getTruePayPerMile());
+        }
+        if (entity.getVehicleCost() == null) {
+          statement.bindNull(21);
+        } else {
+          statement.bindDouble(21, entity.getVehicleCost());
+        }
+        if (entity.getNetValue() == null) {
+          statement.bindNull(22);
+        } else {
+          statement.bindDouble(22, entity.getNetValue());
+        }
+        if (entity.getEstimatedMinutes() == null) {
+          statement.bindNull(23);
+        } else {
+          statement.bindLong(23, entity.getEstimatedMinutes());
         }
       }
     };
@@ -227,6 +272,15 @@ public final class OfferCaptureDao_Impl implements OfferCaptureDao {
           final int _cursorIndexOfVerdict = CursorUtil.getColumnIndexOrThrow(_cursor, "verdict");
           final int _cursorIndexOfPayPerMile = CursorUtil.getColumnIndexOrThrow(_cursor, "payPerMile");
           final int _cursorIndexOfVsPersonalAvg = CursorUtil.getColumnIndexOrThrow(_cursor, "vsPersonalAvg");
+          final int _cursorIndexOfDriverLat = CursorUtil.getColumnIndexOrThrow(_cursor, "driverLat");
+          final int _cursorIndexOfDriverLon = CursorUtil.getColumnIndexOrThrow(_cursor, "driverLon");
+          final int _cursorIndexOfPickupDistance = CursorUtil.getColumnIndexOrThrow(_cursor, "pickupDistance");
+          final int _cursorIndexOfDeliveryDistance = CursorUtil.getColumnIndexOrThrow(_cursor, "deliveryDistance");
+          final int _cursorIndexOfTotalDistance = CursorUtil.getColumnIndexOrThrow(_cursor, "totalDistance");
+          final int _cursorIndexOfTruePayPerMile = CursorUtil.getColumnIndexOrThrow(_cursor, "truePayPerMile");
+          final int _cursorIndexOfVehicleCost = CursorUtil.getColumnIndexOrThrow(_cursor, "vehicleCost");
+          final int _cursorIndexOfNetValue = CursorUtil.getColumnIndexOrThrow(_cursor, "netValue");
+          final int _cursorIndexOfEstimatedMinutes = CursorUtil.getColumnIndexOrThrow(_cursor, "estimatedMinutes");
           final List<OfferCapture> _result = new ArrayList<OfferCapture>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final OfferCapture _item;
@@ -308,7 +362,61 @@ public final class OfferCaptureDao_Impl implements OfferCaptureDao {
             } else {
               _tmpVsPersonalAvg = _cursor.getDouble(_cursorIndexOfVsPersonalAvg);
             }
-            _item = new OfferCapture(_tmpId,_tmpTimestamp,_tmpPlatform,_tmpPayAmount,_tmpDistance,_tmpDistanceUnit,_tmpRestaurant,_tmpScreenshotPath,_tmpRawOcrText,_tmpAccepted,_tmpScore,_tmpVerdict,_tmpPayPerMile,_tmpVsPersonalAvg);
+            final Double _tmpDriverLat;
+            if (_cursor.isNull(_cursorIndexOfDriverLat)) {
+              _tmpDriverLat = null;
+            } else {
+              _tmpDriverLat = _cursor.getDouble(_cursorIndexOfDriverLat);
+            }
+            final Double _tmpDriverLon;
+            if (_cursor.isNull(_cursorIndexOfDriverLon)) {
+              _tmpDriverLon = null;
+            } else {
+              _tmpDriverLon = _cursor.getDouble(_cursorIndexOfDriverLon);
+            }
+            final Double _tmpPickupDistance;
+            if (_cursor.isNull(_cursorIndexOfPickupDistance)) {
+              _tmpPickupDistance = null;
+            } else {
+              _tmpPickupDistance = _cursor.getDouble(_cursorIndexOfPickupDistance);
+            }
+            final Double _tmpDeliveryDistance;
+            if (_cursor.isNull(_cursorIndexOfDeliveryDistance)) {
+              _tmpDeliveryDistance = null;
+            } else {
+              _tmpDeliveryDistance = _cursor.getDouble(_cursorIndexOfDeliveryDistance);
+            }
+            final Double _tmpTotalDistance;
+            if (_cursor.isNull(_cursorIndexOfTotalDistance)) {
+              _tmpTotalDistance = null;
+            } else {
+              _tmpTotalDistance = _cursor.getDouble(_cursorIndexOfTotalDistance);
+            }
+            final Double _tmpTruePayPerMile;
+            if (_cursor.isNull(_cursorIndexOfTruePayPerMile)) {
+              _tmpTruePayPerMile = null;
+            } else {
+              _tmpTruePayPerMile = _cursor.getDouble(_cursorIndexOfTruePayPerMile);
+            }
+            final Double _tmpVehicleCost;
+            if (_cursor.isNull(_cursorIndexOfVehicleCost)) {
+              _tmpVehicleCost = null;
+            } else {
+              _tmpVehicleCost = _cursor.getDouble(_cursorIndexOfVehicleCost);
+            }
+            final Double _tmpNetValue;
+            if (_cursor.isNull(_cursorIndexOfNetValue)) {
+              _tmpNetValue = null;
+            } else {
+              _tmpNetValue = _cursor.getDouble(_cursorIndexOfNetValue);
+            }
+            final Integer _tmpEstimatedMinutes;
+            if (_cursor.isNull(_cursorIndexOfEstimatedMinutes)) {
+              _tmpEstimatedMinutes = null;
+            } else {
+              _tmpEstimatedMinutes = _cursor.getInt(_cursorIndexOfEstimatedMinutes);
+            }
+            _item = new OfferCapture(_tmpId,_tmpTimestamp,_tmpPlatform,_tmpPayAmount,_tmpDistance,_tmpDistanceUnit,_tmpRestaurant,_tmpScreenshotPath,_tmpRawOcrText,_tmpAccepted,_tmpScore,_tmpVerdict,_tmpPayPerMile,_tmpVsPersonalAvg,_tmpDriverLat,_tmpDriverLon,_tmpPickupDistance,_tmpDeliveryDistance,_tmpTotalDistance,_tmpTruePayPerMile,_tmpVehicleCost,_tmpNetValue,_tmpEstimatedMinutes);
             _result.add(_item);
           }
           return _result;
@@ -348,6 +456,15 @@ public final class OfferCaptureDao_Impl implements OfferCaptureDao {
           final int _cursorIndexOfVerdict = CursorUtil.getColumnIndexOrThrow(_cursor, "verdict");
           final int _cursorIndexOfPayPerMile = CursorUtil.getColumnIndexOrThrow(_cursor, "payPerMile");
           final int _cursorIndexOfVsPersonalAvg = CursorUtil.getColumnIndexOrThrow(_cursor, "vsPersonalAvg");
+          final int _cursorIndexOfDriverLat = CursorUtil.getColumnIndexOrThrow(_cursor, "driverLat");
+          final int _cursorIndexOfDriverLon = CursorUtil.getColumnIndexOrThrow(_cursor, "driverLon");
+          final int _cursorIndexOfPickupDistance = CursorUtil.getColumnIndexOrThrow(_cursor, "pickupDistance");
+          final int _cursorIndexOfDeliveryDistance = CursorUtil.getColumnIndexOrThrow(_cursor, "deliveryDistance");
+          final int _cursorIndexOfTotalDistance = CursorUtil.getColumnIndexOrThrow(_cursor, "totalDistance");
+          final int _cursorIndexOfTruePayPerMile = CursorUtil.getColumnIndexOrThrow(_cursor, "truePayPerMile");
+          final int _cursorIndexOfVehicleCost = CursorUtil.getColumnIndexOrThrow(_cursor, "vehicleCost");
+          final int _cursorIndexOfNetValue = CursorUtil.getColumnIndexOrThrow(_cursor, "netValue");
+          final int _cursorIndexOfEstimatedMinutes = CursorUtil.getColumnIndexOrThrow(_cursor, "estimatedMinutes");
           final List<OfferCapture> _result = new ArrayList<OfferCapture>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final OfferCapture _item;
@@ -429,7 +546,61 @@ public final class OfferCaptureDao_Impl implements OfferCaptureDao {
             } else {
               _tmpVsPersonalAvg = _cursor.getDouble(_cursorIndexOfVsPersonalAvg);
             }
-            _item = new OfferCapture(_tmpId,_tmpTimestamp,_tmpPlatform,_tmpPayAmount,_tmpDistance,_tmpDistanceUnit,_tmpRestaurant,_tmpScreenshotPath,_tmpRawOcrText,_tmpAccepted,_tmpScore,_tmpVerdict,_tmpPayPerMile,_tmpVsPersonalAvg);
+            final Double _tmpDriverLat;
+            if (_cursor.isNull(_cursorIndexOfDriverLat)) {
+              _tmpDriverLat = null;
+            } else {
+              _tmpDriverLat = _cursor.getDouble(_cursorIndexOfDriverLat);
+            }
+            final Double _tmpDriverLon;
+            if (_cursor.isNull(_cursorIndexOfDriverLon)) {
+              _tmpDriverLon = null;
+            } else {
+              _tmpDriverLon = _cursor.getDouble(_cursorIndexOfDriverLon);
+            }
+            final Double _tmpPickupDistance;
+            if (_cursor.isNull(_cursorIndexOfPickupDistance)) {
+              _tmpPickupDistance = null;
+            } else {
+              _tmpPickupDistance = _cursor.getDouble(_cursorIndexOfPickupDistance);
+            }
+            final Double _tmpDeliveryDistance;
+            if (_cursor.isNull(_cursorIndexOfDeliveryDistance)) {
+              _tmpDeliveryDistance = null;
+            } else {
+              _tmpDeliveryDistance = _cursor.getDouble(_cursorIndexOfDeliveryDistance);
+            }
+            final Double _tmpTotalDistance;
+            if (_cursor.isNull(_cursorIndexOfTotalDistance)) {
+              _tmpTotalDistance = null;
+            } else {
+              _tmpTotalDistance = _cursor.getDouble(_cursorIndexOfTotalDistance);
+            }
+            final Double _tmpTruePayPerMile;
+            if (_cursor.isNull(_cursorIndexOfTruePayPerMile)) {
+              _tmpTruePayPerMile = null;
+            } else {
+              _tmpTruePayPerMile = _cursor.getDouble(_cursorIndexOfTruePayPerMile);
+            }
+            final Double _tmpVehicleCost;
+            if (_cursor.isNull(_cursorIndexOfVehicleCost)) {
+              _tmpVehicleCost = null;
+            } else {
+              _tmpVehicleCost = _cursor.getDouble(_cursorIndexOfVehicleCost);
+            }
+            final Double _tmpNetValue;
+            if (_cursor.isNull(_cursorIndexOfNetValue)) {
+              _tmpNetValue = null;
+            } else {
+              _tmpNetValue = _cursor.getDouble(_cursorIndexOfNetValue);
+            }
+            final Integer _tmpEstimatedMinutes;
+            if (_cursor.isNull(_cursorIndexOfEstimatedMinutes)) {
+              _tmpEstimatedMinutes = null;
+            } else {
+              _tmpEstimatedMinutes = _cursor.getInt(_cursorIndexOfEstimatedMinutes);
+            }
+            _item = new OfferCapture(_tmpId,_tmpTimestamp,_tmpPlatform,_tmpPayAmount,_tmpDistance,_tmpDistanceUnit,_tmpRestaurant,_tmpScreenshotPath,_tmpRawOcrText,_tmpAccepted,_tmpScore,_tmpVerdict,_tmpPayPerMile,_tmpVsPersonalAvg,_tmpDriverLat,_tmpDriverLon,_tmpPickupDistance,_tmpDeliveryDistance,_tmpTotalDistance,_tmpTruePayPerMile,_tmpVehicleCost,_tmpNetValue,_tmpEstimatedMinutes);
             _result.add(_item);
           }
           return _result;
@@ -471,6 +642,15 @@ public final class OfferCaptureDao_Impl implements OfferCaptureDao {
           final int _cursorIndexOfVerdict = CursorUtil.getColumnIndexOrThrow(_cursor, "verdict");
           final int _cursorIndexOfPayPerMile = CursorUtil.getColumnIndexOrThrow(_cursor, "payPerMile");
           final int _cursorIndexOfVsPersonalAvg = CursorUtil.getColumnIndexOrThrow(_cursor, "vsPersonalAvg");
+          final int _cursorIndexOfDriverLat = CursorUtil.getColumnIndexOrThrow(_cursor, "driverLat");
+          final int _cursorIndexOfDriverLon = CursorUtil.getColumnIndexOrThrow(_cursor, "driverLon");
+          final int _cursorIndexOfPickupDistance = CursorUtil.getColumnIndexOrThrow(_cursor, "pickupDistance");
+          final int _cursorIndexOfDeliveryDistance = CursorUtil.getColumnIndexOrThrow(_cursor, "deliveryDistance");
+          final int _cursorIndexOfTotalDistance = CursorUtil.getColumnIndexOrThrow(_cursor, "totalDistance");
+          final int _cursorIndexOfTruePayPerMile = CursorUtil.getColumnIndexOrThrow(_cursor, "truePayPerMile");
+          final int _cursorIndexOfVehicleCost = CursorUtil.getColumnIndexOrThrow(_cursor, "vehicleCost");
+          final int _cursorIndexOfNetValue = CursorUtil.getColumnIndexOrThrow(_cursor, "netValue");
+          final int _cursorIndexOfEstimatedMinutes = CursorUtil.getColumnIndexOrThrow(_cursor, "estimatedMinutes");
           final List<OfferCapture> _result = new ArrayList<OfferCapture>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final OfferCapture _item;
@@ -552,7 +732,61 @@ public final class OfferCaptureDao_Impl implements OfferCaptureDao {
             } else {
               _tmpVsPersonalAvg = _cursor.getDouble(_cursorIndexOfVsPersonalAvg);
             }
-            _item = new OfferCapture(_tmpId,_tmpTimestamp,_tmpPlatform,_tmpPayAmount,_tmpDistance,_tmpDistanceUnit,_tmpRestaurant,_tmpScreenshotPath,_tmpRawOcrText,_tmpAccepted,_tmpScore,_tmpVerdict,_tmpPayPerMile,_tmpVsPersonalAvg);
+            final Double _tmpDriverLat;
+            if (_cursor.isNull(_cursorIndexOfDriverLat)) {
+              _tmpDriverLat = null;
+            } else {
+              _tmpDriverLat = _cursor.getDouble(_cursorIndexOfDriverLat);
+            }
+            final Double _tmpDriverLon;
+            if (_cursor.isNull(_cursorIndexOfDriverLon)) {
+              _tmpDriverLon = null;
+            } else {
+              _tmpDriverLon = _cursor.getDouble(_cursorIndexOfDriverLon);
+            }
+            final Double _tmpPickupDistance;
+            if (_cursor.isNull(_cursorIndexOfPickupDistance)) {
+              _tmpPickupDistance = null;
+            } else {
+              _tmpPickupDistance = _cursor.getDouble(_cursorIndexOfPickupDistance);
+            }
+            final Double _tmpDeliveryDistance;
+            if (_cursor.isNull(_cursorIndexOfDeliveryDistance)) {
+              _tmpDeliveryDistance = null;
+            } else {
+              _tmpDeliveryDistance = _cursor.getDouble(_cursorIndexOfDeliveryDistance);
+            }
+            final Double _tmpTotalDistance;
+            if (_cursor.isNull(_cursorIndexOfTotalDistance)) {
+              _tmpTotalDistance = null;
+            } else {
+              _tmpTotalDistance = _cursor.getDouble(_cursorIndexOfTotalDistance);
+            }
+            final Double _tmpTruePayPerMile;
+            if (_cursor.isNull(_cursorIndexOfTruePayPerMile)) {
+              _tmpTruePayPerMile = null;
+            } else {
+              _tmpTruePayPerMile = _cursor.getDouble(_cursorIndexOfTruePayPerMile);
+            }
+            final Double _tmpVehicleCost;
+            if (_cursor.isNull(_cursorIndexOfVehicleCost)) {
+              _tmpVehicleCost = null;
+            } else {
+              _tmpVehicleCost = _cursor.getDouble(_cursorIndexOfVehicleCost);
+            }
+            final Double _tmpNetValue;
+            if (_cursor.isNull(_cursorIndexOfNetValue)) {
+              _tmpNetValue = null;
+            } else {
+              _tmpNetValue = _cursor.getDouble(_cursorIndexOfNetValue);
+            }
+            final Integer _tmpEstimatedMinutes;
+            if (_cursor.isNull(_cursorIndexOfEstimatedMinutes)) {
+              _tmpEstimatedMinutes = null;
+            } else {
+              _tmpEstimatedMinutes = _cursor.getInt(_cursorIndexOfEstimatedMinutes);
+            }
+            _item = new OfferCapture(_tmpId,_tmpTimestamp,_tmpPlatform,_tmpPayAmount,_tmpDistance,_tmpDistanceUnit,_tmpRestaurant,_tmpScreenshotPath,_tmpRawOcrText,_tmpAccepted,_tmpScore,_tmpVerdict,_tmpPayPerMile,_tmpVsPersonalAvg,_tmpDriverLat,_tmpDriverLon,_tmpPickupDistance,_tmpDeliveryDistance,_tmpTotalDistance,_tmpTruePayPerMile,_tmpVehicleCost,_tmpNetValue,_tmpEstimatedMinutes);
             _result.add(_item);
           }
           return _result;
@@ -631,6 +865,38 @@ public final class OfferCaptureDao_Impl implements OfferCaptureDao {
   @Override
   public Object getAveragePayPerMile(final Continuation<? super Double> $completion) {
     final String _sql = "SELECT AVG(CASE WHEN distance > 0 THEN payAmount / distance ELSE NULL END) FROM offer_captures WHERE payAmount IS NOT NULL AND distance IS NOT NULL AND distance > 0";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<Double>() {
+      @Override
+      @Nullable
+      public Double call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final Double _result;
+          if (_cursor.moveToFirst()) {
+            final Double _tmp;
+            if (_cursor.isNull(0)) {
+              _tmp = null;
+            } else {
+              _tmp = _cursor.getDouble(0);
+            }
+            _result = _tmp;
+          } else {
+            _result = null;
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object getAverageScore(final Continuation<? super Double> $completion) {
+    final String _sql = "SELECT AVG(score) FROM (SELECT score FROM offer_captures WHERE score IS NOT NULL ORDER BY timestamp DESC LIMIT 30)";
     final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
     final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
     return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<Double>() {

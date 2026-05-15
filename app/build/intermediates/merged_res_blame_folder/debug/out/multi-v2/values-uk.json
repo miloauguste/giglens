@@ -40,7 +40,7 @@
                     }
                 },
                 {
-                    "source": "/home/poppa/.gradle/caches/transforms-4/3e9cd825f72e098334e92c7359cae4e1/transformed/play-services-base-18.1.0/res/values-uk/values.xml",
+                    "source": "/home/poppa/.gradle/caches/transforms-4/a24c36c987d3426211406c45bf7f11cf/transformed/play-services-base-18.3.0/res/values-uk/values.xml",
                     "from": {
                         "startLines": "4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20",
                         "startColumns": "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0",
@@ -54,6 +54,23 @@
                         "startOffsets": "4613,4721,4884,5011,5121,5275,5404,5519,5770,5938,6044,6206,6331,6478,6620,6690,6751",
                         "endColumns": "107,162,126,109,153,128,114,104,167,105,161,124,146,141,69,60,87",
                         "endOffsets": "4716,4879,5006,5116,5270,5399,5514,5619,5933,6039,6201,6326,6473,6615,6685,6746,6834"
+                    }
+                },
+                {
+                    "source": "/home/poppa/.gradle/caches/transforms-4/965c4b9aec6fa917f9d5493922749e78/transformed/play-services-basement-18.3.0/res/values-uk/values.xml",
+                    "from": {
+                        "startLines": "4",
+                        "startColumns": "0",
+                        "startOffsets": "195",
+                        "endColumns": "141",
+                        "endOffsets": "336"
+                    },
+                    "to": {
+                        "startLines": "58",
+                        "startColumns": "4",
+                        "startOffsets": "5624",
+                        "endColumns": "145",
+                        "endOffsets": "5765"
                     }
                 },
                 {
@@ -71,23 +88,6 @@
                         "startOffsets": "3591,3691,3793,3894,3995,4100,4205,11700",
                         "endColumns": "99,101,100,100,104,104,112,100",
                         "endOffsets": "3686,3788,3889,3990,4095,4200,4313,11796"
-                    }
-                },
-                {
-                    "source": "/home/poppa/.gradle/caches/transforms-4/b2ec663025df32ebd8b6e2d5c4cc5bf6/transformed/play-services-basement-18.1.0/res/values-uk/values.xml",
-                    "from": {
-                        "startLines": "4",
-                        "startColumns": "0",
-                        "startOffsets": "195",
-                        "endColumns": "141",
-                        "endOffsets": "336"
-                    },
-                    "to": {
-                        "startLines": "58",
-                        "startColumns": "4",
-                        "startOffsets": "5624",
-                        "endColumns": "145",
-                        "endOffsets": "5765"
                     }
                 }
             ]

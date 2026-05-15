@@ -33,13 +33,13 @@ public final class OfferDatabase_Impl extends OfferDatabase {
   @Override
   @NonNull
   protected SupportSQLiteOpenHelper createOpenHelper(@NonNull final DatabaseConfiguration config) {
-    final SupportSQLiteOpenHelper.Callback _openCallback = new RoomOpenHelper(config, new RoomOpenHelper.Delegate(2) {
+    final SupportSQLiteOpenHelper.Callback _openCallback = new RoomOpenHelper(config, new RoomOpenHelper.Delegate(3) {
       @Override
       public void createAllTables(@NonNull final SupportSQLiteDatabase db) {
-        db.execSQL("CREATE TABLE IF NOT EXISTS `offer_captures` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `timestamp` INTEGER NOT NULL, `platform` TEXT NOT NULL, `payAmount` REAL, `distance` REAL, `distanceUnit` TEXT NOT NULL, `restaurant` TEXT, `screenshotPath` TEXT, `rawOcrText` TEXT, `accepted` INTEGER, `score` INTEGER, `verdict` TEXT, `payPerMile` REAL, `vsPersonalAvg` REAL)");
+        db.execSQL("CREATE TABLE IF NOT EXISTS `offer_captures` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `timestamp` INTEGER NOT NULL, `platform` TEXT NOT NULL, `payAmount` REAL, `distance` REAL, `distanceUnit` TEXT NOT NULL, `restaurant` TEXT, `screenshotPath` TEXT, `rawOcrText` TEXT, `accepted` INTEGER, `score` INTEGER, `verdict` TEXT, `payPerMile` REAL, `vsPersonalAvg` REAL, `driverLat` REAL, `driverLon` REAL, `pickupDistance` REAL, `deliveryDistance` REAL, `totalDistance` REAL, `truePayPerMile` REAL, `vehicleCost` REAL, `netValue` REAL, `estimatedMinutes` INTEGER)");
         db.execSQL("CREATE TABLE IF NOT EXISTS `scorer_config` (`key` TEXT NOT NULL, `value` REAL NOT NULL, `description` TEXT NOT NULL, PRIMARY KEY(`key`))");
         db.execSQL("CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)");
-        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '52d9332a08dddf007e024de4f64ecae8')");
+        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'cbfc5ae383463a5d0a4faab6370b37e0')");
       }
 
       @Override
@@ -89,7 +89,7 @@ public final class OfferDatabase_Impl extends OfferDatabase {
       @NonNull
       public RoomOpenHelper.ValidationResult onValidateSchema(
           @NonNull final SupportSQLiteDatabase db) {
-        final HashMap<String, TableInfo.Column> _columnsOfferCaptures = new HashMap<String, TableInfo.Column>(14);
+        final HashMap<String, TableInfo.Column> _columnsOfferCaptures = new HashMap<String, TableInfo.Column>(23);
         _columnsOfferCaptures.put("id", new TableInfo.Column("id", "INTEGER", true, 1, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsOfferCaptures.put("timestamp", new TableInfo.Column("timestamp", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsOfferCaptures.put("platform", new TableInfo.Column("platform", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
@@ -104,6 +104,15 @@ public final class OfferDatabase_Impl extends OfferDatabase {
         _columnsOfferCaptures.put("verdict", new TableInfo.Column("verdict", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsOfferCaptures.put("payPerMile", new TableInfo.Column("payPerMile", "REAL", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsOfferCaptures.put("vsPersonalAvg", new TableInfo.Column("vsPersonalAvg", "REAL", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsOfferCaptures.put("driverLat", new TableInfo.Column("driverLat", "REAL", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsOfferCaptures.put("driverLon", new TableInfo.Column("driverLon", "REAL", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsOfferCaptures.put("pickupDistance", new TableInfo.Column("pickupDistance", "REAL", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsOfferCaptures.put("deliveryDistance", new TableInfo.Column("deliveryDistance", "REAL", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsOfferCaptures.put("totalDistance", new TableInfo.Column("totalDistance", "REAL", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsOfferCaptures.put("truePayPerMile", new TableInfo.Column("truePayPerMile", "REAL", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsOfferCaptures.put("vehicleCost", new TableInfo.Column("vehicleCost", "REAL", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsOfferCaptures.put("netValue", new TableInfo.Column("netValue", "REAL", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsOfferCaptures.put("estimatedMinutes", new TableInfo.Column("estimatedMinutes", "INTEGER", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
         final HashSet<TableInfo.ForeignKey> _foreignKeysOfferCaptures = new HashSet<TableInfo.ForeignKey>(0);
         final HashSet<TableInfo.Index> _indicesOfferCaptures = new HashSet<TableInfo.Index>(0);
         final TableInfo _infoOfferCaptures = new TableInfo("offer_captures", _columnsOfferCaptures, _foreignKeysOfferCaptures, _indicesOfferCaptures);
@@ -128,7 +137,7 @@ public final class OfferDatabase_Impl extends OfferDatabase {
         }
         return new RoomOpenHelper.ValidationResult(true, null);
       }
-    }, "52d9332a08dddf007e024de4f64ecae8", "9bdfe82ec44dceb241e6760d3eff3bf4");
+    }, "cbfc5ae383463a5d0a4faab6370b37e0", "f849222affe4f7090b304ee8c0e75bb0");
     final SupportSQLiteOpenHelper.Configuration _sqliteConfig = SupportSQLiteOpenHelper.Configuration.builder(config.context).name(config.name).callback(_openCallback).build();
     final SupportSQLiteOpenHelper _helper = config.sqliteOpenHelperFactory.create(_sqliteConfig);
     return _helper;

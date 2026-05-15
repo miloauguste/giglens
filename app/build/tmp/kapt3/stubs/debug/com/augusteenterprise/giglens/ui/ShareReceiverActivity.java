@@ -21,16 +21,10 @@ public final class ShareReceiverActivity extends androidx.appcompat.app.AppCompa
     private final void processSharedImage(android.net.Uri uri) {
     }
     
-    /**
-     * Saves a copy of the shared image to app storage.
-     */
     private final java.lang.String saveImageCopy(android.net.Uri uri) {
         return null;
     }
     
-    /**
-     * Detects which gig platform the screenshot is from based on OCR text.
-     */
     private final java.lang.String detectPlatform(java.lang.String text) {
         return null;
     }

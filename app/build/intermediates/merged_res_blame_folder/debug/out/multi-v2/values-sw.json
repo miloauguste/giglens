@@ -23,24 +23,7 @@
                     }
                 },
                 {
-                    "source": "/home/poppa/.gradle/caches/transforms-4/b2ec663025df32ebd8b6e2d5c4cc5bf6/transformed/play-services-basement-18.1.0/res/values-sw/values.xml",
-                    "from": {
-                        "startLines": "4",
-                        "startColumns": "0",
-                        "startOffsets": "195",
-                        "endColumns": "141",
-                        "endOffsets": "336"
-                    },
-                    "to": {
-                        "startLines": "56",
-                        "startColumns": "4",
-                        "startOffsets": "5463",
-                        "endColumns": "145",
-                        "endOffsets": "5604"
-                    }
-                },
-                {
-                    "source": "/home/poppa/.gradle/caches/transforms-4/3e9cd825f72e098334e92c7359cae4e1/transformed/play-services-base-18.1.0/res/values-sw/values.xml",
+                    "source": "/home/poppa/.gradle/caches/transforms-4/a24c36c987d3426211406c45bf7f11cf/transformed/play-services-base-18.3.0/res/values-sw/values.xml",
                     "from": {
                         "startLines": "4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20",
                         "startColumns": "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0",
@@ -71,6 +54,23 @@
                         "startOffsets": "309,412,511,619,709,814,931,1014,1096,1187,1280,1375,1469,1569,1662,1757,1851,1942,2033,2115,2216,2324,2423,2530,2642,2746,2908,11564",
                         "endColumns": "102,98,107,89,104,116,82,81,90,92,94,93,99,92,94,93,90,90,81,100,107,98,106,111,103,161,96,82",
                         "endOffsets": "407,506,614,704,809,926,1009,1091,1182,1275,1370,1464,1564,1657,1752,1846,1937,2028,2110,2211,2319,2418,2525,2637,2741,2903,3000,11642"
+                    }
+                },
+                {
+                    "source": "/home/poppa/.gradle/caches/transforms-4/965c4b9aec6fa917f9d5493922749e78/transformed/play-services-basement-18.3.0/res/values-sw/values.xml",
+                    "from": {
+                        "startLines": "4",
+                        "startColumns": "0",
+                        "startOffsets": "195",
+                        "endColumns": "141",
+                        "endOffsets": "336"
+                    },
+                    "to": {
+                        "startLines": "56",
+                        "startColumns": "4",
+                        "startOffsets": "5463",
+                        "endColumns": "145",
+                        "endOffsets": "5604"
                     }
                 },
                 {

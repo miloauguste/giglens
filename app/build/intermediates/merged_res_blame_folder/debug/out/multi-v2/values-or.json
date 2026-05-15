@@ -4,7 +4,24 @@
             "outputFile": "com.augusteenterprise.giglens.app-mergeDebugResources-39:/values-or/values-or.xml",
             "map": [
                 {
-                    "source": "/home/poppa/.gradle/caches/transforms-4/3e9cd825f72e098334e92c7359cae4e1/transformed/play-services-base-18.1.0/res/values-or/values.xml",
+                    "source": "/home/poppa/.gradle/caches/transforms-4/965c4b9aec6fa917f9d5493922749e78/transformed/play-services-basement-18.3.0/res/values-or/values.xml",
+                    "from": {
+                        "startLines": "4",
+                        "startColumns": "0",
+                        "startOffsets": "195",
+                        "endColumns": "135",
+                        "endOffsets": "330"
+                    },
+                    "to": {
+                        "startLines": "56",
+                        "startColumns": "4",
+                        "startOffsets": "5541",
+                        "endColumns": "139",
+                        "endOffsets": "5676"
+                    }
+                },
+                {
+                    "source": "/home/poppa/.gradle/caches/transforms-4/a24c36c987d3426211406c45bf7f11cf/transformed/play-services-base-18.3.0/res/values-or/values.xml",
                     "from": {
                         "startLines": "4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20",
                         "startColumns": "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0",
@@ -54,23 +71,6 @@
                         "startOffsets": "322,441,551,658,744,848,968,1047,1128,1219,1312,1415,1510,1610,1703,1798,1894,1985,2075,2164,2274,2378,2484,2595,2699,2817,2980,11417",
                         "endColumns": "118,109,106,85,103,119,78,80,90,92,102,94,99,92,94,95,90,89,88,109,103,105,110,103,117,162,105,89",
                         "endOffsets": "436,546,653,739,843,963,1042,1123,1214,1307,1410,1505,1605,1698,1793,1889,1980,2070,2159,2269,2373,2479,2590,2694,2812,2975,3081,11502"
-                    }
-                },
-                {
-                    "source": "/home/poppa/.gradle/caches/transforms-4/b2ec663025df32ebd8b6e2d5c4cc5bf6/transformed/play-services-basement-18.1.0/res/values-or/values.xml",
-                    "from": {
-                        "startLines": "4",
-                        "startColumns": "0",
-                        "startOffsets": "195",
-                        "endColumns": "135",
-                        "endOffsets": "330"
-                    },
-                    "to": {
-                        "startLines": "56",
-                        "startColumns": "4",
-                        "startOffsets": "5541",
-                        "endColumns": "139",
-                        "endOffsets": "5676"
                     }
                 },
                 {
