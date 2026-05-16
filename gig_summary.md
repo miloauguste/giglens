@@ -89,6 +89,9 @@ maps_api_key, data_sharing
 3. Add runtime location permission request in ShareReceiverActivity
 4. Grant location permission on device and test full geocoding flow
 5. Update CLAUDE.md with session rules
+6. Result display overhaul — simplified one-liner output (e.g. DD offer $8.50, approx gross: $7.25, est. net: $6.72)
+7. Position-aware display — result widget appears at top/middle/bottom based on where offer sits on screen
+8. Display type choice — Toast (auto-dismiss) vs overlay card (stays until dismissed) vs status bar notification
 
 ### Phase 2 (Beta-Ready)
 6. Offer history view (RecyclerView with date filters)
