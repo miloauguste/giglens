@@ -30,22 +30,26 @@ public final class OfferDatabase_Impl extends OfferDatabase {
 
   private volatile ScorerConfigDao _scorerConfigDao;
 
+  private volatile AppConfigDao _appConfigDao;
+
   @Override
   @NonNull
   protected SupportSQLiteOpenHelper createOpenHelper(@NonNull final DatabaseConfiguration config) {
-    final SupportSQLiteOpenHelper.Callback _openCallback = new RoomOpenHelper(config, new RoomOpenHelper.Delegate(3) {
+    final SupportSQLiteOpenHelper.Callback _openCallback = new RoomOpenHelper(config, new RoomOpenHelper.Delegate(4) {
       @Override
       public void createAllTables(@NonNull final SupportSQLiteDatabase db) {
         db.execSQL("CREATE TABLE IF NOT EXISTS `offer_captures` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `timestamp` INTEGER NOT NULL, `platform` TEXT NOT NULL, `payAmount` REAL, `distance` REAL, `distanceUnit` TEXT NOT NULL, `restaurant` TEXT, `screenshotPath` TEXT, `rawOcrText` TEXT, `accepted` INTEGER, `score` INTEGER, `verdict` TEXT, `payPerMile` REAL, `vsPersonalAvg` REAL, `driverLat` REAL, `driverLon` REAL, `pickupDistance` REAL, `deliveryDistance` REAL, `totalDistance` REAL, `truePayPerMile` REAL, `vehicleCost` REAL, `netValue` REAL, `estimatedMinutes` INTEGER)");
         db.execSQL("CREATE TABLE IF NOT EXISTS `scorer_config` (`key` TEXT NOT NULL, `value` REAL NOT NULL, `description` TEXT NOT NULL, PRIMARY KEY(`key`))");
+        db.execSQL("CREATE TABLE IF NOT EXISTS `app_config` (`key` TEXT NOT NULL, `value` TEXT NOT NULL, `description` TEXT NOT NULL, PRIMARY KEY(`key`))");
         db.execSQL("CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)");
-        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'cbfc5ae383463a5d0a4faab6370b37e0')");
+        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '32da061bd771fea748f16e6ab05cfee3')");
       }
 
       @Override
       public void dropAllTables(@NonNull final SupportSQLiteDatabase db) {
         db.execSQL("DROP TABLE IF EXISTS `offer_captures`");
         db.execSQL("DROP TABLE IF EXISTS `scorer_config`");
+        db.execSQL("DROP TABLE IF EXISTS `app_config`");
         final List<? extends RoomDatabase.Callback> _callbacks = mCallbacks;
         if (_callbacks != null) {
           for (RoomDatabase.Callback _callback : _callbacks) {
@@ -135,9 +139,22 @@ public final class OfferDatabase_Impl extends OfferDatabase {
                   + " Expected:\n" + _infoScorerConfig + "\n"
                   + " Found:\n" + _existingScorerConfig);
         }
+        final HashMap<String, TableInfo.Column> _columnsAppConfig = new HashMap<String, TableInfo.Column>(3);
+        _columnsAppConfig.put("key", new TableInfo.Column("key", "TEXT", true, 1, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsAppConfig.put("value", new TableInfo.Column("value", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsAppConfig.put("description", new TableInfo.Column("description", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        final HashSet<TableInfo.ForeignKey> _foreignKeysAppConfig = new HashSet<TableInfo.ForeignKey>(0);
+        final HashSet<TableInfo.Index> _indicesAppConfig = new HashSet<TableInfo.Index>(0);
+        final TableInfo _infoAppConfig = new TableInfo("app_config", _columnsAppConfig, _foreignKeysAppConfig, _indicesAppConfig);
+        final TableInfo _existingAppConfig = TableInfo.read(db, "app_config");
+        if (!_infoAppConfig.equals(_existingAppConfig)) {
+          return new RoomOpenHelper.ValidationResult(false, "app_config(com.augusteenterprise.giglens.data.AppConfig).\n"
+                  + " Expected:\n" + _infoAppConfig + "\n"
+                  + " Found:\n" + _existingAppConfig);
+        }
         return new RoomOpenHelper.ValidationResult(true, null);
       }
-    }, "cbfc5ae383463a5d0a4faab6370b37e0", "f849222affe4f7090b304ee8c0e75bb0");
+    }, "32da061bd771fea748f16e6ab05cfee3", "73b814adea7d78fa14fec0a9f2ec3b2a");
     final SupportSQLiteOpenHelper.Configuration _sqliteConfig = SupportSQLiteOpenHelper.Configuration.builder(config.context).name(config.name).callback(_openCallback).build();
     final SupportSQLiteOpenHelper _helper = config.sqliteOpenHelperFactory.create(_sqliteConfig);
     return _helper;
@@ -148,7 +165,7 @@ public final class OfferDatabase_Impl extends OfferDatabase {
   protected InvalidationTracker createInvalidationTracker() {
     final HashMap<String, String> _shadowTablesMap = new HashMap<String, String>(0);
     final HashMap<String, Set<String>> _viewTables = new HashMap<String, Set<String>>(0);
-    return new InvalidationTracker(this, _shadowTablesMap, _viewTables, "offer_captures","scorer_config");
+    return new InvalidationTracker(this, _shadowTablesMap, _viewTables, "offer_captures","scorer_config","app_config");
   }
 
   @Override
@@ -159,6 +176,7 @@ public final class OfferDatabase_Impl extends OfferDatabase {
       super.beginTransaction();
       _db.execSQL("DELETE FROM `offer_captures`");
       _db.execSQL("DELETE FROM `scorer_config`");
+      _db.execSQL("DELETE FROM `app_config`");
       super.setTransactionSuccessful();
     } finally {
       super.endTransaction();
@@ -175,6 +193,7 @@ public final class OfferDatabase_Impl extends OfferDatabase {
     final HashMap<Class<?>, List<Class<?>>> _typeConvertersMap = new HashMap<Class<?>, List<Class<?>>>();
     _typeConvertersMap.put(OfferCaptureDao.class, OfferCaptureDao_Impl.getRequiredConverters());
     _typeConvertersMap.put(ScorerConfigDao.class, ScorerConfigDao_Impl.getRequiredConverters());
+    _typeConvertersMap.put(AppConfigDao.class, AppConfigDao_Impl.getRequiredConverters());
     return _typeConvertersMap;
   }
 
@@ -217,6 +236,20 @@ public final class OfferDatabase_Impl extends OfferDatabase {
           _scorerConfigDao = new ScorerConfigDao_Impl(this);
         }
         return _scorerConfigDao;
+      }
+    }
+  }
+
+  @Override
+  public AppConfigDao appConfigDao() {
+    if (_appConfigDao != null) {
+      return _appConfigDao;
+    } else {
+      synchronized(this) {
+        if(_appConfigDao == null) {
+          _appConfigDao = new AppConfigDao_Impl(this);
+        }
+        return _appConfigDao;
       }
     }
   }

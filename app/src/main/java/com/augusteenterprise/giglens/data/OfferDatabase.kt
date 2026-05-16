@@ -1,6 +1,6 @@
 package com.augusteenterprise.giglens.data
 // Author: Claude (Anthropic)
-// Room database singleton — v3 adds location and distance breakdown fields
+// Room database singleton — v4 adds app_config string settings table
 
 import android.content.Context
 import androidx.room.Database
@@ -13,13 +13,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Database(
-    entities = [OfferCapture::class, ScorerConfig::class],
-    version = 3,
+    entities = [OfferCapture::class, ScorerConfig::class, AppConfig::class],
+    version = 4,
     exportSchema = false
 )
 abstract class OfferDatabase : RoomDatabase() {
     abstract fun offerCaptureDao(): OfferCaptureDao
     abstract fun scorerConfigDao(): ScorerConfigDao
+    abstract fun appConfigDao(): AppConfigDao
 
     companion object {
         @Volatile
@@ -52,16 +53,27 @@ abstract class OfferDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE offer_captures ADD COLUMN vehicleCost REAL")
                 db.execSQL("ALTER TABLE offer_captures ADD COLUMN netValue REAL")
                 db.execSQL("ALTER TABLE offer_captures ADD COLUMN estimatedMinutes INTEGER")
-                // Add new scorer_config keys for 4-factor scoring
-                db.execSQL("INSERT OR IGNORE INTO scorer_config VALUES('weight_pickup_penalty', 0.50, 'Weight: pickup leg penalty (shorter = better)')")
+                db.execSQL("INSERT OR IGNORE INTO scorer_config VALUES('weight_pickup_penalty', 0.50, 'Weight: pickup leg penalty')")
                 db.execSQL("INSERT OR IGNORE INTO scorer_config VALUES('weight_true_pay_per_mile', 0.20, 'Weight: pay / total miles')")
                 db.execSQL("INSERT OR IGNORE INTO scorer_config VALUES('weight_total_pay_v2', 0.20, 'Weight: total pay amount')")
-                db.execSQL("INSERT OR IGNORE INTO scorer_config VALUES('weight_delivery_leg', 0.10, 'Weight: delivery leg (shorter = slightly better)')")
-                db.execSQL("INSERT OR IGNORE INTO scorer_config VALUES('pickup_distance_max', 8.0, 'Normalization: max pickup distance (scores 0)')")
-                db.execSQL("INSERT OR IGNORE INTO scorer_config VALUES('cost_per_mile', 0.90, 'Vehicle cost per mile driven (IRS standard $0.90)')")
-                db.execSQL("INSERT OR IGNORE INTO scorer_config VALUES('pickup_distance_min', 0.0, 'Normalization: min pickup distance (scores 100)')")
-                db.execSQL("INSERT OR IGNORE INTO scorer_config VALUES('true_pay_per_mile_min', 0.50, 'Normalization: worst true $/mile')")
-                db.execSQL("INSERT OR IGNORE INTO scorer_config VALUES('true_pay_per_mile_max', 3.00, 'Normalization: best true $/mile')")
+                db.execSQL("INSERT OR IGNORE INTO scorer_config VALUES('weight_delivery_leg', 0.10, 'Weight: delivery leg')")
+                db.execSQL("INSERT OR IGNORE INTO scorer_config VALUES('pickup_distance_max', 8.0, 'Max pickup distance')")
+                db.execSQL("INSERT OR IGNORE INTO scorer_config VALUES('pickup_distance_min', 0.0, 'Min pickup distance')")
+                db.execSQL("INSERT OR IGNORE INTO scorer_config VALUES('true_pay_per_mile_min', 0.50, 'Worst true \$/mile')")
+                db.execSQL("INSERT OR IGNORE INTO scorer_config VALUES('true_pay_per_mile_max', 3.00, 'Best true \$/mile')")
+                db.execSQL("INSERT OR IGNORE INTO scorer_config VALUES('cost_per_mile', 0.90, 'Vehicle cost per mile')")
+            }
+        }
+
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS app_config (
+                        `key` TEXT NOT NULL PRIMARY KEY,
+                        value TEXT NOT NULL,
+                        description TEXT NOT NULL DEFAULT ''
+                    )
+                """.trimIndent())
             }
         }
 
@@ -72,20 +84,21 @@ abstract class OfferDatabase : RoomDatabase() {
                     OfferDatabase::class.java,
                     "giglens_offers.db"
                 )
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                 .build()
                 INSTANCE = instance
 
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
-                        val dao = instance.scorerConfigDao()
-                        val count = dao.count()
-                        android.util.Log.d("OfferDatabase", "Seed check: scorer_config count = $count")
-                        if (count == 0) {
-                            dao.insertAll(defaultScorerConfig())
-                            android.util.Log.d("OfferDatabase", "Seed complete: inserted ${defaultScorerConfig().size} rows")
-                        } else {
-                            android.util.Log.d("OfferDatabase", "Seed skipped: already has $count rows")
+                        val scorerDao = instance.scorerConfigDao()
+                        if (scorerDao.count() == 0) {
+                            scorerDao.insertAll(defaultScorerConfig())
+                            android.util.Log.d("OfferDatabase", "Scorer config seeded")
+                        }
+                        val appDao = instance.appConfigDao()
+                        if (appDao.count() == 0) {
+                            appDao.insertAll(defaultAppConfig())
+                            android.util.Log.d("OfferDatabase", "App config seeded")
                         }
                     } catch (e: Exception) {
                         android.util.Log.e("OfferDatabase", "Seed failed: ${e.message}", e)

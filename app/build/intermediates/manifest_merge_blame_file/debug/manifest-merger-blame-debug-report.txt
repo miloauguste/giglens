@@ -2,146 +2,146 @@
 2<!-- Author: Claude (Anthropic) -->
 3<manifest xmlns:android="http://schemas.android.com/apk/res/android"
 4    package="com.augusteenterprise.giglens"
-5    android:versionCode="5"
-6    android:versionName="0.1.4" >
+5    android:versionCode="6"
+6    android:versionName="0.1.5" >
 7
 8    <uses-sdk
 9        android:minSdkVersion="26"
 10        android:targetSdkVersion="34" />
 11
 12    <!-- Foreground service for auto mode (screenshots) -->
-13    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-13-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:6:5-79
-13-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:6:22-76
-14    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-14-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:7:5-81
-14-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:7:22-78
-15    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-15-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:8:5-77
-15-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:8:22-74
-16    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
-16-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:9:5-94
-16-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:9:22-91
-17    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-17-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:10:5-77
-17-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:10:22-74
-18
-19    <permission
-19-->[androidx.core:core:1.12.0] /home/poppa/.gradle/caches/transforms-4/b0050dc6201b71b76c7914862555ad52/transformed/core-1.12.0/AndroidManifest.xml:22:5-24:47
-20        android:name="com.augusteenterprise.giglens.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
-20-->[androidx.core:core:1.12.0] /home/poppa/.gradle/caches/transforms-4/b0050dc6201b71b76c7914862555ad52/transformed/core-1.12.0/AndroidManifest.xml:23:9-81
-21        android:protectionLevel="signature" />
-21-->[androidx.core:core:1.12.0] /home/poppa/.gradle/caches/transforms-4/b0050dc6201b71b76c7914862555ad52/transformed/core-1.12.0/AndroidManifest.xml:24:9-44
-22
-23    <uses-permission android:name="com.augusteenterprise.giglens.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" /> <!-- Although the *SdkVersion is captured in gradle build files, this is required for non gradle builds -->
-23-->[androidx.core:core:1.12.0] /home/poppa/.gradle/caches/transforms-4/b0050dc6201b71b76c7914862555ad52/transformed/core-1.12.0/AndroidManifest.xml:26:5-97
-23-->[androidx.core:core:1.12.0] /home/poppa/.gradle/caches/transforms-4/b0050dc6201b71b76c7914862555ad52/transformed/core-1.12.0/AndroidManifest.xml:26:22-94
-24    <!-- <uses-sdk android:minSdkVersion="14"/> -->
-25    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-25-->[com.google.android.datatransport:transport-backend-cct:2.3.3] /home/poppa/.gradle/caches/transforms-4/b3ad3306c7901ccea991b727a523a2e5/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:25:5-79
-25-->[com.google.android.datatransport:transport-backend-cct:2.3.3] /home/poppa/.gradle/caches/transforms-4/b3ad3306c7901ccea991b727a523a2e5/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:25:22-76
-26    <uses-permission android:name="android.permission.INTERNET" />
-26-->[com.google.android.datatransport:transport-backend-cct:2.3.3] /home/poppa/.gradle/caches/transforms-4/b3ad3306c7901ccea991b727a523a2e5/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:26:5-67
-26-->[com.google.android.datatransport:transport-backend-cct:2.3.3] /home/poppa/.gradle/caches/transforms-4/b3ad3306c7901ccea991b727a523a2e5/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:26:22-64
+13    <uses-permission android:name="android.permission.INTERNET" />
+13-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:6:5-67
+13-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:6:22-64
+14    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+14-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:7:5-79
+14-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:7:22-76
+15    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+15-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:8:5-81
+15-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:8:22-78
+16    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+16-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:9:5-77
+16-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:9:22-74
+17    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+17-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:10:5-94
+17-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:10:22-91
+18    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+18-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:11:5-77
+18-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:11:22-74
+19
+20    <permission
+20-->[androidx.core:core:1.12.0] /home/poppa/.gradle/caches/transforms-4/b0050dc6201b71b76c7914862555ad52/transformed/core-1.12.0/AndroidManifest.xml:22:5-24:47
+21        android:name="com.augusteenterprise.giglens.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+21-->[androidx.core:core:1.12.0] /home/poppa/.gradle/caches/transforms-4/b0050dc6201b71b76c7914862555ad52/transformed/core-1.12.0/AndroidManifest.xml:23:9-81
+22        android:protectionLevel="signature" />
+22-->[androidx.core:core:1.12.0] /home/poppa/.gradle/caches/transforms-4/b0050dc6201b71b76c7914862555ad52/transformed/core-1.12.0/AndroidManifest.xml:24:9-44
+23
+24    <uses-permission android:name="com.augusteenterprise.giglens.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" /> <!-- Although the *SdkVersion is captured in gradle build files, this is required for non gradle builds -->
+24-->[androidx.core:core:1.12.0] /home/poppa/.gradle/caches/transforms-4/b0050dc6201b71b76c7914862555ad52/transformed/core-1.12.0/AndroidManifest.xml:26:5-97
+24-->[androidx.core:core:1.12.0] /home/poppa/.gradle/caches/transforms-4/b0050dc6201b71b76c7914862555ad52/transformed/core-1.12.0/AndroidManifest.xml:26:22-94
+25    <!-- <uses-sdk android:minSdkVersion="14"/> -->
+26    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+26-->[com.google.android.datatransport:transport-backend-cct:2.3.3] /home/poppa/.gradle/caches/transforms-4/b3ad3306c7901ccea991b727a523a2e5/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:25:5-79
+26-->[com.google.android.datatransport:transport-backend-cct:2.3.3] /home/poppa/.gradle/caches/transforms-4/b3ad3306c7901ccea991b727a523a2e5/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:25:22-76
 27
 28    <application
-28-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:12:5-62:19
+28-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:13:5-63:19
 29        android:name="com.augusteenterprise.giglens.GigLensApp"
-29-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:13:9-35
+29-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:14:9-35
 30        android:allowBackup="true"
-30-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:14:9-35
+30-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:15:9-35
 31        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
 31-->[androidx.core:core:1.12.0] /home/poppa/.gradle/caches/transforms-4/b0050dc6201b71b76c7914862555ad52/transformed/core-1.12.0/AndroidManifest.xml:28:18-86
 32        android:debuggable="true"
 33        android:extractNativeLibs="false"
 34        android:icon="@android:drawable/sym_def_app_icon"
-34-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:15:9-58
+34-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:16:9-58
 35        android:label="GigLens"
-35-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:16:9-32
+35-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:17:9-32
 36        android:supportsRtl="true"
-36-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:17:9-35
+36-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:18:9-35
 37        android:theme="@style/Theme.GigLens" >
-37-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:18:9-45
+37-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:19:9-45
 38
 39        <!-- Main activity -->
 40        <activity
-40-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:21:9-28:20
+40-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:22:9-29:20
 41            android:name="com.augusteenterprise.giglens.ui.MainActivity"
-41-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:22:13-44
+41-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:23:13-44
 42            android:exported="true" >
-42-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:23:13-36
+42-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:24:13-36
 43            <intent-filter>
-43-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:24:13-27:29
+43-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:25:13-28:29
 44                <action android:name="android.intent.action.MAIN" />
-44-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:25:17-69
-44-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:25:25-66
+44-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:26:17-69
+44-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:26:25-66
 45
 46                <category android:name="android.intent.category.LAUNCHER" />
-46-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:26:17-77
-46-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:26:27-74
+46-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:27:17-77
+46-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:27:27-74
 47            </intent-filter>
 48        </activity>
 49
 50        <!-- DEFAULT: Share target — receives screenshots from any app -->
 51        <activity
-51-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:31:9-41:20
+51-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:32:9-42:20
 52            android:name="com.augusteenterprise.giglens.ui.ShareReceiverActivity"
-52-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:32:13-53
+52-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:33:13-53
 53            android:exported="true"
-53-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:33:13-36
+53-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:34:13-36
 54            android:label="GigLens"
-54-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:35:13-36
+54-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:36:13-36
 55            android:theme="@style/Theme.GigLens.Transparent" >
-55-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:34:13-61
+55-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:35:13-61
 56            <intent-filter>
-56-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:36:13-40:29
+56-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:37:13-41:29
 57                <action android:name="android.intent.action.SEND" />
-57-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:37:17-69
-57-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:37:25-66
+57-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:38:17-69
+57-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:38:25-66
 58
 59                <category android:name="android.intent.category.DEFAULT" />
-59-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:38:17-76
-59-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:38:27-73
+59-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:39:17-76
+59-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:39:27-73
 60
 61                <data android:mimeType="image/*" />
-61-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:39:17-52
-61-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:39:23-49
+61-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:40:17-52
+61-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:40:23-49
 62            </intent-filter>
 63        </activity>
 64
 65        <!-- AUTO MODE (opt-in): Accessibility Service -->
 66        <service
-66-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:44:9-54:19
+66-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:45:9-55:19
 67            android:name="com.augusteenterprise.giglens.service.OfferDetectorService"
-67-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:45:13-57
+67-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:46:13-57
 68            android:exported="false"
-68-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:47:13-37
+68-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:48:13-37
 69            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" >
-69-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:46:13-79
+69-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:47:13-79
 70            <intent-filter>
-70-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:48:13-50:29
+70-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:49:13-51:29
 71                <action android:name="android.accessibilityservice.AccessibilityService" />
-71-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:49:17-92
-71-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:49:25-89
+71-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:50:17-92
+71-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:50:25-89
 72            </intent-filter>
 73
 74            <meta-data
-74-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:51:13-53:72
+74-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:52:13-54:72
 75                android:name="android.accessibilityservice"
-75-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:52:17-60
+75-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:53:17-60
 76                android:resource="@xml/accessibility_service_config" />
-76-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:53:17-69
+76-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:54:17-69
 77        </service>
 78
 79        <!-- AUTO MODE: Screenshot capture service -->
 80        <service
-80-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:57:9-60:40
+80-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:58:9-61:40
 81            android:name="com.augusteenterprise.giglens.service.ScreenCaptureService"
-81-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:58:13-57
+81-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:59:13-57
 82            android:exported="false"
-82-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:60:13-37
+82-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:61:13-37
 83            android:foregroundServiceType="mediaProjection" />
-83-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:59:13-60
+83-->/home/poppa/giglens/app/src/main/AndroidManifest.xml:60:13-60
 84
 85        <provider
 85-->[androidx.emoji2:emoji2:1.2.0] /home/poppa/.gradle/caches/transforms-4/fa42f8412f88102021976b303a97513f/transformed/emoji2-1.2.0/AndroidManifest.xml:24:9-32:20

@@ -182,7 +182,7 @@ public final class OfferCaptureDao_Impl implements OfferCaptureDao {
   }
 
   @Override
-  public Object insert(final OfferCapture capture, final Continuation<? super Long> $completion) {
+  public Object insert(final OfferCapture capture, final Continuation<? super Long> arg1) {
     return CoroutinesRoom.execute(__db, true, new Callable<Long>() {
       @Override
       @NonNull
@@ -196,11 +196,11 @@ public final class OfferCaptureDao_Impl implements OfferCaptureDao {
           __db.endTransaction();
         }
       }
-    }, $completion);
+    }, arg1);
   }
 
   @Override
-  public Object deleteById(final long id, final Continuation<? super Unit> $completion) {
+  public Object deleteById(final long id, final Continuation<? super Unit> arg1) {
     return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
       @Override
       @NonNull
@@ -221,11 +221,11 @@ public final class OfferCaptureDao_Impl implements OfferCaptureDao {
           __preparedStmtOfDeleteById.release(_stmt);
         }
       }
-    }, $completion);
+    }, arg1);
   }
 
   @Override
-  public Object deleteAll(final Continuation<? super Unit> $completion) {
+  public Object deleteAll(final Continuation<? super Unit> arg0) {
     return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
       @Override
       @NonNull
@@ -244,11 +244,11 @@ public final class OfferCaptureDao_Impl implements OfferCaptureDao {
           __preparedStmtOfDeleteAll.release(_stmt);
         }
       }
-    }, $completion);
+    }, arg0);
   }
 
   @Override
-  public Object getAll(final Continuation<? super List<OfferCapture>> $completion) {
+  public Object getAll(final Continuation<? super List<OfferCapture>> arg0) {
     final String _sql = "SELECT * FROM offer_captures ORDER BY timestamp DESC";
     final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
     final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
@@ -425,12 +425,11 @@ public final class OfferCaptureDao_Impl implements OfferCaptureDao {
           _statement.release();
         }
       }
-    }, $completion);
+    }, arg0);
   }
 
   @Override
-  public Object getRecent(final int limit,
-      final Continuation<? super List<OfferCapture>> $completion) {
+  public Object getRecent(final int limit, final Continuation<? super List<OfferCapture>> arg1) {
     final String _sql = "SELECT * FROM offer_captures ORDER BY timestamp DESC LIMIT ?";
     final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 1);
     int _argIndex = 1;
@@ -609,12 +608,12 @@ public final class OfferCaptureDao_Impl implements OfferCaptureDao {
           _statement.release();
         }
       }
-    }, $completion);
+    }, arg1);
   }
 
   @Override
   public Object getByDateRange(final long startTime, final long endTime,
-      final Continuation<? super List<OfferCapture>> $completion) {
+      final Continuation<? super List<OfferCapture>> arg2) {
     final String _sql = "SELECT * FROM offer_captures WHERE timestamp BETWEEN ? AND ? ORDER BY timestamp DESC";
     final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 2);
     int _argIndex = 1;
@@ -795,11 +794,11 @@ public final class OfferCaptureDao_Impl implements OfferCaptureDao {
           _statement.release();
         }
       }
-    }, $completion);
+    }, arg2);
   }
 
   @Override
-  public Object getCount(final Continuation<? super Integer> $completion) {
+  public Object getCount(final Continuation<? super Integer> arg0) {
     final String _sql = "SELECT COUNT(*) FROM offer_captures";
     final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
     final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
@@ -827,11 +826,11 @@ public final class OfferCaptureDao_Impl implements OfferCaptureDao {
           _statement.release();
         }
       }
-    }, $completion);
+    }, arg0);
   }
 
   @Override
-  public Object getAveragePay(final Continuation<? super Double> $completion) {
+  public Object getAveragePay(final Continuation<? super Double> arg0) {
     final String _sql = "SELECT AVG(payAmount) FROM offer_captures WHERE payAmount IS NOT NULL";
     final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
     final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
@@ -859,11 +858,11 @@ public final class OfferCaptureDao_Impl implements OfferCaptureDao {
           _statement.release();
         }
       }
-    }, $completion);
+    }, arg0);
   }
 
   @Override
-  public Object getAveragePayPerMile(final Continuation<? super Double> $completion) {
+  public Object getAveragePayPerMile(final Continuation<? super Double> arg0) {
     final String _sql = "SELECT AVG(CASE WHEN distance > 0 THEN payAmount / distance ELSE NULL END) FROM offer_captures WHERE payAmount IS NOT NULL AND distance IS NOT NULL AND distance > 0";
     final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
     final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
@@ -891,11 +890,11 @@ public final class OfferCaptureDao_Impl implements OfferCaptureDao {
           _statement.release();
         }
       }
-    }, $completion);
+    }, arg0);
   }
 
   @Override
-  public Object getAverageScore(final Continuation<? super Double> $completion) {
+  public Object getAverageScore(final Continuation<? super Double> arg0) {
     final String _sql = "SELECT AVG(score) FROM (SELECT score FROM offer_captures WHERE score IS NOT NULL ORDER BY timestamp DESC LIMIT 30)";
     final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
     final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
@@ -923,7 +922,7 @@ public final class OfferCaptureDao_Impl implements OfferCaptureDao {
           _statement.release();
         }
       }
-    }, $completion);
+    }, arg0);
   }
 
   @NonNull
