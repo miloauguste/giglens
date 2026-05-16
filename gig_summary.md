@@ -395,3 +395,61 @@ https://www.fueleconomy.gov/feg/ws/index.shtml
 6. Add vehicle info display to Settings screen
 
 ### Onboarding approved rendering: giglens_onboarding_vehicle
+
+---
+
+## FEATURE SPEC — Widget Gestures + Auto-Scan (May 16, 2026)
+
+### Widget state progression (approved)
+GigL (default) → capturing → scoring... → verdict pill
+
+### Widget gesture map (approved)
+- Default state: "GigL" label + "tap to scan" hint
+- Short press: capture → OCR → score → display result
+- Long press: context menu (scan now, history, move, settings, hide)
+- Drag: move widget to any screen position
+- Tap result pill: expand/collapse mini drawer
+- Pull drawer: expand to full detail
+
+### Long press context menu items:
+1. Scan offer now — manual trigger
+2. Offer history — opens history view
+3. Move widget — enters drag mode with position saved to app_config
+4. Settings — opens GigLens settings
+5. Hide widget — collapses to notification tray
+
+### Auto-scan feature (approved)
+Optional — driver enables in Settings.
+Default: OFF (Accessibility Service requires explicit user consent)
+
+Three scan modes (mutually exclusive, stored in app_config):
+- AUTO: OfferDetectorService watches DoorDash, fires on offer detection
+  Requires: BIND_ACCESSIBILITY_SERVICE permission
+  Widget animates automatically without driver interaction
+- MANUAL: Driver taps widget pill to trigger scan
+  Requires: SYSTEM_ALERT_WINDOW only
+  Widget shows "tap to scan" hint
+- SHARE: Driver screenshots → shares to GigLens (original mode)
+  Requires: zero permissions
+  Widget not shown — result appears as notification
+
+New app_config keys:
+- auto_scan_enabled: "true" | "false" (default: false)
+- scan_mode: "AUTO" | "MANUAL" | "SHARE" (default: "MANUAL")
+
+### Settings UI additions needed:
+- Scan mode selector (radio: Auto / Manual / Share)
+- Auto mode explanation dialog before enabling
+  (explains Accessibility Service scope — DoorDash only)
+- Widget position preference (saved position or reset to default)
+- Widget label preference (show "GigL" or custom label)
+
+### Implementation order:
+1. Add scan_mode to app_config + AppConfigKeys
+2. Add scan mode selector to SettingsActivity
+3. Wire OfferDetectorService to check scan_mode before firing
+4. Wire widget short press to trigger manual scan
+5. Animate widget through states during capture/score pipeline
+6. Save widget position to app_config on drag end
+
+### Reference rendering: giglens_widget_gesture_states
