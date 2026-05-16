@@ -19,6 +19,7 @@ import com.augusteenterprise.giglens.GigLensApp
 import com.augusteenterprise.giglens.R
 import com.augusteenterprise.giglens.databinding.ActivityMainBinding
 import com.augusteenterprise.giglens.service.OfferDetectorService
+import com.augusteenterprise.giglens.ui.SettingsActivity
 import com.augusteenterprise.giglens.service.ScreenCaptureService
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -50,6 +51,9 @@ class MainActivity : AppCompatActivity() {
 
         binding.btnToggleCapture.setOnClickListener { showAutoModeDialog() }
         binding.btnViewHistory.setOnClickListener { openHistory() }
+        binding.btnSettings.setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)

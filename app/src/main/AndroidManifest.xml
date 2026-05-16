@@ -30,6 +30,11 @@
 
         <!-- DEFAULT: Share target — receives screenshots from any app -->
         <activity
+            android:name=".ui.SettingsActivity"
+            android:label="Settings"
+            android:parentActivityName=".ui.MainActivity" />
+
+        <activity
             android:name=".ui.ShareReceiverActivity"
             android:exported="true"
             android:theme="@style/Theme.GigLens.Transparent"

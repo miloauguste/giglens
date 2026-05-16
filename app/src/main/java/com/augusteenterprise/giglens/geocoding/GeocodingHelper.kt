@@ -116,6 +116,34 @@ object GeocodingHelper {
         }
 
     /**
+     * Reverse geocodes a lat/lon to extract state/region for use as geocoding hint.
+     * Returns format like "New Jersey, USA" or null if unavailable.
+     */
+    suspend fun reverseGeocode(lat: Double, lon: Double): String? =
+        withContext(Dispatchers.IO) {
+            try {
+                val url = "https://nominatim.openstreetmap.org/reverse?lat=$lat&lon=$lon&format=json"
+                val connection = URL(url).openConnection() as HttpsURLConnection
+                connection.apply {
+                    requestMethod = "GET"
+                    setRequestProperty("User-Agent", USER_AGENT)
+                    connectTimeout = TIMEOUT_MS
+                    readTimeout    = TIMEOUT_MS
+                }
+                val response = connection.inputStream.bufferedReader().readText()
+                connection.disconnect()
+                val json = org.json.JSONObject(response)
+                val address = json.optJSONObject("address") ?: return@withContext null
+                val state   = address.optString("state", "")
+                val country = address.optString("country", "")
+                if (state.isNotBlank() && country.isNotBlank()) "$state, $country" else null
+            } catch (e: Exception) {
+                Log.e(TAG, "Reverse geocode failed: ${e.message}", e)
+                null
+            }
+        }
+
+    /**
      * Haversine straight-line distance in miles between two lat/lon points.
      */
     fun straightLineMiles(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {

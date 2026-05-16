@@ -14,15 +14,19 @@ data class AppConfig(
 )
 
 object AppConfigKeys {
-    const val DRIVER_REGION   = "driver_region"    // e.g. "New Jersey, USA" — set from GPS or user prefs
-    const val DRIVER_STATE    = "driver_state"     // e.g. "NJ"
-    const val MAPS_API_KEY    = "maps_api_key"     // Pro tier: Google Maps Distance Matrix
-    const val DATA_SHARING    = "data_sharing"     // "none" | "aggregate" | "individual"
+    const val DRIVER_REGION        = "driver_region"         // auto-detected from GPS reverse geocode
+    const val DRIVER_MANUAL_REGION = "driver_manual_region"  // user-entered fallback
+    const val DRIVER_STATE         = "driver_state"          // e.g. "NJ"
+    const val GPS_ENABLED          = "gps_enabled"           // "true" | "false"
+    const val MAPS_API_KEY         = "maps_api_key"          // Pro tier: Google Maps Distance Matrix
+    const val DATA_SHARING         = "data_sharing"          // "none" | "aggregate" | "individual"
 }
 
 fun defaultAppConfig(): List<AppConfig> = listOf(
-    AppConfig(AppConfigKeys.DRIVER_REGION, "",    "Driver's region for geocoding (set automatically from GPS)"),
-    AppConfig(AppConfigKeys.DRIVER_STATE,  "",    "Driver's state abbreviation (set automatically from GPS)"),
-    AppConfig(AppConfigKeys.MAPS_API_KEY,  "",    "Google Maps Distance Matrix API key (Pro tier)"),
-    AppConfig(AppConfigKeys.DATA_SHARING,  "none","Community data sharing: none | aggregate | individual")
+    AppConfig(AppConfigKeys.DRIVER_REGION,        "",     "Auto-detected region from GPS reverse geocode"),
+    AppConfig(AppConfigKeys.DRIVER_MANUAL_REGION, "",     "User-entered region fallback"),
+    AppConfig(AppConfigKeys.DRIVER_STATE,         "",     "Driver state abbreviation (auto)"),
+    AppConfig(AppConfigKeys.GPS_ENABLED,          "false","GPS location enabled: true | false"),
+    AppConfig(AppConfigKeys.MAPS_API_KEY,         "",     "Google Maps Distance Matrix API key (Pro tier)"),
+    AppConfig(AppConfigKeys.DATA_SHARING,         "none", "Community data sharing: none | aggregate | individual")
 )
