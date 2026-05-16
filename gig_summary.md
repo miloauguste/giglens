@@ -300,3 +300,35 @@ MEDIUM — before Play Store:
 32. Accessibility Service justification for Play Store
 33. GDPR/CCPA compliance — data export, deletion, retention policy
 34. Play Store submission
+
+---
+
+## APPROVED UI DESIGN — GigLens Overlay Widget (May 16, 2026)
+
+### Layout approved by Milo Auguste
+
+**Framework:** Jetpack Compose + WindowManager overlay
+**Permission required:** SYSTEM_ALERT_WINDOW (opt-in, same as chat heads)
+
+### Three interaction states:
+1. Score pill — floating, minimal, shows verdict color + score number only
+2. Tap → mini drawer — slides open from pill, one-liner summary (offer, net, distance)
+3. Pull/expand → full detail — complete breakdown, vehicle cost, vs avg, pickup estimate
+
+### Design rules (never change):
+- Widget is draggable anywhere on screen by the driver
+- Position saved to app_config DB — remembered between sessions
+- Accept button (DoorDash) must NEVER be obscured at any state
+- Drawer opens FROM the widget position — top widget = opens downward, bottom = opens upward, left = opens right, right = opens left
+- Dark theme only — matches DoorDash dark UI
+- Pill size: minimal — score number + verdict dot only when collapsed
+- Full detail card width: 200dp max — does not dominate the screen
+
+### Compose implementation plan:
+- WindowManager + TYPE_APPLICATION_OVERLAY for floating widget
+- MotionLayout or AnimatedVisibility for pill → mini → full transitions  
+- SheetState enum: PILL | MINI | FULL
+- Draggable modifier with boundary constraints (screen edges)
+- Position persistence: appConfigDao.setValue(WIDGET_X, WIDGET_Y) on drag end
+
+### Reference rendering: giglens_draggable_widget_demo
