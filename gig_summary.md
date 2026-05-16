@@ -178,3 +178,125 @@ maps_api_key, data_sharing
     app/src/main/res/layout/
         activity_main.xml
         activity_settings.xml
+
+---
+
+## SECURITY & FEATURE ROADMAP (Priority Order)
+
+### SDLC Security Policy (always enforced)
+- Security layer must be implemented AS features are added, never after
+- Every new feature must include its security requirements before coding begins
+- Continuous scanning is part of every session — run all scans before ending
+- No feature is complete without its corresponding security layer passing all scans
+
+### Security Scan Suite (run every session end)
+1. OWASP dependency check — ./gradlew :app:dependencyCheckAnalyze
+2. Android Lint — ./gradlew :app:lint
+3. Gitleaks — scan git history for secrets (TO INSTALL)
+4. Semgrep — Kotlin static analysis for insecure patterns (TO INSTALL)
+5. MobSF — full APK analysis via Docker (TO INSTALL)
+
+### Encryption Requirements (by priority)
+CRITICAL — must be done before beta:
+1. Move screenshots from external storage to app-private storage (getFilesDir)
+   - Current: getExternalFilesDir() — accessible to other apps
+   - Fix: getFilesDir() — app-private, no other app access
+   - Security layer for: share-to-capture feature
+
+2. SQLCipher Room database encryption
+   - Current: plain SQLite readable on rooted devices
+   - Fix: SQLCipher with key from Android Keystore (hardware-backed)
+   - Security layer for: all DB features (scoring, offers, config)
+   - Dependencies: net.zetetic:android-database-sqlcipher:4.5.4
+
+3. EncryptedSharedPreferences for tokens
+   - Current: not implemented (no auth yet)
+   - Fix: AndroidX Security library backed by Android Keystore
+   - Security layer for: Feature — user authentication
+   - Dependency: androidx.security:security-crypto:1.1.0-alpha06
+
+HIGH — must be done before networking:
+4. Network Security Config
+   - HTTPS only, no cleartext traffic
+   - Certificate pinning for API endpoints
+   - Security layer for: backend sync, community data features
+
+5. TLS 1.3 + certificate pinning
+   - Security layer for: community benchmarking, fleet dashboard
+
+MEDIUM — before Play Store:
+6. ProGuard/R8 minification and obfuscation
+   - Current: isMinifyEnabled = false
+   - Security layer for: release builds
+
+7. Strip debug logging from release
+   - Current: Log.d/Log.i calls expose OCR text, GPS, pay amounts
+   - Fix: ProGuard rule to strip all debug logs in release
+
+8. Input validation hardening
+   - Sanitize all OCR output before DB insertion
+   - Validate screenshot file size
+   - Rate-limit share processing
+
+---
+
+## FEATURE BACKLOG (categorized and prioritized)
+
+### P0 — Fix Now (blocking quality)
+1. Restaurant extraction bug — grabbing map garbage instead of restaurant name
+2. Pickup street extraction — too narrow scan window
+3. Runtime location permission request at capture time
+4. Result display overhaul — simplified one-liner toast
+5. Position-aware display widget (top/middle/bottom)
+
+### P1 — Beta Required
+6. Offer history view (RecyclerView + date filters)
+   Security: read-only DAO queries, no raw SQL
+7. UI design pass (dark theme, icon, onboarding)
+8. Floating status widget
+   Security: SYSTEM_ALERT_WINDOW permission, opt-in only
+9. Pay-per-mile color coding (green/yellow/red)
+10. Daily/weekly earnings summary
+11. Move screenshots to app-private storage (SECURITY)
+12. SQLCipher DB encryption (SECURITY)
+
+### P2 — Post-Beta
+13. User authentication (email + password)
+    Security: bcrypt server-side, JWT with 15min expiry,
+    EncryptedSharedPreferences, refresh token rotation
+14. Multi-platform OCR (Uber Eats, Grubhub, Instacart, Amazon Flex)
+15. CSV export for tax records
+    Security: no PII in export, driver controls data
+16. Decline reason logging
+17. Goal tracker (Make 50 today progress bar)
+18. End-of-day push notification recap
+19. ProGuard/R8 release build (SECURITY)
+20. Strip debug logs from release (SECURITY)
+
+### P3 — Growth Features
+21. Best hours heatmap
+22. Restaurant ranking
+23. Cross-platform offer comparison
+24. Smart alerts (This offer is 40% above your average)
+25. Community stats — anonymized aggregates
+    Security: differential privacy, no individual identification,
+    explicit opt-in, GDPR/CCPA compliant data deletion
+26. Google Maps Distance Matrix API (Pro tier)
+    Security: API key in app_config DB, never in source code
+
+### P4 — Business/Monetization
+27. Fleet operator web dashboard
+    Security: role-based access control, audit logs,
+    encrypted data in transit and at rest
+28. White-label mode
+29. Freemium model (Free 30-day / Pro .99/mo)
+    Security: receipt validation via Play Billing,
+    server-side entitlement check
+30. API for fleet management integration
+    Security: OAuth 2.0, rate limiting, API key rotation
+
+### P5 — Platform
+31. Privacy policy (required before Play Store)
+32. Accessibility Service justification for Play Store
+33. GDPR/CCPA compliance — data export, deletion, retention policy
+34. Play Store submission

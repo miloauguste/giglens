@@ -1,4 +1,4 @@
-/home/poppa/giglens/app/src/main/AndroidManifest.xml:33: Warning: Redundant label can be removed [RedundantLabel]
+/home/poppa/giglens/app/src/main/AndroidManifest.xml:41: Warning: Redundant label can be removed [RedundantLabel]
             android:label="GigLens">
             ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -7,39 +7,42 @@
    the application tag. Since the application has already specified the same
    label, the label on this activity can be omitted.
 
-/home/poppa/giglens/app/build.gradle.kts:47: Warning: A newer version of androidx.core:core-ktx than 1.12.0 is available: 1.18.0 [GradleDependency]
+/home/poppa/giglens/app/build.gradle.kts:56: Warning: A newer version of androidx.core:core-ktx than 1.12.0 is available: 1.18.0 [GradleDependency]
     implementation("androidx.core:core-ktx:1.12.0")
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/poppa/giglens/app/build.gradle.kts:48: Warning: A newer version of androidx.appcompat:appcompat than 1.6.1 is available: 1.7.1 [GradleDependency]
+/home/poppa/giglens/app/build.gradle.kts:57: Warning: A newer version of androidx.appcompat:appcompat than 1.6.1 is available: 1.7.1 [GradleDependency]
     implementation("androidx.appcompat:appcompat:1.6.1")
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/poppa/giglens/app/build.gradle.kts:49: Warning: A newer version of com.google.android.material:material than 1.11.0 is available: 1.14.0 [GradleDependency]
+/home/poppa/giglens/app/build.gradle.kts:58: Warning: A newer version of com.google.android.material:material than 1.11.0 is available: 1.14.0 [GradleDependency]
     implementation("com.google.android.material:material:1.11.0")
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/poppa/giglens/app/build.gradle.kts:50: Warning: A newer version of androidx.constraintlayout:constraintlayout than 2.1.4 is available: 2.2.1 [GradleDependency]
+/home/poppa/giglens/app/build.gradle.kts:59: Warning: A newer version of androidx.constraintlayout:constraintlayout than 2.1.4 is available: 2.2.1 [GradleDependency]
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/poppa/giglens/app/build.gradle.kts:51: Warning: A newer version of androidx.lifecycle:lifecycle-runtime-ktx than 2.7.0 is available: 2.10.0 [GradleDependency]
+/home/poppa/giglens/app/build.gradle.kts:60: Warning: A newer version of androidx.lifecycle:lifecycle-runtime-ktx than 2.7.0 is available: 2.10.0 [GradleDependency]
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/poppa/giglens/app/build.gradle.kts:52: Warning: A newer version of androidx.lifecycle:lifecycle-viewmodel-ktx than 2.7.0 is available: 2.10.0 [GradleDependency]
+/home/poppa/giglens/app/build.gradle.kts:61: Warning: A newer version of androidx.lifecycle:lifecycle-viewmodel-ktx than 2.7.0 is available: 2.10.0 [GradleDependency]
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/poppa/giglens/app/build.gradle.kts:55: Warning: A newer version of com.google.mlkit:text-recognition than 16.0.0 is available: 16.0.1 [GradleDependency]
+/home/poppa/giglens/app/build.gradle.kts:64: Warning: A newer version of com.google.mlkit:text-recognition than 16.0.0 is available: 16.0.1 [GradleDependency]
     implementation("com.google.mlkit:text-recognition:16.0.0")
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/poppa/giglens/app/build.gradle.kts:58: Warning: A newer version of androidx.room:room-runtime than 2.6.1 is available: 2.8.4 [GradleDependency]
+/home/poppa/giglens/app/build.gradle.kts:67: Warning: A newer version of androidx.room:room-runtime than 2.6.1 is available: 2.8.4 [GradleDependency]
     implementation("androidx.room:room-runtime:2.6.1")
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/poppa/giglens/app/build.gradle.kts:59: Warning: A newer version of androidx.room:room-ktx than 2.6.1 is available: 2.8.4 [GradleDependency]
+/home/poppa/giglens/app/build.gradle.kts:68: Warning: A newer version of androidx.room:room-ktx than 2.6.1 is available: 2.8.4 [GradleDependency]
     implementation("androidx.room:room-ktx:2.6.1")
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/poppa/giglens/app/build.gradle.kts:60: Warning: A newer version of androidx.room:room-compiler than 2.6.1 is available: 2.8.4 [GradleDependency]
+/home/poppa/giglens/app/build.gradle.kts:69: Warning: A newer version of androidx.room:room-compiler than 2.6.1 is available: 2.8.4 [GradleDependency]
     kapt("androidx.room:room-compiler:2.6.1")
           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/poppa/giglens/app/build.gradle.kts:63: Warning: A newer version of androidx.recyclerview:recyclerview than 1.3.2 is available: 1.4.0 [GradleDependency]
+/home/poppa/giglens/app/build.gradle.kts:72: Warning: A newer version of androidx.recyclerview:recyclerview than 1.3.2 is available: 1.4.0 [GradleDependency]
     implementation("androidx.recyclerview:recyclerview:1.3.2")
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/build.gradle.kts:76: Warning: A newer version of com.google.android.gms:play-services-location than 21.2.0 is available: 21.3.0 [GradleDependency]
+    implementation("com.google.android.gms:play-services-location:21.2.0")
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
    Explanation for issues of type "GradleDependency":
    This detector looks for usages of libraries where the version you are using
@@ -51,7 +54,7 @@
 /home/poppa/giglens/app/src/main/java/com/augusteenterprise/giglens/GigLensApp.kt:24: Warning: Unnecessary; SDK_INT is always >= 26 [ObsoleteSdkInt]
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/poppa/giglens/app/src/main/java/com/augusteenterprise/giglens/ui/MainActivity.kt:112: Warning: Unnecessary; SDK_INT is always >= 26 [ObsoleteSdkInt]
+/home/poppa/giglens/app/src/main/java/com/augusteenterprise/giglens/ui/MainActivity.kt:116: Warning: Unnecessary; SDK_INT is always >= 26 [ObsoleteSdkInt]
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -64,7 +67,7 @@
    where the version qualifier is less than or equal to the minSdkVersion,
    where the contents should be merged into the best folder.
 
-/home/poppa/giglens/app/build.gradle.kts:60: Warning: This library supports using KSP instead of kapt, which greatly improves performance. Learn more: https://developer.android.com/studio/build/migrate-to-ksp [KaptUsageInsteadOfKsp]
+/home/poppa/giglens/app/build.gradle.kts:69: Warning: This library supports using KSP instead of kapt, which greatly improves performance. Learn more: https://developer.android.com/studio/build/migrate-to-ksp [KaptUsageInsteadOfKsp]
     kapt("androidx.room:room-compiler:2.6.1")
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -74,7 +77,7 @@
 
    https://developer.android.com/studio/build/migrate-to-ksp
 
-/home/poppa/giglens/app/src/main/res/layout/activity_main.xml:68: Warning: Set android:baselineAligned="false" on this element for better performance [DisableBaselineAlignment]
+/home/poppa/giglens/app/src/main/res/layout/activity_main.xml:77: Warning: Set android:baselineAligned="false" on this element for better performance [DisableBaselineAlignment]
     <LinearLayout
      ~~~~~~~~~~~~
 
@@ -82,6 +85,31 @@
    When a LinearLayout is used to distribute the space proportionally between
    nested layouts, the baseline alignment property should be turned off to
    make the layout computation faster.
+
+/home/poppa/giglens/app/src/main/res/layout/activity_settings.xml:6: Warning: Possible overdraw: Root element paints background ?android:attr/windowBackground with a theme that also paints a background (inferred theme is @style/Theme.GigLens) [Overdraw]
+    android:background="?android:attr/windowBackground">
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "Overdraw":
+   If you set a background drawable on a root view, then you should use a
+   custom theme where the theme background is null. Otherwise, the theme
+   background will be painted first, only to have your custom background
+   completely cover it; this is called "overdraw".
+
+   NOTE: This detector relies on figuring out which layouts are associated
+   with which activities based on scanning the Java code, and it's currently
+   doing that using an inexact pattern matching algorithm. Therefore, it can
+   incorrectly conclude which activity the layout is associated with and then
+   wrongly complain that a background-theme is hidden.
+
+   If you want your custom background on multiple pages, then you should
+   consider making a custom theme with your custom background and just using
+   that theme instead of a root element background.
+
+   Of course it's possible that your custom drawable is translucent and you
+   want it to be mixed with the background. However, you will get better
+   performance if you pre-mix the background with your drawable and use that
+   resulting image or color as a custom theme background instead.
 
 /home/poppa/giglens/app/src/main/res/mipmap-hdpi/ic_launcher.png: Warning: The resource R.mipmap.ic_launcher appears to be unused [UnusedResources]
 /home/poppa/giglens/app/src/main/res/values/strings.xml:4: Warning: The resource R.string.app_name appears to be unused [UnusedResources]
@@ -123,12 +151,30 @@
    The unique silhouette implies that your launcher icon should not be a
    filled square.
 
-/home/poppa/giglens/app/src/main/java/com/augusteenterprise/giglens/ui/MainActivity.kt:127: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+/home/poppa/giglens/app/src/main/java/com/augusteenterprise/giglens/ui/MainActivity.kt:131: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
                 binding.tvCaptureCount.text = "$count offers captured"
                                               ~~~~~~~~~~~~~~~~~~~~~~~~
-/home/poppa/giglens/app/src/main/java/com/augusteenterprise/giglens/ui/MainActivity.kt:127: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+/home/poppa/giglens/app/src/main/java/com/augusteenterprise/giglens/ui/MainActivity.kt:131: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
                 binding.tvCaptureCount.text = "$count offers captured"
                                                      ~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/java/com/augusteenterprise/giglens/ui/SettingsActivity.kt:85: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+                binding.etCostPerMile.setText("%.2f".format(costPerMile))
+                                               ~~~~
+/home/poppa/giglens/app/src/main/java/com/augusteenterprise/giglens/ui/SettingsActivity.kt:127: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        binding.tvDetectedRegion.text = "Detecting region…"
+                                         ~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/java/com/augusteenterprise/giglens/ui/SettingsActivity.kt:138: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+                        binding.tvDetectedRegion.text = "Detected region: $region"
+                                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/java/com/augusteenterprise/giglens/ui/SettingsActivity.kt:138: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+                        binding.tvDetectedRegion.text = "Detected region: $region"
+                                                         ~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/java/com/augusteenterprise/giglens/ui/SettingsActivity.kt:143: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+                        binding.tvDetectedRegion.text = "Detected region: — (could not resolve)"
+                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/java/com/augusteenterprise/giglens/ui/SettingsActivity.kt:149: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+                    binding.tvDetectedRegion.text = "Detected region: — (no GPS fix)"
+                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
    Explanation for issues of type "SetTextI18n":
    When calling TextView#setText
@@ -152,18 +198,72 @@
 /home/poppa/giglens/app/src/main/res/layout/activity_main.xml:43: Warning: Hardcoded string "0 offers captured", should use @string resource [HardcodedText]
         android:text="0 offers captured"
         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/poppa/giglens/app/src/main/res/layout/activity_main.xml:86: Warning: Hardcoded string "--", should use @string resource [HardcodedText]
+/home/poppa/giglens/app/src/main/res/layout/activity_main.xml:73: Warning: Hardcoded string "Settings", should use @string resource [HardcodedText]
+        android:text="Settings"
+        ~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/res/layout/activity_main.xml:95: Warning: Hardcoded string "--", should use @string resource [HardcodedText]
                 android:text="--"
                 ~~~~~~~~~~~~~~~~~
-/home/poppa/giglens/app/src/main/res/layout/activity_main.xml:94: Warning: Hardcoded string "Avg Pay", should use @string resource [HardcodedText]
+/home/poppa/giglens/app/src/main/res/layout/activity_main.xml:103: Warning: Hardcoded string "Avg Pay", should use @string resource [HardcodedText]
                 android:text="Avg Pay"
                 ~~~~~~~~~~~~~~~~~~~~~~
-/home/poppa/giglens/app/src/main/res/layout/activity_main.xml:110: Warning: Hardcoded string "--", should use @string resource [HardcodedText]
+/home/poppa/giglens/app/src/main/res/layout/activity_main.xml:119: Warning: Hardcoded string "--", should use @string resource [HardcodedText]
                 android:text="--"
                 ~~~~~~~~~~~~~~~~~
-/home/poppa/giglens/app/src/main/res/layout/activity_main.xml:118: Warning: Hardcoded string "Avg $/mi", should use @string resource [HardcodedText]
+/home/poppa/giglens/app/src/main/res/layout/activity_main.xml:127: Warning: Hardcoded string "Avg $/mi", should use @string resource [HardcodedText]
                 android:text="Avg $/mi"
                 ~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/res/layout/activity_settings.xml:17: Warning: Hardcoded string "LOCATION", should use @string resource [HardcodedText]
+            android:text="LOCATION"
+            ~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/res/layout/activity_settings.xml:49: Warning: Hardcoded string "Use GPS for region", should use @string resource [HardcodedText]
+                            android:text="Use GPS for region"
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/res/layout/activity_settings.xml:56: Warning: Hardcoded string "Automatically detects your region for better distance estimates", should use @string resource [HardcodedText]
+                            android:text="Automatically detects your region for better distance estimates"
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/res/layout/activity_settings.xml:72: Warning: Hardcoded string "Detected region: --", should use @string resource [HardcodedText]
+                    android:text="Detected region: --"
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/res/layout/activity_settings.xml:86: Warning: Hardcoded string "Manual region (fallback if GPS off)", should use @string resource [HardcodedText]
+                    android:text="Manual region (fallback if GPS off)"
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/res/layout/activity_settings.xml:95: Warning: Hardcoded string "e.g. Newark, New Jersey, USA", should use @string resource [HardcodedText]
+                    android:hint="e.g. Newark, New Jersey, USA"
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/res/layout/activity_settings.xml:112: Warning: Hardcoded string "SCORING", should use @string resource [HardcodedText]
+            android:text="SCORING"
+            ~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/res/layout/activity_settings.xml:131: Warning: Hardcoded string "Vehicle cost per mile", should use @string resource [HardcodedText]
+                    android:text="Vehicle cost per mile"
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/res/layout/activity_settings.xml:138: Warning: Hardcoded string "IRS standard is $0.90/mile. Adjust for your vehicle.", should use @string resource [HardcodedText]
+                    android:text="IRS standard is $0.90/mile. Adjust for your vehicle."
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/res/layout/activity_settings.xml:148: Warning: Hardcoded string "Cost per mile ($)", should use @string resource [HardcodedText]
+                    android:hint="Cost per mile ($)"
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/res/layout/activity_settings.xml:165: Warning: Hardcoded string "COMMUNITY DATA", should use @string resource [HardcodedText]
+            android:text="COMMUNITY DATA"
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/res/layout/activity_settings.xml:184: Warning: Hardcoded string "Share offer data", should use @string resource [HardcodedText]
+                    android:text="Share offer data"
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/res/layout/activity_settings.xml:191: Warning: Hardcoded string "Help other drivers by contributing anonymized offer data to community benchmarks.", should use @string resource [HardcodedText]
+                    android:text="Help other drivers by contributing anonymized offer data to community benchmarks."
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/res/layout/activity_settings.xml:206: Warning: Hardcoded string "Don't share anything", should use @string resource [HardcodedText]
+                        android:text="Don't share anything"/>
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/res/layout/activity_settings.xml:212: Warning: Hardcoded string "Share anonymized averages only", should use @string resource [HardcodedText]
+                        android:text="Share anonymized averages only"/>
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/res/layout/activity_settings.xml:218: Warning: Hardcoded string "Share individual offers (opted-in)", should use @string resource [HardcodedText]
+                        android:text="Share individual offers (opted-in)"/>
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/poppa/giglens/app/src/main/res/layout/activity_settings.xml:227: Warning: Hardcoded string "Save Settings", should use @string resource [HardcodedText]
+            android:text="Save Settings"
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
    Explanation for issues of type "HardcodedText":
    Hardcoding text attributes directly in layout files is bad for several
@@ -179,4 +279,4 @@
    There are quickfixes to automatically extract this hardcoded string into a
    resource lookup.
 
-0 errors, 31 warnings
+0 errors, 57 warnings

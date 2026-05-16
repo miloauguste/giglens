@@ -1,12 +1,25 @@
 R_DEF: Internal format may change without notice
 local
+id btnSaveSettings
+id btnSettings
 id btnToggleCapture
 id btnViewHistory
+id etCostPerMile
+id etRegion
+id rbSharingAggregate
+id rbSharingIndividual
+id rbSharingNone
+id rgDataSharing
+id switchGps
+id tilCostPerMile
+id tilRegion
 id tvAvgPay
 id tvAvgPerMile
 id tvCaptureCount
+id tvDetectedRegion
 id tvStatus
 layout activity_main
+layout activity_settings
 mipmap ic_launcher
 string accessibility_service_description
 string app_name

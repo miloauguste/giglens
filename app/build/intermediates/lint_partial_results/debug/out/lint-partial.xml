@@ -15,12 +15,12 @@
                     <map id="android.settings.ACCESSIBILITY_SETTINGS (used to start an activity)">
                         <location id="0"
                             file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/augusteenterprise/giglens/ui/MainActivity.kt"
-                            line="101"
+                            line="105"
                             column="31"
-                            startOffset="3714"
-                            endLine="101"
+                            startOffset="3900"
+                            endLine="105"
                             endColumn="77"
-                            endOffset="3760"/>
+                            endOffset="3946"/>
                     </map>
             </map>
             <map id="actionsRegisteredNonExported">
@@ -58,7 +58,7 @@
             endOffset="690"/>
         <entry
             name="model"
-            string="attr[colorPrimary(R)],id[btnViewHistory(U),tvAvgPerMile(U),tvStatus(U),tvCaptureCount(U),btnToggleCapture(U),tvAvgPay(U)],layout[activity_main(U)],mipmap[ic_launcher(D)],string[status_active(D),btn_stop_capture(D),btn_view_history(U),btn_start_capture(U),notification_channel_description(U),notification_text(U),app_name(D),status_no_accessibility(D),notification_title(U),notification_channel_name(U),accessibility_service_description(U),status_idle(U)],style[Theme_GigLens(U),Theme_GigLens_Transparent(U),Theme_MaterialComponents_DayNight_DarkActionBar(R),Widget_MaterialComponents_Button_OutlinedButton(R)],xml[accessibility_service_config(U)];7^0^14^c^b^18,15^17,16^15,19^13;;;"/>
+            string="attr[colorPrimary(R),colorOnBackground(R)],id[tilRegion(D),btnViewHistory(U),btnSettings(U),tvAvgPerMile(U),rbSharingAggregate(U),tvStatus(U),tvCaptureCount(U),tilCostPerMile(D),btnToggleCapture(U),tvDetectedRegion(U),etRegion(U),etCostPerMile(U),tvAvgPay(U),rbSharingNone(U),switchGps(U),rgDataSharing(D),btnSaveSettings(U),rbSharingIndividual(U)],layout[activity_main(U),activity_settings(U)],mipmap[ic_launcher(D)],string[status_active(D),btn_stop_capture(D),btn_view_history(U),btn_start_capture(U),notification_channel_description(U),notification_text(U),app_name(D),status_no_accessibility(D),notification_title(U),notification_channel_name(U),accessibility_service_description(U),status_idle(U)],style[Theme_GigLens(U),Theme_GigLens_Transparent(U),Widget_MaterialComponents_Button_TextButton(R),Theme_MaterialComponents_DayNight_DarkActionBar(R),Widget_MaterialComponents_Button_OutlinedButton(R),Widget_MaterialComponents_TextInputLayout_OutlinedBox(R)],xml[accessibility_service_config(U)];14^0^22^1a^19^27^25,15^0^1^28,23^26,24^23,29^21;;;"/>
         <location id="R.string.btn_stop_capture"
             file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/values/strings.xml"
             line="7"

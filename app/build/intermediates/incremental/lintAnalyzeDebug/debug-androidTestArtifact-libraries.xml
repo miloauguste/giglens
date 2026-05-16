@@ -1,9 +1,9 @@
 <libraries>
   <library
       name="androidx.databinding:viewbinding:8.2.2@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/534c76ed87ae8af2d2cdacd56ea24fcd/transformed/viewbinding-8.2.2/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/f73558a4adcb87c75aba7bebea4b9857/transformed/viewbinding-8.2.2/jars/classes.jar"
       resolved="androidx.databinding:viewbinding:8.2.2"
-      folder="/home/poppa/.gradle/caches/transforms-4/534c76ed87ae8af2d2cdacd56ea24fcd/transformed/viewbinding-8.2.2"
+      folder="/home/poppa/.gradle/caches/transforms-4/f73558a4adcb87c75aba7bebea4b9857/transformed/viewbinding-8.2.2"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -14,9 +14,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="com.google.android.material:material:1.11.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/20f9f55559fa30b9613287a62f2ff52e/transformed/material-1.11.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/24518bc16620e0e47b3b54d6d7ded676/transformed/material-1.11.0/jars/classes.jar"
       resolved="com.google.android.material:material:1.11.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/20f9f55559fa30b9613287a62f2ff52e/transformed/material-1.11.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/24518bc16620e0e47b3b54d6d7ded676/transformed/material-1.11.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -27,9 +27,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.appcompat:appcompat:1.6.1@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/9c75ff4c79870bfab8ed55ae294f9a22/transformed/appcompat-1.6.1/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/cae1d80c2a52b9f5317556be213d3245/transformed/appcompat-1.6.1/jars/classes.jar"
       resolved="androidx.appcompat:appcompat:1.6.1"
-      folder="/home/poppa/.gradle/caches/transforms-4/9c75ff4c79870bfab8ed55ae294f9a22/transformed/appcompat-1.6.1"
+      folder="/home/poppa/.gradle/caches/transforms-4/cae1d80c2a52b9f5317556be213d3245/transformed/appcompat-1.6.1"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -40,9 +40,22 @@
       proguardRules="proguard.txt"/>
   <library
       name="com.google.mlkit:text-recognition:16.0.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/1af207e53cffc799671228a46f4c5a30/transformed/text-recognition-16.0.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/f9e775a1abdf808ff57c6b832470a3c0/transformed/text-recognition-16.0.0/jars/classes.jar"
       resolved="com.google.mlkit:text-recognition:16.0.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/1af207e53cffc799671228a46f4c5a30/transformed/text-recognition-16.0.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/f9e775a1abdf808ff57c6b832470a3c0/transformed/text-recognition-16.0.0"
+      manifest="AndroidManifest.xml"
+      resFolder="res"
+      assetsFolder="assets"
+      lintJar="lint.jar"
+      publicResources="public.txt"
+      symbolFile="R.txt"
+      externalAnnotations="annotations.zip"
+      proguardRules="proguard.txt"/>
+  <library
+      name="com.google.android.gms:play-services-location:21.2.0@aar"
+      jars="/home/poppa/.gradle/caches/transforms-4/2de46151936e391e1bfd0d9504cf55b1/transformed/play-services-location-21.2.0/jars/classes.jar"
+      resolved="com.google.android.gms:play-services-location:21.2.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/2de46151936e391e1bfd0d9504cf55b1/transformed/play-services-location-21.2.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -53,9 +66,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="com.google.android.gms:play-services-mlkit-text-recognition:19.0.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/1316d4282edf3dc7a56128b3499ae151/transformed/play-services-mlkit-text-recognition-19.0.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/d5ff18b7717e4d36f2575821772b4c81/transformed/play-services-mlkit-text-recognition-19.0.0/jars/classes.jar"
       resolved="com.google.android.gms:play-services-mlkit-text-recognition:19.0.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/1316d4282edf3dc7a56128b3499ae151/transformed/play-services-mlkit-text-recognition-19.0.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/d5ff18b7717e4d36f2575821772b4c81/transformed/play-services-mlkit-text-recognition-19.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -66,9 +79,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="com.google.mlkit:text-recognition-bundled-common:16.0.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/e6fcd39ac96d0d1f4e5f81b75016050e/transformed/text-recognition-bundled-common-16.0.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/7b39c9e0c32b53db244a87066b384d96/transformed/text-recognition-bundled-common-16.0.0/jars/classes.jar"
       resolved="com.google.mlkit:text-recognition-bundled-common:16.0.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/e6fcd39ac96d0d1f4e5f81b75016050e/transformed/text-recognition-bundled-common-16.0.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/7b39c9e0c32b53db244a87066b384d96/transformed/text-recognition-bundled-common-16.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -79,9 +92,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="com.google.android.gms:play-services-mlkit-text-recognition-common:19.0.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/732915803c7fa5b3c9114afd059246a6/transformed/play-services-mlkit-text-recognition-common-19.0.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/15e4512823f49776ad56be4ece1024ed/transformed/play-services-mlkit-text-recognition-common-19.0.0/jars/classes.jar"
       resolved="com.google.android.gms:play-services-mlkit-text-recognition-common:19.0.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/732915803c7fa5b3c9114afd059246a6/transformed/play-services-mlkit-text-recognition-common-19.0.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/15e4512823f49776ad56be4ece1024ed/transformed/play-services-mlkit-text-recognition-common-19.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -92,9 +105,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="com.google.mlkit:vision-common:17.3.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/57560cf137748a9e03af290c8c21427d/transformed/vision-common-17.3.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/f2b6af582dd96ae24aec67295a815f38/transformed/vision-common-17.3.0/jars/classes.jar"
       resolved="com.google.mlkit:vision-common:17.3.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/57560cf137748a9e03af290c8c21427d/transformed/vision-common-17.3.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/f2b6af582dd96ae24aec67295a815f38/transformed/vision-common-17.3.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -105,9 +118,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="com.google.mlkit:common:18.8.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/014c63e1cf2049d18689d50f81f87df3/transformed/common-18.8.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/6d6799cf998158f32f149d494e0a3e4d/transformed/common-18.8.0/jars/classes.jar"
       resolved="com.google.mlkit:common:18.8.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/014c63e1cf2049d18689d50f81f87df3/transformed/common-18.8.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/6d6799cf998158f32f149d494e0a3e4d/transformed/common-18.8.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -117,10 +130,10 @@
       externalAnnotations="annotations.zip"
       proguardRules="proguard.txt"/>
   <library
-      name="com.google.android.gms:play-services-base:18.1.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/01bf64fe45ba84c43bc609ad30f2943a/transformed/play-services-base-18.1.0/jars/classes.jar"
-      resolved="com.google.android.gms:play-services-base:18.1.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/01bf64fe45ba84c43bc609ad30f2943a/transformed/play-services-base-18.1.0"
+      name="com.google.android.gms:play-services-base:18.3.0@aar"
+      jars="/home/poppa/.gradle/caches/transforms-4/a24c36c987d3426211406c45bf7f11cf/transformed/play-services-base-18.3.0/jars/classes.jar"
+      resolved="com.google.android.gms:play-services-base:18.3.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/a24c36c987d3426211406c45bf7f11cf/transformed/play-services-base-18.3.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -131,9 +144,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="com.google.mlkit:vision-interfaces:16.2.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/c3ba665e35036b6ba22c898539ba5685/transformed/vision-interfaces-16.2.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/9a52eb61523c22fd1bff07b0bd1126bb/transformed/vision-interfaces-16.2.0/jars/classes.jar"
       resolved="com.google.mlkit:vision-interfaces:16.2.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/c3ba665e35036b6ba22c898539ba5685/transformed/vision-interfaces-16.2.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/9a52eb61523c22fd1bff07b0bd1126bb/transformed/vision-interfaces-16.2.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -143,10 +156,10 @@
       externalAnnotations="annotations.zip"
       proguardRules="proguard.txt"/>
   <library
-      name="com.google.android.gms:play-services-tasks:18.0.2@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/e59e4945c81e080967ac69aad8ad8448/transformed/play-services-tasks-18.0.2/jars/classes.jar"
-      resolved="com.google.android.gms:play-services-tasks:18.0.2"
-      folder="/home/poppa/.gradle/caches/transforms-4/e59e4945c81e080967ac69aad8ad8448/transformed/play-services-tasks-18.0.2"
+      name="com.google.android.gms:play-services-tasks:18.1.0@aar"
+      jars="/home/poppa/.gradle/caches/transforms-4/b952c6c932134cac8a00bc7bb3e1b31b/transformed/play-services-tasks-18.1.0/jars/classes.jar"
+      resolved="com.google.android.gms:play-services-tasks:18.1.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/b952c6c932134cac8a00bc7bb3e1b31b/transformed/play-services-tasks-18.1.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -156,10 +169,10 @@
       externalAnnotations="annotations.zip"
       proguardRules="proguard.txt"/>
   <library
-      name="com.google.android.gms:play-services-basement:18.1.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/5462dd8fe0ab859ac5eaa906c3c1bd81/transformed/play-services-basement-18.1.0/jars/classes.jar"
-      resolved="com.google.android.gms:play-services-basement:18.1.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/5462dd8fe0ab859ac5eaa906c3c1bd81/transformed/play-services-basement-18.1.0"
+      name="com.google.android.gms:play-services-basement:18.3.0@aar"
+      jars="/home/poppa/.gradle/caches/transforms-4/965c4b9aec6fa917f9d5493922749e78/transformed/play-services-basement-18.3.0/jars/classes.jar"
+      resolved="com.google.android.gms:play-services-basement:18.3.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/965c4b9aec6fa917f9d5493922749e78/transformed/play-services-basement-18.3.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -170,9 +183,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.fragment:fragment:1.3.6@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/87f790a12e10097978402ad1cf40264d/transformed/fragment-1.3.6/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/f0fba7f0d7d08dc56b35784696a78770/transformed/fragment-1.3.6/jars/classes.jar"
       resolved="androidx.fragment:fragment:1.3.6"
-      folder="/home/poppa/.gradle/caches/transforms-4/87f790a12e10097978402ad1cf40264d/transformed/fragment-1.3.6"
+      folder="/home/poppa/.gradle/caches/transforms-4/f0fba7f0d7d08dc56b35784696a78770/transformed/fragment-1.3.6"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -183,9 +196,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.activity:activity:1.8.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/c168270d5e67fcaa2a6d03f7623a23f5/transformed/activity-1.8.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/cf858c4b3468b5212aa1dc07adc55e6a/transformed/activity-1.8.0/jars/classes.jar"
       resolved="androidx.activity:activity:1.8.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/c168270d5e67fcaa2a6d03f7623a23f5/transformed/activity-1.8.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/cf858c4b3468b5212aa1dc07adc55e6a/transformed/activity-1.8.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -196,9 +209,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.recyclerview:recyclerview:1.3.2@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/91aacc4df311e8b7883dac880d772c19/transformed/recyclerview-1.3.2/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/4d7dd6b4326babc7b8c7f630778f516b/transformed/recyclerview-1.3.2/jars/classes.jar"
       resolved="androidx.recyclerview:recyclerview:1.3.2"
-      folder="/home/poppa/.gradle/caches/transforms-4/91aacc4df311e8b7883dac880d772c19/transformed/recyclerview-1.3.2"
+      folder="/home/poppa/.gradle/caches/transforms-4/4d7dd6b4326babc7b8c7f630778f516b/transformed/recyclerview-1.3.2"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -209,9 +222,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.appcompat:appcompat-resources:1.6.1@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/8691a6a396934ab4efd7a4833e6e24a6/transformed/appcompat-resources-1.6.1/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/d027b8677f0acea6071bcfc1fbf969fe/transformed/appcompat-resources-1.6.1/jars/classes.jar"
       resolved="androidx.appcompat:appcompat-resources:1.6.1"
-      folder="/home/poppa/.gradle/caches/transforms-4/8691a6a396934ab4efd7a4833e6e24a6/transformed/appcompat-resources-1.6.1"
+      folder="/home/poppa/.gradle/caches/transforms-4/d027b8677f0acea6071bcfc1fbf969fe/transformed/appcompat-resources-1.6.1"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -222,9 +235,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.drawerlayout:drawerlayout:1.1.1@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/31e490f6cf6ac9c35cfe3bb000dca1e5/transformed/drawerlayout-1.1.1/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/2b35e5a51113604a18afb747b1c2e7f5/transformed/drawerlayout-1.1.1/jars/classes.jar"
       resolved="androidx.drawerlayout:drawerlayout:1.1.1"
-      folder="/home/poppa/.gradle/caches/transforms-4/31e490f6cf6ac9c35cfe3bb000dca1e5/transformed/drawerlayout-1.1.1"
+      folder="/home/poppa/.gradle/caches/transforms-4/2b35e5a51113604a18afb747b1c2e7f5/transformed/drawerlayout-1.1.1"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -235,9 +248,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.coordinatorlayout:coordinatorlayout:1.1.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/148bd2257a15fdd9aeb57cb310e5a86c/transformed/coordinatorlayout-1.1.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/262c080cb21a0d6be426d374013ef709/transformed/coordinatorlayout-1.1.0/jars/classes.jar"
       resolved="androidx.coordinatorlayout:coordinatorlayout:1.1.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/148bd2257a15fdd9aeb57cb310e5a86c/transformed/coordinatorlayout-1.1.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/262c080cb21a0d6be426d374013ef709/transformed/coordinatorlayout-1.1.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -248,9 +261,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.dynamicanimation:dynamicanimation:1.0.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/16b877beeeca813911652338f0a19e25/transformed/dynamicanimation-1.0.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/f0bf7a0045b0d2a48e0cea6614468f0a/transformed/dynamicanimation-1.0.0/jars/classes.jar"
       resolved="androidx.dynamicanimation:dynamicanimation:1.0.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/16b877beeeca813911652338f0a19e25/transformed/dynamicanimation-1.0.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/f0bf7a0045b0d2a48e0cea6614468f0a/transformed/dynamicanimation-1.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -261,9 +274,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.transition:transition:1.2.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/fab56aa1f4ba30ab451d264854cb91ac/transformed/transition-1.2.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/027b84d9e24761cdbe566fa09b6a2d55/transformed/transition-1.2.0/jars/classes.jar"
       resolved="androidx.transition:transition:1.2.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/fab56aa1f4ba30ab451d264854cb91ac/transformed/transition-1.2.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/027b84d9e24761cdbe566fa09b6a2d55/transformed/transition-1.2.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -274,9 +287,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.vectordrawable:vectordrawable-animated:1.1.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/31c6251c2b2eb6dfd73692f538753031/transformed/vectordrawable-animated-1.1.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/a87792c2bfd53966fb6811eaca17f39a/transformed/vectordrawable-animated-1.1.0/jars/classes.jar"
       resolved="androidx.vectordrawable:vectordrawable-animated:1.1.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/31c6251c2b2eb6dfd73692f538753031/transformed/vectordrawable-animated-1.1.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/a87792c2bfd53966fb6811eaca17f39a/transformed/vectordrawable-animated-1.1.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -287,9 +300,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.vectordrawable:vectordrawable:1.1.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/f58eecfb681df6ff0a4c0248e880cbf7/transformed/vectordrawable-1.1.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/39f12770fedf1855b9080fca62a42334/transformed/vectordrawable-1.1.0/jars/classes.jar"
       resolved="androidx.vectordrawable:vectordrawable:1.1.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/f58eecfb681df6ff0a4c0248e880cbf7/transformed/vectordrawable-1.1.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/39f12770fedf1855b9080fca62a42334/transformed/vectordrawable-1.1.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -300,9 +313,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.viewpager:viewpager:1.0.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/7afe6723d8c3eafa0a27c09e957eaec7/transformed/viewpager-1.0.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/6fa018efffbb202920188d3aee56b016/transformed/viewpager-1.0.0/jars/classes.jar"
       resolved="androidx.viewpager:viewpager:1.0.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/7afe6723d8c3eafa0a27c09e957eaec7/transformed/viewpager-1.0.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/6fa018efffbb202920188d3aee56b016/transformed/viewpager-1.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -313,9 +326,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.customview:customview:1.1.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/653816ea83f45a307c804a8ba7e703ec/transformed/customview-1.1.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/dbddc03d8e4a4054d61bf02181d688aa/transformed/customview-1.1.0/jars/classes.jar"
       resolved="androidx.customview:customview:1.1.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/653816ea83f45a307c804a8ba7e703ec/transformed/customview-1.1.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/dbddc03d8e4a4054d61bf02181d688aa/transformed/customview-1.1.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -326,9 +339,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.legacy:legacy-support-core-utils:1.0.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/f13c6fbf94eb8c69f1e82930fb8c644a/transformed/legacy-support-core-utils-1.0.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/f5626166cd5cdada0900e84170e493b0/transformed/legacy-support-core-utils-1.0.0/jars/classes.jar"
       resolved="androidx.legacy:legacy-support-core-utils:1.0.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/f13c6fbf94eb8c69f1e82930fb8c644a/transformed/legacy-support-core-utils-1.0.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/f5626166cd5cdada0900e84170e493b0/transformed/legacy-support-core-utils-1.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -339,9 +352,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.loader:loader:1.0.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/03511e16e32ee3f613fd8296bdbd06c0/transformed/loader-1.0.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/a83e5df81d67b187a5ef47f7d7336ef9/transformed/loader-1.0.0/jars/classes.jar"
       resolved="androidx.loader:loader:1.0.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/03511e16e32ee3f613fd8296bdbd06c0/transformed/loader-1.0.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/a83e5df81d67b187a5ef47f7d7336ef9/transformed/loader-1.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -352,9 +365,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.core:core:1.12.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/ea3df0294d03aef598c6eca03c452a36/transformed/core-1.12.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/b0050dc6201b71b76c7914862555ad52/transformed/core-1.12.0/jars/classes.jar"
       resolved="androidx.core:core:1.12.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/ea3df0294d03aef598c6eca03c452a36/transformed/core-1.12.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/b0050dc6201b71b76c7914862555ad52/transformed/core-1.12.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -365,9 +378,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.lifecycle:lifecycle-livedata-core-ktx:2.7.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/b0bc5943ee287f24173afb68bd942bc4/transformed/lifecycle-livedata-core-ktx-2.7.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/f3e5ba51c217154745ae00231faf850f/transformed/lifecycle-livedata-core-ktx-2.7.0/jars/classes.jar"
       resolved="androidx.lifecycle:lifecycle-livedata-core-ktx:2.7.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/b0bc5943ee287f24173afb68bd942bc4/transformed/lifecycle-livedata-core-ktx-2.7.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/f3e5ba51c217154745ae00231faf850f/transformed/lifecycle-livedata-core-ktx-2.7.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -378,9 +391,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.lifecycle:lifecycle-livedata:2.7.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/3ac2beb17d82e312851dcb325b7ede6b/transformed/lifecycle-livedata-2.7.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/b80e83ca2ecff031e8b2eeb503d74897/transformed/lifecycle-livedata-2.7.0/jars/classes.jar"
       resolved="androidx.lifecycle:lifecycle-livedata:2.7.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/3ac2beb17d82e312851dcb325b7ede6b/transformed/lifecycle-livedata-2.7.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/b80e83ca2ecff031e8b2eeb503d74897/transformed/lifecycle-livedata-2.7.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -395,9 +408,9 @@
       resolved="androidx.lifecycle:lifecycle-common:2.7.0"/>
   <library
       name="androidx.lifecycle:lifecycle-livedata-core:2.7.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/bcb5640f42eda86794a59c40d0cabf8c/transformed/lifecycle-livedata-core-2.7.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/a7de8d0f55e22b1b3643935b0396e52e/transformed/lifecycle-livedata-core-2.7.0/jars/classes.jar"
       resolved="androidx.lifecycle:lifecycle-livedata-core:2.7.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/bcb5640f42eda86794a59c40d0cabf8c/transformed/lifecycle-livedata-core-2.7.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/a7de8d0f55e22b1b3643935b0396e52e/transformed/lifecycle-livedata-core-2.7.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -408,9 +421,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.lifecycle:lifecycle-viewmodel:2.7.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/0fc035fe53e1079d43609ab73e230f48/transformed/lifecycle-viewmodel-2.7.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/0ff9aafd271053ade40f8db135605402/transformed/lifecycle-viewmodel-2.7.0/jars/classes.jar"
       resolved="androidx.lifecycle:lifecycle-viewmodel:2.7.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/0fc035fe53e1079d43609ab73e230f48/transformed/lifecycle-viewmodel-2.7.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/0ff9aafd271053ade40f8db135605402/transformed/lifecycle-viewmodel-2.7.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -421,9 +434,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.lifecycle:lifecycle-runtime:2.7.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/d7d5842e9ac765cc09716f36d9cdbf53/transformed/lifecycle-runtime-2.7.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/f340401677ae8247879947b7c3598ac9/transformed/lifecycle-runtime-2.7.0/jars/classes.jar"
       resolved="androidx.lifecycle:lifecycle-runtime:2.7.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/d7d5842e9ac765cc09716f36d9cdbf53/transformed/lifecycle-runtime-2.7.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/f340401677ae8247879947b7c3598ac9/transformed/lifecycle-runtime-2.7.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -434,9 +447,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.lifecycle:lifecycle-runtime-ktx:2.7.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/b043738327876446fea9e2619d9c78d0/transformed/lifecycle-runtime-ktx-2.7.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/13c13bc91d7c2a90fb87ddb6f67131f2/transformed/lifecycle-runtime-ktx-2.7.0/jars/classes.jar"
       resolved="androidx.lifecycle:lifecycle-runtime-ktx:2.7.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/b043738327876446fea9e2619d9c78d0/transformed/lifecycle-runtime-ktx-2.7.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/13c13bc91d7c2a90fb87ddb6f67131f2/transformed/lifecycle-runtime-ktx-2.7.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -447,9 +460,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/2773aa0f3a94389d332078e42b41e5ab/transformed/lifecycle-viewmodel-ktx-2.7.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/eacd273bbad114e84fcabccb95ef3a8f/transformed/lifecycle-viewmodel-ktx-2.7.0/jars/classes.jar"
       resolved="androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/2773aa0f3a94389d332078e42b41e5ab/transformed/lifecycle-viewmodel-ktx-2.7.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/eacd273bbad114e84fcabccb95ef3a8f/transformed/lifecycle-viewmodel-ktx-2.7.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -460,9 +473,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.lifecycle:lifecycle-viewmodel-savedstate:2.7.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/d8c47edea294cb46ab90aa081e4901b4/transformed/lifecycle-viewmodel-savedstate-2.7.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/710230b26aeed37c6d14e9b93b78ab79/transformed/lifecycle-viewmodel-savedstate-2.7.0/jars/classes.jar"
       resolved="androidx.lifecycle:lifecycle-viewmodel-savedstate:2.7.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/d8c47edea294cb46ab90aa081e4901b4/transformed/lifecycle-viewmodel-savedstate-2.7.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/710230b26aeed37c6d14e9b93b78ab79/transformed/lifecycle-viewmodel-savedstate-2.7.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -473,9 +486,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.core:core-ktx:1.12.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/996408d1ac81f3e24a91832c9eb6062d/transformed/core-ktx-1.12.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/a2ffc7e9075170ab6207f8e6a92d2ce0/transformed/core-ktx-1.12.0/jars/classes.jar"
       resolved="androidx.core:core-ktx:1.12.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/996408d1ac81f3e24a91832c9eb6062d/transformed/core-ktx-1.12.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/a2ffc7e9075170ab6207f8e6a92d2ce0/transformed/core-ktx-1.12.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -490,9 +503,9 @@
       resolved="androidx.room:room-common:2.6.1"/>
   <library
       name="androidx.room:room-runtime:2.6.1@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/ccaf83614be97eff5f6799ed08b77aff/transformed/room-runtime-2.6.1/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/98419f258049f9df47000ec4aa77e3eb/transformed/room-runtime-2.6.1/jars/classes.jar"
       resolved="androidx.room:room-runtime:2.6.1"
-      folder="/home/poppa/.gradle/caches/transforms-4/ccaf83614be97eff5f6799ed08b77aff/transformed/room-runtime-2.6.1"
+      folder="/home/poppa/.gradle/caches/transforms-4/98419f258049f9df47000ec4aa77e3eb/transformed/room-runtime-2.6.1"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -503,9 +516,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.room:room-ktx:2.6.1@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/717b73e669e6da3345c61bfb235a666c/transformed/room-ktx-2.6.1/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/a152caf167cbe7e3d438755011cac94c/transformed/room-ktx-2.6.1/jars/classes.jar"
       resolved="androidx.room:room-ktx:2.6.1"
-      folder="/home/poppa/.gradle/caches/transforms-4/717b73e669e6da3345c61bfb235a666c/transformed/room-ktx-2.6.1"
+      folder="/home/poppa/.gradle/caches/transforms-4/a152caf167cbe7e3d438755011cac94c/transformed/room-ktx-2.6.1"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -516,9 +529,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.savedstate:savedstate:1.2.1@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/281684e729cdd4ceffde4664d91c5b17/transformed/savedstate-1.2.1/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/de64d5fa9a058ea2bfde55cdd9133146/transformed/savedstate-1.2.1/jars/classes.jar"
       resolved="androidx.savedstate:savedstate:1.2.1"
-      folder="/home/poppa/.gradle/caches/transforms-4/281684e729cdd4ceffde4664d91c5b17/transformed/savedstate-1.2.1"
+      folder="/home/poppa/.gradle/caches/transforms-4/de64d5fa9a058ea2bfde55cdd9133146/transformed/savedstate-1.2.1"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -529,9 +542,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.annotation:annotation-experimental:1.3.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/7f1c19d75183e4182a55135f586463d3/transformed/annotation-experimental-1.3.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/3971823a9a65e45b99a7855c65b47504/transformed/annotation-experimental-1.3.0/jars/classes.jar"
       resolved="androidx.annotation:annotation-experimental:1.3.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/7f1c19d75183e4182a55135f586463d3/transformed/annotation-experimental-1.3.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/3971823a9a65e45b99a7855c65b47504/transformed/annotation-experimental-1.3.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -554,9 +567,9 @@
       resolved="org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22"/>
   <library
       name="androidx.cursoradapter:cursoradapter:1.0.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/965095e389980cbebf2f6e8fdbc22433/transformed/cursoradapter-1.0.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/b9323b4b4b0f230bd3ec252a31cf5087/transformed/cursoradapter-1.0.0/jars/classes.jar"
       resolved="androidx.cursoradapter:cursoradapter:1.0.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/965095e389980cbebf2f6e8fdbc22433/transformed/cursoradapter-1.0.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/b9323b4b4b0f230bd3ec252a31cf5087/transformed/cursoradapter-1.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -567,9 +580,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.cardview:cardview:1.0.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/5eb5d1fe0a681e7073cc3476609c3f1b/transformed/cardview-1.0.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/820851ae772ff6eaa0239d0145b87194/transformed/cardview-1.0.0/jars/classes.jar"
       resolved="androidx.cardview:cardview:1.0.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/5eb5d1fe0a681e7073cc3476609c3f1b/transformed/cardview-1.0.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/820851ae772ff6eaa0239d0145b87194/transformed/cardview-1.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -580,9 +593,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.sqlite:sqlite-framework:2.4.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/e91abfaeeb422200e69b9f6c15c0615c/transformed/sqlite-framework-2.4.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/72e564f8f88f954b1e656ca3bbb133a6/transformed/sqlite-framework-2.4.0/jars/classes.jar"
       resolved="androidx.sqlite:sqlite-framework:2.4.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/e91abfaeeb422200e69b9f6c15c0615c/transformed/sqlite-framework-2.4.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/72e564f8f88f954b1e656ca3bbb133a6/transformed/sqlite-framework-2.4.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -593,9 +606,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.sqlite:sqlite:2.4.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/fbb3373f15987721e7d3541987aa9233/transformed/sqlite-2.4.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/3fb02c2e3fd8d0256dd77e403cadc3c8/transformed/sqlite-2.4.0/jars/classes.jar"
       resolved="androidx.sqlite:sqlite:2.4.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/fbb3373f15987721e7d3541987aa9233/transformed/sqlite-2.4.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/3fb02c2e3fd8d0256dd77e403cadc3c8/transformed/sqlite-2.4.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -606,9 +619,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.versionedparcelable:versionedparcelable:1.1.1@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/f42d38a5b2b097ab9f021f493af95023/transformed/versionedparcelable-1.1.1/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/062a2c05be029e1c6442baa5707a90b6/transformed/versionedparcelable-1.1.1/jars/classes.jar"
       resolved="androidx.versionedparcelable:versionedparcelable:1.1.1"
-      folder="/home/poppa/.gradle/caches/transforms-4/f42d38a5b2b097ab9f021f493af95023/transformed/versionedparcelable-1.1.1"
+      folder="/home/poppa/.gradle/caches/transforms-4/062a2c05be029e1c6442baa5707a90b6/transformed/versionedparcelable-1.1.1"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -623,9 +636,9 @@
       resolved="androidx.collection:collection:1.1.0"/>
   <library
       name="androidx.arch.core:core-runtime:2.2.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/c2f2e9ffb278cca87b700c6574ebb53f/transformed/core-runtime-2.2.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/2a18618ab31454d2fc8dbc130e2f3530/transformed/core-runtime-2.2.0/jars/classes.jar"
       resolved="androidx.arch.core:core-runtime:2.2.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/c2f2e9ffb278cca87b700c6574ebb53f/transformed/core-runtime-2.2.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/2a18618ab31454d2fc8dbc130e2f3530/transformed/core-runtime-2.2.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -640,9 +653,9 @@
       resolved="androidx.arch.core:core-common:2.2.0"/>
   <library
       name="com.google.android.datatransport:transport-backend-cct:2.3.3@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/e6e6cea1ffbfaf66289ee91ef51beca7/transformed/transport-backend-cct-2.3.3/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/b3ad3306c7901ccea991b727a523a2e5/transformed/transport-backend-cct-2.3.3/jars/classes.jar"
       resolved="com.google.android.datatransport:transport-backend-cct:2.3.3"
-      folder="/home/poppa/.gradle/caches/transforms-4/e6e6cea1ffbfaf66289ee91ef51beca7/transformed/transport-backend-cct-2.3.3"
+      folder="/home/poppa/.gradle/caches/transforms-4/b3ad3306c7901ccea991b727a523a2e5/transformed/transport-backend-cct-2.3.3"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -653,9 +666,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="com.google.android.datatransport:transport-runtime:2.2.6@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/746d05780c336280edb1f2c12eb7ef54/transformed/transport-runtime-2.2.6/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/fcef7b638932afb3963a06749cded3a0/transformed/transport-runtime-2.2.6/jars/classes.jar"
       resolved="com.google.android.datatransport:transport-runtime:2.2.6"
-      folder="/home/poppa/.gradle/caches/transforms-4/746d05780c336280edb1f2c12eb7ef54/transformed/transport-runtime-2.2.6"
+      folder="/home/poppa/.gradle/caches/transforms-4/fcef7b638932afb3963a06749cded3a0/transformed/transport-runtime-2.2.6"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -666,9 +679,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="com.google.android.datatransport:transport-api:2.2.1@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/11a4ec6556e501a1dd7cdc918c9be445/transformed/transport-api-2.2.1/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/9263931b33a6d6ceec1c35199e409c34/transformed/transport-api-2.2.1/jars/classes.jar"
       resolved="com.google.android.datatransport:transport-api:2.2.1"
-      folder="/home/poppa/.gradle/caches/transforms-4/11a4ec6556e501a1dd7cdc918c9be445/transformed/transport-api-2.2.1"
+      folder="/home/poppa/.gradle/caches/transforms-4/9263931b33a6d6ceec1c35199e409c34/transformed/transport-api-2.2.1"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -679,9 +692,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="com.google.firebase:firebase-components:16.1.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/e704ae6c0a667e417d8a616350e51998/transformed/firebase-components-16.1.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/56a55d34af00b41fd6924a8994f44ed3/transformed/firebase-components-16.1.0/jars/classes.jar"
       resolved="com.google.firebase:firebase-components:16.1.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/e704ae6c0a667e417d8a616350e51998/transformed/firebase-components-16.1.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/56a55d34af00b41fd6924a8994f44ed3/transformed/firebase-components-16.1.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -692,9 +705,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="com.google.firebase:firebase-encoders-json:17.1.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/32c836244253e9b7061789af9e18fcdf/transformed/firebase-encoders-json-17.1.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/53aef34b5b383e4b1a3dfafe67373c1e/transformed/firebase-encoders-json-17.1.0/jars/classes.jar"
       resolved="com.google.firebase:firebase-encoders-json:17.1.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/32c836244253e9b7061789af9e18fcdf/transformed/firebase-encoders-json-17.1.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/53aef34b5b383e4b1a3dfafe67373c1e/transformed/firebase-encoders-json-17.1.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -709,9 +722,9 @@
       resolved="com.google.firebase:firebase-encoders:16.1.0"/>
   <library
       name="androidx.interpolator:interpolator:1.0.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/aab9f7edf9a7a9e2437ba970620e295b/transformed/interpolator-1.0.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/568f18730595378b9ffa40752c833385/transformed/interpolator-1.0.0/jars/classes.jar"
       resolved="androidx.interpolator:interpolator:1.0.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/aab9f7edf9a7a9e2437ba970620e295b/transformed/interpolator-1.0.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/568f18730595378b9ffa40752c833385/transformed/interpolator-1.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -722,9 +735,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.documentfile:documentfile:1.0.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/29d681ece1348861c6e8b548e189d6d8/transformed/documentfile-1.0.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/c2f45c9293e923a06808c5e7a94e63aa/transformed/documentfile-1.0.0/jars/classes.jar"
       resolved="androidx.documentfile:documentfile:1.0.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/29d681ece1348861c6e8b548e189d6d8/transformed/documentfile-1.0.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/c2f45c9293e923a06808c5e7a94e63aa/transformed/documentfile-1.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -735,9 +748,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.localbroadcastmanager:localbroadcastmanager:1.0.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/cbeae02b38991b4e333c133f56ad91f5/transformed/localbroadcastmanager-1.0.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/1b2a0885bb9c13c23004f11a31231c75/transformed/localbroadcastmanager-1.0.0/jars/classes.jar"
       resolved="androidx.localbroadcastmanager:localbroadcastmanager:1.0.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/cbeae02b38991b4e333c133f56ad91f5/transformed/localbroadcastmanager-1.0.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/1b2a0885bb9c13c23004f11a31231c75/transformed/localbroadcastmanager-1.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -748,9 +761,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.print:print:1.0.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/6ca52a60379859ed8c0bccfc0fc1c628/transformed/print-1.0.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/c7d1b23731a90e8e79a3e13b8b157949/transformed/print-1.0.0/jars/classes.jar"
       resolved="androidx.print:print:1.0.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/6ca52a60379859ed8c0bccfc0fc1c628/transformed/print-1.0.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/c7d1b23731a90e8e79a3e13b8b157949/transformed/print-1.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -761,9 +774,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="androidx.exifinterface:exifinterface:1.0.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/070ee82daae3c70f0953854b7b4765f3/transformed/exifinterface-1.0.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/e8ffe8e864cf63849477db729573945f/transformed/exifinterface-1.0.0/jars/classes.jar"
       resolved="androidx.exifinterface:exifinterface:1.0.0"
-      folder="/home/poppa/.gradle/caches/transforms-4/070ee82daae3c70f0953854b7b4765f3/transformed/exifinterface-1.0.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/e8ffe8e864cf63849477db729573945f/transformed/exifinterface-1.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -794,9 +807,9 @@
       resolved="androidx.resourceinspection:resourceinspection-annotation:1.0.1"/>
   <library
       name="androidx.constraintlayout:constraintlayout:2.1.4@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/c7e3088cf10d8dcd827360abf8af0908/transformed/constraintlayout-2.1.4/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/9fc798412cb38fc30c968c7189237533/transformed/constraintlayout-2.1.4/jars/classes.jar"
       resolved="androidx.constraintlayout:constraintlayout:2.1.4"
-      folder="/home/poppa/.gradle/caches/transforms-4/c7e3088cf10d8dcd827360abf8af0908/transformed/constraintlayout-2.1.4"
+      folder="/home/poppa/.gradle/caches/transforms-4/9fc798412cb38fc30c968c7189237533/transformed/constraintlayout-2.1.4"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -811,9 +824,9 @@
       resolved="javax.inject:javax.inject:1"/>
   <library
       name="com.google.android.odml:image:1.0.0-beta1@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/9249b678837717d1f4f354fa90bbc056/transformed/image-1.0.0-beta1/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/cecbcbfe63f37ba84a9cfa71d640bbe1/transformed/image-1.0.0-beta1/jars/classes.jar"
       resolved="com.google.android.odml:image:1.0.0-beta1"
-      folder="/home/poppa/.gradle/caches/transforms-4/9249b678837717d1f4f354fa90bbc056/transformed/image-1.0.0-beta1"
+      folder="/home/poppa/.gradle/caches/transforms-4/cecbcbfe63f37ba84a9cfa71d640bbe1/transformed/image-1.0.0-beta1"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -831,10 +844,10 @@
       project=":app"/>
   <library
       name="androidx.viewpager2:viewpager2:1.0.0@aar"
-      jars="/home/poppa/.gradle/caches/transforms-4/70fb48dcc6dd5a286e21d3be3865f18d/transformed/viewpager2-1.0.0/jars/classes.jar"
+      jars="/home/poppa/.gradle/caches/transforms-4/04acfa521068f9694d5238de3828b786/transformed/viewpager2-1.0.0/jars/classes.jar"
       resolved="androidx.viewpager2:viewpager2:1.0.0"
       provided="true"
-      folder="/home/poppa/.gradle/caches/transforms-4/70fb48dcc6dd5a286e21d3be3865f18d/transformed/viewpager2-1.0.0"
+      folder="/home/poppa/.gradle/caches/transforms-4/04acfa521068f9694d5238de3828b786/transformed/viewpager2-1.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"

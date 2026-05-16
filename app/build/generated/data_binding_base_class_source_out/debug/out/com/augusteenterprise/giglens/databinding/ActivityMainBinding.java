@@ -21,6 +21,9 @@ public final class ActivityMainBinding implements ViewBinding {
   private final LinearLayout rootView;
 
   @NonNull
+  public final MaterialButton btnSettings;
+
+  @NonNull
   public final MaterialButton btnToggleCapture;
 
   @NonNull
@@ -38,11 +41,12 @@ public final class ActivityMainBinding implements ViewBinding {
   @NonNull
   public final TextView tvStatus;
 
-  private ActivityMainBinding(@NonNull LinearLayout rootView,
+  private ActivityMainBinding(@NonNull LinearLayout rootView, @NonNull MaterialButton btnSettings,
       @NonNull MaterialButton btnToggleCapture, @NonNull MaterialButton btnViewHistory,
       @NonNull TextView tvAvgPay, @NonNull TextView tvAvgPerMile, @NonNull TextView tvCaptureCount,
       @NonNull TextView tvStatus) {
     this.rootView = rootView;
+    this.btnSettings = btnSettings;
     this.btnToggleCapture = btnToggleCapture;
     this.btnViewHistory = btnViewHistory;
     this.tvAvgPay = tvAvgPay;
@@ -78,6 +82,12 @@ public final class ActivityMainBinding implements ViewBinding {
     // This is done to optimize the compiled bytecode for size and performance.
     int id;
     missingId: {
+      id = R.id.btnSettings;
+      MaterialButton btnSettings = ViewBindings.findChildViewById(rootView, id);
+      if (btnSettings == null) {
+        break missingId;
+      }
+
       id = R.id.btnToggleCapture;
       MaterialButton btnToggleCapture = ViewBindings.findChildViewById(rootView, id);
       if (btnToggleCapture == null) {
@@ -114,8 +124,8 @@ public final class ActivityMainBinding implements ViewBinding {
         break missingId;
       }
 
-      return new ActivityMainBinding((LinearLayout) rootView, btnToggleCapture, btnViewHistory,
-          tvAvgPay, tvAvgPerMile, tvCaptureCount, tvStatus);
+      return new ActivityMainBinding((LinearLayout) rootView, btnSettings, btnToggleCapture,
+          btnViewHistory, tvAvgPay, tvAvgPerMile, tvCaptureCount, tvStatus);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

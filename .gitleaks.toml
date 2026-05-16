@@ -1,0 +1,14 @@
+# GigLens Gitleaks configuration
+# Author: Claude (Anthropic)
+title = "GigLens Gitleaks Config"
+
+[allowlist]
+description = "Allowlisted files and paths"
+paths = [
+    "local.properties",
+    "gig_summary.md",
+    "dependency-check-suppressions.xml",
+    "security_reports/.*",
+    "app/build/.*",
+    ".*.html",
+]

@@ -3212,6 +3212,8 @@ id bounce
 id bounceBoth
 id bounceEnd
 id bounceStart
+id btnSaveSettings
+id btnSettings
 id btnToggleCapture
 id btnViewHistory
 id buttonPanel
@@ -3296,6 +3298,8 @@ id end
 id endToStart
 id enterAlways
 id enterAlwaysCollapsed
+id etCostPerMile
+id etRegion
 id exitUntilCollapsed
 id expand_activities_button
 id expanded_menu
@@ -3478,9 +3482,13 @@ id progress_circular
 id progress_horizontal
 id radio
 id ratio
+id rbSharingAggregate
+id rbSharingIndividual
+id rbSharingNone
 id rectangles
 id report_drawn
 id reverseSawtooth
+id rgDataSharing
 id right
 id rightToLeft
 id right_icon
@@ -3548,6 +3556,7 @@ id stretch
 id submenuarrow
 id submit_area
 id supportScrollUp
+id switchGps
 id tabMode
 id tag_accessibility_actions
 id tag_accessibility_clickable_spans
@@ -3578,6 +3587,8 @@ id textinput_helper_text
 id textinput_placeholder
 id textinput_prefix_text
 id textinput_suffix_text
+id tilCostPerMile
+id tilRegion
 id time
 id title
 id titleDividerNoCustom
@@ -3597,6 +3608,7 @@ id triangle
 id tvAvgPay
 id tvAvgPerMile
 id tvCaptureCount
+id tvDetectedRegion
 id tvStatus
 id unchecked
 id uniform
@@ -3738,6 +3750,7 @@ layout abc_search_view
 layout abc_select_dialog_material
 layout abc_tooltip
 layout activity_main
+layout activity_settings
 layout custom_dialog
 layout design_bottom_navigation_item
 layout design_bottom_sheet_dialog
