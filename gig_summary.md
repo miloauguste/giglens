@@ -332,3 +332,66 @@ MEDIUM — before Play Store:
 - Position persistence: appConfigDao.setValue(WIDGET_X, WIDGET_Y) on drag end
 
 ### Reference rendering: giglens_draggable_widget_demo
+
+---
+
+## APPROVED UI DESIGN — Onboarding / Registration Flow (May 16, 2026)
+
+### Flow: 4 screens (approved)
+1. Welcome — logo, value props, Get Started / Sign In
+2. Vehicle — year, make, model, mileage, fuel type → estimated cost per mile
+3. Preferences — region, primary platform, minimum net value threshold
+4. Permissions — overlay (required), location (optional)
+5. Account — optional, unlocks Pro features
+
+### Vehicle screen (step 1) — approved design
+Captures:
+- Year (dropdown)
+- Make (dropdown)
+- Model (dropdown)
+- Current mileage — affects maintenance cost estimate
+- Fuel type — Gas / Electric / Hybrid
+
+Cost per mile breakdown shown live:
+- Fuel cost per mile (from EPA MPG data for vehicle)
+- Wear cost per mile (tire/brake estimate)
+- Maintenance cost per mile (age/mileage adjusted)
+- Total replaces flat IRS $0.90 rate
+
+### New DB table required: vehicle_profiles
+Fields needed:
+- id (PK)
+- year (INT)
+- make (TEXT)
+- model (TEXT)
+- current_mileage (INT)
+- fuel_type (TEXT) — GAS | ELECTRIC | HYBRID
+- epa_mpg_city (REAL)
+- epa_mpg_highway (REAL)
+- estimated_cost_per_mile (REAL) — computed, stored for scoring
+- created_at (LONG)
+- updated_at (LONG)
+
+### New scorer_config keys needed:
+- vehicle_fuel_cost_per_mile — from EPA MPG + local gas price
+- vehicle_wear_cost_per_mile — tire/brake estimate
+- vehicle_maintenance_cost_per_mile — age/mileage adjusted
+- local_gas_price — set from region, adjustable in Settings
+
+### EPA data source (free, no API key):
+https://www.fueleconomy.gov/feg/ws/index.shtml
+- /api/vehicle/menu/year — get available years
+- /api/vehicle/menu/make?year=X — get makes for year
+- /api/vehicle/menu/model?year=X&make=Y — get models
+- /api/vehicle/menu/options?year=X&make=Y&model=Z — get trim options
+- Returns MPG city/highway in JSON, free, no auth
+
+### Implementation plan:
+1. Add vehicle_profiles Room entity + DAO + migration
+2. Create VehicleSetupActivity.kt (Compose) for onboarding screen
+3. Create FuelEconomyApiClient.kt — calls fueleconomy.gov API
+4. CostPerMileCalculator.kt — fuel + wear + maintenance formula
+5. Wire calculated cost_per_mile to scorer_config on setup complete
+6. Add vehicle info display to Settings screen
+
+### Onboarding approved rendering: giglens_onboarding_vehicle
