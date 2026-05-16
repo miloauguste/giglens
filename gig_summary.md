@@ -514,3 +514,48 @@ New app_config keys:
 - 2FA toggle in Settings → Account section
 - Setup confirmation screen
 - "Check your email" waiting screen with resend countdown
+
+---
+
+## APPROVED UI DESIGN — 2FA OTP Screen (May 16, 2026)
+
+### Layout approved by Milo Auguste
+
+### OTP box rule (mandatory — no exceptions):
+Never use fixed pixel widths for OTP boxes.
+Always use fluid grid that divides available width equally.
+
+### Compose pattern (approved):
+```kotlin
+Row(modifier = Modifier.fillMaxWidth()) {
+    repeat(6) {
+        Box(
+            modifier = Modifier
+                .weight(1f)      // equal share of available width
+                .aspectRatio(1f) // always square, never overflow
+                .padding(3.dp)
+                .border(...)
+        ) { /* digit */ }
+    }
+}
+```
+
+### Font scaling:
+Use sp units for digit text inside OTP boxes.
+Never hardcode px — must respect system font size settings.
+
+### Screen states (all approved):
+1. Waiting — first N boxes filled (active input), rest empty with placeholder
+2. Wrong code — all boxes red border, attempt counter decremented, error banner
+3. Locked — lock icon, all boxes dimmed, verify button disabled, countdown timer
+
+### Sticky bottom (same rule as all form screens):
+Verify button and Resend link always pinned at bottom.
+Content scrolls, buttons never scroll off screen.
+
+### Resend flow:
+- Tap Resend → button hidden, 60s countdown shown
+- Countdown expires → button reappears
+- Max 5 resends per hour enforced server-side
+
+### Reference rendering: giglens_2fa_responsive
