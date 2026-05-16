@@ -453,3 +453,64 @@ New app_config keys:
 6. Save widget position to app_config on drag end
 
 ### Reference rendering: giglens_widget_gesture_states
+
+---
+
+## FEATURE SPEC — Two-Factor Authentication (May 16, 2026)
+
+### Method: Email OTP only
+- 6-digit code sent to registered email address
+- Code expires after 10 minutes
+- 3 attempts before lockout (5 minute cooldown)
+- Resend available after 60 seconds
+
+### Enforcement: Optional, driver-controlled
+- Default: OFF
+- Enabled in Settings → Account → Two-Factor Authentication
+- Not prompted during onboarding — keeps registration smooth
+- No 2FA requirement for free tier or Pro tier
+
+### UX flow when enabled:
+1. Driver opens GigLens after session expiry
+2. Email + password accepted
+3. "Check your email" screen shown
+4. Driver enters 6-digit code
+5. Session granted on success
+
+### UX flow for setup (in Settings):
+1. Driver taps "Enable Two-Factor Authentication"
+2. Confirmation dialog explains what it does
+3. Verification email sent immediately
+4. Driver enters code to confirm setup
+5. Toggle switches ON — active from next login
+
+### Security requirements:
+- OTP generated server-side using cryptographically secure random
+- OTP hashed before storage (never stored in plain text)
+- OTP delivery via transactional email (SendGrid or similar)
+- Rate limit: max 5 OTP requests per hour per account
+- Brute force protection: 3 failed attempts = 5 min lockout
+- Audit log: all 2FA events logged server-side
+
+### Android implementation:
+- No third-party SDK needed — pure email flow
+- OTP input: 6 individual digit fields (standard Android pattern)
+- Auto-read from SMS not needed (email OTP)
+- EncryptedSharedPreferences stores "2fa_verified" session flag
+- Session flag cleared on logout or 30-day expiry
+
+### New app_config keys:
+- two_fa_enabled: "true" | "false" (default: "false")
+- two_fa_method: "EMAIL" (only supported method currently)
+
+### New backend endpoints needed (Phase 2):
+- POST /auth/2fa/send — sends OTP to registered email
+- POST /auth/2fa/verify — validates OTP, returns session token
+- POST /auth/2fa/enable — enables 2FA after verification
+- POST /auth/2fa/disable — disables 2FA after re-verification
+
+### UI screens needed:
+- OTP entry screen (6-digit input, resend timer, 3-attempt limit)
+- 2FA toggle in Settings → Account section
+- Setup confirmation screen
+- "Check your email" waiting screen with resend countdown
