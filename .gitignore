@@ -1,1 +1,14 @@
 local.properties
+
+# Build outputs
+app/build/
+build/
+.gradle/
+
+# Security scan reports (local only)
+security_reports/
+
+# Keystore files
+*.jks
+*.keystore
+keystore.properties
