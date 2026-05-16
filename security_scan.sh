@@ -186,19 +186,22 @@ echo ""
 if [ -f "$APK" ]; then
     info "Running MobSF static analysis..."
     # Start MobSF container
-    MOBSF_PORT=8000
+    MOBSF_PORT=8001
     CONTAINER_ID=$(docker run -d \
         -p $MOBSF_PORT:8000 \
         opensecurity/mobile-security-framework-mobsf:latest 2>/dev/null)
 
     if [ -n "$CONTAINER_ID" ]; then
         info "MobSF container started: $CONTAINER_ID"
-        sleep 15  # Wait for MobSF to initialize
+        sleep 30  # Wait for MobSF to initialize
+        # Extract API key from container logs (strips ANSI color codes)
+        MOBSF_API_KEY=$(docker logs $CONTAINER_ID 2>&1 | grep 'REST API Key' | tail -1 | sed 's/.*REST API Key: //' | sed 's/\x1b\[[0-9;]*m//g' | tr -d '\r\n ')
+        info "MobSF API key: ${MOBSF_API_KEY:0:8}..."
 
         # Upload APK
         UPLOAD=$(curl -s -F "file=@$APK" \
             "http://localhost:$MOBSF_PORT/api/v1/upload" \
-            -H "Authorization: mobsf" 2>/dev/null || echo "")
+            -H "Authorization: $MOBSF_API_KEY" 2>/dev/null || echo "")
 
         if echo "$UPLOAD" | grep -q "hash"; then
             HASH=$(echo "$UPLOAD" | python3 -c "import sys,json; print(json.load(sys.stdin)['hash'])" 2>/dev/null || echo "")
@@ -207,14 +210,14 @@ if [ -f "$APK" ]; then
                 curl -s -X POST \
                     "http://localhost:$MOBSF_PORT/api/v1/scan" \
                     -d "hash=$HASH" \
-                    -H "Authorization: mobsf" > /dev/null 2>&1
+                    -H "Authorization: $MOBSF_API_KEY" > /dev/null 2>&1
                 sleep 30  # Wait for scan
 
                 # Get score
                 SCORE_JSON=$(curl -s \
                     "http://localhost:$MOBSF_PORT/api/v1/scorecard" \
                     -d "hash=$HASH" \
-                    -H "Authorization: mobsf" 2>/dev/null || echo "")
+                    -H "Authorization: $MOBSF_API_KEY" 2>/dev/null || echo "")
 
                 if echo "$SCORE_JSON" | grep -q "security_score"; then
                     SCORE=$(echo "$SCORE_JSON" | python3 -c \
