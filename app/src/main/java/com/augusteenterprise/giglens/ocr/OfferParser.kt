@@ -5,6 +5,13 @@ package com.augusteenterprise.giglens.ocr
 
 import android.util.Log
 
+data class DeliveryEstimate(
+    val deliveryLegMiles: Double,   // pickup → dropoff estimated miles
+    val totalMiles: Double,         // driver → pickup + pickup → dropoff
+    val timeRemainingMinutes: Int,  // minutes until deliver-by deadline
+    val status: String              // "OK", "EXPIRED", "IMPOSSIBLE"
+)
+
 data class ParsedOffer(
     val payAmount: Double? = null,
     val distance: Double? = null,
@@ -90,6 +97,97 @@ object OfferParser {
     }
 
     /**
+     * Extracts current time from the status bar line (always first line of OCR).
+     * Status bar format: "2:58 X oo •" or "4:40 VOO MO•" etc.
+     * Returns time as total minutes since midnight for easy math.
+     *
+     * CORRECT: "2:58 X oo •" → 178 minutes (2*60+58)
+     * WRONG:   parsing any line for time — must be status bar only (first non-empty line)
+     */
+    fun extractCurrentTime(text: String, deliverByMinutes: Int? = null): Int? {
+        val firstLine = text.lines().firstOrNull { it.isNotBlank() } ?: return null
+        val timeRegex = Regex("""^(\d{1,2}):(\d{2})""")
+        val match = timeRegex.find(firstLine.trim()) ?: return null
+        var hours = match.groupValues[1].toIntOrNull() ?: return null
+        val minutes = match.groupValues[2].toIntOrNull() ?: return null
+        if (hours > 12 || minutes > 59) return null
+
+        // Status bar has no AM/PM — infer from deliver-by time
+        // If deliver-by is PM (>=720 min) and current hour is small, assume PM
+        // CORRECT: deliverBy=917(3PM), currentHour=2 → 2+12=14 → 14*60+58=898 min
+        // WRONG:   leaving as 2*60+58=178 min → 739 min time remaining
+        if (deliverByMinutes != null && deliverByMinutes >= 12 * 60 && hours < 8) {
+            hours += 12
+        }
+
+        Log.d(TAG, "extractCurrentTime: '$firstLine' → ${hours}h${minutes}m = ${hours*60+minutes}min")
+        return hours * 60 + minutes
+    }
+
+    /**
+     * Extracts deliver-by time as total minutes since midnight.
+     * Returns null if not found.
+     *
+     * CORRECT: "Deliver by 3:17 PM" → 15*60+17 = 917 minutes
+     * WRONG:   returning raw string — caller needs minutes for math
+     */
+    fun extractDeliverByMinutes(text: String): Int? {
+        val regex = Regex("""[Dd]eliver\s+by\s+(\d{1,2}):(\d{2})\s*(AM|PM)""", RegexOption.IGNORE_CASE)
+        val match = regex.find(text) ?: return null
+        var hours = match.groupValues[1].toIntOrNull() ?: return null
+        val minutes = match.groupValues[2].toIntOrNull() ?: return null
+        val ampm = match.groupValues[3].uppercase()
+        if (ampm == "PM" && hours != 12) hours += 12
+        if (ampm == "AM" && hours == 12) hours = 0
+        Log.d(TAG, "extractDeliverByMinutes: → ${hours}h${minutes}m = ${hours*60+minutes} min")
+        return hours * 60 + minutes
+    }
+
+    /**
+     * Estimates delivery leg distance (pickup → dropoff) using time math.
+     * Formula: (time_remaining - prep_time) × avg_speed_mph / 60
+     *
+     * CORRECT: 19 min remaining, 2 min prep, 45 mph → (19-2) × 45/60 = 12.75 mi
+     * WRONG:   using 20 mph — unrealistic for suburban NJ gig driving
+     *
+     * @param currentTimeMinutes  from extractCurrentTime()
+     * @param deliverByMinutes    from extractDeliverByMinutes()
+     * @param avgSpeedMph         from scorer_config, default 45
+     * @param prepTimeMinutes     from scorer_config, default 2
+     */
+    fun estimateDeliveryLegMiles(
+        currentTimeMinutes: Int,
+        deliverByMinutes: Int,
+        pickupDistanceMiles: Double,
+        avgSpeedMph: Double = 45.0,
+        prepTimeMinutes: Int = 2
+    ): DeliveryEstimate {
+        val timeRemainingMin = deliverByMinutes - currentTimeMinutes
+        if (timeRemainingMin <= 0) {
+            Log.d(TAG, "estimateDeliveryLegMiles: offer already expired")
+            return DeliveryEstimate(0.0, 0.0, timeRemainingMin, "EXPIRED")
+        }
+
+        val driveTimeToPickupMin = (pickupDistanceMiles / avgSpeedMph) * 60
+        val timeForDeliveryMin = timeRemainingMin - driveTimeToPickupMin - prepTimeMinutes
+
+        if (timeForDeliveryMin <= 0) {
+            Log.d(TAG, "estimateDeliveryLegMiles: impossible — not enough time to reach pickup")
+            return DeliveryEstimate(0.0, pickupDistanceMiles, timeRemainingMin, "IMPOSSIBLE")
+        }
+
+        val deliveryLegMiles = (timeForDeliveryMin / 60.0) * avgSpeedMph
+        val totalMiles = pickupDistanceMiles + deliveryLegMiles
+
+        Log.d(TAG, "estimateDeliveryLegMiles: ${timeRemainingMin}min remaining | " +
+            "${driveTimeToPickupMin.toInt()}min to pickup | " +
+            "${timeForDeliveryMin.toInt()}min delivery | " +
+            "${deliveryLegMiles}mi delivery leg | ${totalMiles}mi total")
+
+        return DeliveryEstimate(deliveryLegMiles, totalMiles, timeRemainingMin, "OK")
+    }
+
+    /**
      * Extracts distance in miles.
      */
     private fun extractDistance(text: String): Double? {
@@ -125,6 +223,8 @@ object OfferParser {
                             c.contains("accept") || c.contains("decline")
                             || c.contains("customer") || c.contains("dropoff")
                             || c.contains("mapbox") || c.contains("deliver")
+                            || c.contains("center") || c.contains("township")
+                            || c.contains("guaranteed") || c.contains("incl")
                         }
                     ) {
                         return candidate

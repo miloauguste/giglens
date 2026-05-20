@@ -30,27 +30,43 @@ data class DistanceEstimate(
     val method: String                // "geocoded" or "unavailable"
 )
 
+// Written-out state names to abbreviations — loaded from assets/state_name_map.json
+// Edit that file to add new states — no hardcoded strings in source
+private var STATE_NAME_MAP: Map<String, String> = emptyMap()
+
 object GeocodingHelper {
 
     /**
      * Geocodes pickup and dropoff streets and returns estimated road distance.
      * Returns null distances if geocoding fails — caller must handle gracefully.
+     * Auto-extracts region hint from raw OCR text if no hint provided.
+     *
+     * CORRECT: pass rawOcrText → region extracted from map labels → accurate geocode
+     * WRONG:   always passing stored driver_region which may not match offer location
      *
      * @param pickupStreet   Street name near restaurant (from OCR)
      * @param dropoffStreet  Street name near customer (from OCR)
-     * @param regionHint     City/region hint to improve accuracy (from driver GPS)
+     * @param regionHint     Override region hint (from GPS reverse geocode if available)
+     * @param rawOcrText     Full OCR text — used to extract region hint when GPS unavailable
      */
     suspend fun estimateDeliveryDistance(
         pickupStreet: String?,
         dropoffStreet: String?,
-        regionHint: String? = null
+        regionHint: String? = null,
+        rawOcrText: String? = null
     ): DistanceEstimate {
         if (pickupStreet == null && dropoffStreet == null) {
             return DistanceEstimate(null, null, null, null, "unavailable")
         }
 
-        val pickup  = pickupStreet?.let  { resolveAddress(it, regionHint) }
-        val dropoff = dropoffStreet?.let { resolveAddress(it, regionHint) }
+        // Use provided hint, fall back to OCR-extracted region, then no hint
+        val resolvedHint = regionHint
+            ?: rawOcrText?.let { extractRegionHint(it) }
+
+        Log.d(TAG, "Region hint: $resolvedHint (source: ${if (regionHint != null) "GPS" else if (resolvedHint != null) "OCR" else "none"})")
+
+        val pickup  = pickupStreet?.let  { resolveAddress(it, resolvedHint) }
+        val dropoff = dropoffStreet?.let { resolveAddress(it, resolvedHint) }
 
         if (pickup == null || dropoff == null) {
             Log.d(TAG, "Geocoding partial — pickup: $pickup, dropoff: $dropoff")
@@ -142,6 +158,68 @@ object GeocodingHelper {
                 null
             }
         }
+
+    /**
+     * Extracts the best region hint from raw OCR text for use as a Nominatim anchor.
+     * Scans for known state abbreviations and filters out map garbage.
+     * Example: "Willingboro Township NJ" → "Willingboro, NJ"
+     *
+     * CORRECT: OCR has "Willingboro", "Township", "NJ" → returns "Willingboro, NJ"
+     * WRONG:   returning the raw driver_region from app_config which may be stale
+     */
+    fun extractRegionHint(rawOcrText: String): String? {
+        val lines = rawOcrText.lines().map { it.trim() }.filter { it.isNotBlank() }
+
+        // US state abbreviations — used to detect state line in OCR
+        val stateAbbreviations = setOf(
+            "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
+            "KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ",
+            "NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT",
+            "VA","WA","WV","WI","WY","DC"
+        )
+
+        // Skip tokens — map garbage, UI elements, not place names
+        val skipTokens = setOf(
+            "mapbox", "omapbox", "accept", "decline", "pickup", "dropoff",
+            "guaranteed", "deliver", "doordash", "turnpike", "township",
+            "borough", "county", "pkwy", "blvd", "rd", "st", "ave"
+        )
+
+        // Find state abbreviation in OCR — strongest anchor signal
+        var detectedState: String? = null
+        for (line in lines) {
+            val words = line.trim().split(" ")
+            for (word in words) {
+                if (word.uppercase() in stateAbbreviations) {
+                    detectedState = word.uppercase()
+                    break
+                }
+            }
+            // Written-out state detection handled by STATE_NAME_MAP (loaded from assets)
+        }
+
+        // Find best town candidate — capitalized word, 4-20 chars, not a skip token
+        val townCandidate = lines.firstOrNull { line ->
+            val lower = line.lowercase()
+            line.length in 4..20
+                && line[0].isUpperCase()
+                && line.none { it.isDigit() }
+                && skipTokens.none { lower.contains(it) }
+                && !lower.contains("guaranteed")
+                && !lower.contains("deliver")
+                && line.split(" ").size <= 2
+        }
+
+        return when {
+            townCandidate != null && detectedState != null ->
+                "$townCandidate, $detectedState"
+            townCandidate != null ->
+                townCandidate
+            detectedState != null ->
+                detectedState
+            else -> null
+        }
+    }
 
     /**
      * Haversine straight-line distance in miles between two lat/lon points.

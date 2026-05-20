@@ -49,7 +49,11 @@ object StreetExtractor {
     }
 
     /**
-     * Scans lines after a keyword for the first line that looks like a street address.
+     * Scans lines BEFORE and AFTER a keyword for the first line that looks like a street address.
+     * DoorDash renders the street ABOVE the Pickup/Dropoff label on screen,
+     * so ML Kit OCR delivers it BEFORE the keyword in the text stream.
+     * Scans 10 lines before (nearest first), then falls back to lines after.
+     * Skips idx+1 after keyword — that line is always the restaurant name, not a street.
      */
     private fun extractNearKeyword(lines: List<String>, keyword: String): String? {
         val keywordIdx = lines.indexOfFirst {
@@ -57,13 +61,21 @@ object StreetExtractor {
         }
         if (keywordIdx < 0) return null
 
-        // Scan up to 5 lines after the keyword
-        val searchLines = lines.subList(
-            (keywordIdx + 1).coerceAtMost(lines.size),
-            (keywordIdx + 6).coerceAtMost(lines.size)
-        )
+        // Scan lines BEFORE keyword (reversed so nearest line wins)
+        val beforeLines = lines.subList(
+            (keywordIdx - 10).coerceAtLeast(0),
+            keywordIdx
+        ).reversed()
 
-        return searchLines.firstOrNull { isStreetLine(it) }
+        val beforeResult = beforeLines.firstOrNull { isStreetLine(it) }
+        if (beforeResult != null) return beforeResult
+
+        // Fallback: scan lines AFTER keyword — skip idx+1 (restaurant name)
+        val afterLines = lines.subList(
+            (keywordIdx + 2).coerceAtMost(lines.size),
+            (keywordIdx + 7).coerceAtMost(lines.size)
+        )
+        return afterLines.firstOrNull { isStreetLine(it) }
     }
 
     /**
