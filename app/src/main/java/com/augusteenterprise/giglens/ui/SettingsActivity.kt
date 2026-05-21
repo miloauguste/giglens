@@ -1,4 +1,5 @@
 package com.augusteenterprise.giglens.ui
+// Author: DeepSeek - Fixed widget toggle permission handling
 
 // Author: Claude (Anthropic)
 // Settings screen — driver configures region, GPS preference, vehicle cost, data sharing.
@@ -6,6 +7,8 @@ package com.augusteenterprise.giglens.ui
 // No hardcoded defaults in UI logic — all defaults come from DB seed values.
 
 import android.Manifest
+import android.content.Intent
+import android.provider.Settings as AndroidSettings
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
@@ -14,11 +17,14 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.GlobalScope
 import com.augusteenterprise.giglens.GigLensApp
 import com.augusteenterprise.giglens.data.AppConfigKeys
 import com.augusteenterprise.giglens.data.ScorerConfigKeys
 import com.augusteenterprise.giglens.databinding.ActivitySettingsBinding
 import com.augusteenterprise.giglens.geocoding.GeocodingHelper
+import com.augusteenterprise.giglens.service.OfferOverlayService
+import com.augusteenterprise.giglens.ui.OverlayPermissionHelper
 import com.augusteenterprise.giglens.location.LocationHelper
 import kotlinx.coroutines.launch
 
@@ -55,7 +61,11 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         loadSettings()
-        setupListeners()
+        try {
+            setupListeners()
+        } catch (e: Exception) {
+            Log.e(TAG, "setupListeners crashed: ${e.message}", e)
+        }
     }
 
     override fun onSupportNavigateUp(): Boolean {
@@ -73,8 +83,14 @@ class SettingsActivity : AppCompatActivity() {
             val gpsEnabled     = appDao.getValue(AppConfigKeys.GPS_ENABLED) == "true"
             val costPerMile    = scorerDao.getValue(ScorerConfigKeys.COST_PER_MILE) ?: 0.90
             val dataSharing    = appDao.getValue(AppConfigKeys.DATA_SHARING) ?: "none"
+            val widgetEnabledRaw = appDao.getValue(AppConfigKeys.WIDGET_ENABLED)
+            Log.d(TAG, "loadSettings: widget_enabled raw value = $widgetEnabledRaw")
+            val widgetEnabled = widgetEnabledRaw == "true"
+            Log.d(TAG, "loadSettings: widget_enabled boolean = $widgetEnabled")
 
             runOnUiThread {
+                updateWidgetPermUI()
+                binding.switchWidget.isChecked = widgetEnabled
                 binding.switchGps.isChecked = gpsEnabled
                 binding.tvDetectedRegion.text = if (detectedRegion.isNotBlank()) {
                     "Detected region: $detectedRegion"
@@ -104,6 +120,34 @@ class SettingsActivity : AppCompatActivity() {
             }
         }
         binding.btnSaveSettings.setOnClickListener { saveSettings() }
+
+        binding.switchWidget.setOnCheckedChangeListener { _, isChecked ->
+            Log.d(TAG, "switchWidget toggled: $isChecked")
+            if (isChecked) {
+                if (!OverlayPermissionHelper.hasPermission(this)) {
+                    binding.switchWidget.isChecked = false
+                    OverlayPermissionHelper.requestPermission(this)
+                    return@setOnCheckedChangeListener
+                }
+                startWidgetService()
+                GlobalScope.launch {
+                    GigLensApp.instance.database.appConfigDao()
+                        .setValue(AppConfigKeys.WIDGET_ENABLED, "true")
+                    Log.d(TAG, "widget_enabled saved: true")
+                }
+            } else {
+                stopService(Intent(this, OfferOverlayService::class.java))
+                GlobalScope.launch {
+                    GigLensApp.instance.database.appConfigDao()
+                        .setValue(AppConfigKeys.WIDGET_ENABLED, "false")
+                    Log.d(TAG, "widget_enabled saved: false")
+                }
+            }
+        }
+
+        binding.btnGrantOverlay.setOnClickListener {
+            OverlayPermissionHelper.requestPermission(this)
+        }
     }
 
     private fun requestLocationAndDetect() {
@@ -149,6 +193,46 @@ class SettingsActivity : AppCompatActivity() {
                     binding.tvDetectedRegion.text = "Detected region: — (no GPS fix)"
                     Toast.makeText(this@SettingsActivity, "No GPS fix — enter region manually", Toast.LENGTH_LONG).show()
                 }
+            }
+        }
+    }
+
+    private fun updateWidgetPermUI() {
+        val hasPermission = OverlayPermissionHelper.hasPermission(this)
+        if (hasPermission) {
+            binding.tvWidgetPermStatus.text = "Permission granted"
+            binding.tvWidgetPermStatus.setTextColor(
+                android.graphics.Color.parseColor("#4CAF50"))
+            binding.btnGrantOverlay.visibility = android.view.View.GONE
+        } else {
+            binding.tvWidgetPermStatus.text = "Permission required: Draw over other apps"
+            binding.tvWidgetPermStatus.setTextColor(
+                android.graphics.Color.parseColor("#FF9800"))
+            binding.btnGrantOverlay.visibility = android.view.View.VISIBLE
+        }
+    }
+
+    private fun startWidgetService() {
+        val intent = Intent(this, OfferOverlayService::class.java)
+        startService(intent)
+        Log.d(TAG, "Widget service started")
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == OverlayPermissionHelper.REQUEST_CODE) {
+            updateWidgetPermUI()
+            if (OverlayPermissionHelper.hasPermission(this)) {
+                binding.switchWidget.isChecked = true
+                startWidgetService()
+                lifecycleScope.launch {
+                    GigLensApp.instance.database.appConfigDao()
+                        .setValue(AppConfigKeys.WIDGET_ENABLED, "true")
+                }
+                Toast.makeText(this, "Widget enabled", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Permission denied — widget cannot float over apps",
+                    Toast.LENGTH_LONG).show()
             }
         }
     }

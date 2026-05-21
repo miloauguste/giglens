@@ -85,6 +85,8 @@ abstract class OfferDatabase : RoomDatabase() {
                     "giglens_offers.db"
                 )
                 .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                .fallbackToDestructiveMigration()
+                .setJournalMode(JournalMode.TRUNCATE)
                 .build()
                 INSTANCE = instance
 

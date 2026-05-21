@@ -20,6 +20,7 @@ object AppConfigKeys {
     const val GPS_ENABLED          = "gps_enabled"           // "true" | "false"
     const val MAPS_API_KEY         = "maps_api_key"          // Pro tier: Google Maps Distance Matrix
     const val DATA_SHARING         = "data_sharing"          // "none" | "aggregate" | "individual"
+    const val WIDGET_ENABLED       = "widget_enabled"         // "true" | "false"
 }
 
 fun defaultAppConfig(): List<AppConfig> = listOf(
@@ -28,5 +29,6 @@ fun defaultAppConfig(): List<AppConfig> = listOf(
     AppConfig(AppConfigKeys.DRIVER_STATE,         "",     "Driver state abbreviation (auto)"),
     AppConfig(AppConfigKeys.GPS_ENABLED,          "false","GPS location enabled: true | false"),
     AppConfig(AppConfigKeys.MAPS_API_KEY,         "",     "Google Maps Distance Matrix API key (Pro tier)"),
-    AppConfig(AppConfigKeys.DATA_SHARING,         "none", "Community data sharing: none | aggregate | individual")
+    AppConfig(AppConfigKeys.DATA_SHARING,         "none", "Community data sharing: none | aggregate | individual"),
+    AppConfig(AppConfigKeys.WIDGET_ENABLED,       "false","Widget overlay enabled/disabled")
 )
