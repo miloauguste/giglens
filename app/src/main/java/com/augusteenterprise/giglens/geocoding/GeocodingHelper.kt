@@ -1,10 +1,11 @@
 package com.augusteenterprise.giglens.geocoding
-// Author: Claude (Anthropic)
+// Author: Claude (Anthropic) - Added loadStateNameMap() + written-out state detection in extractRegionHint()
 // Geocodes street addresses using Nominatim (OpenStreetMap) — free, no API key.
 // Rate limit: 1 request/second. GigLens makes max 2 calls per offer capture.
 // Pro tier: swap resolveAddress() with Google Maps Geocoding API for higher accuracy.
 
 import android.location.Location
+import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -35,6 +36,27 @@ data class DistanceEstimate(
 private var STATE_NAME_MAP: Map<String, String> = emptyMap()
 
 object GeocodingHelper {
+
+    /**
+     * Loads written-out state name -> abbreviation map from assets/state_name_map.json.
+     * Call once from GigLensApp.onCreate() before any geocoding runs.
+     *
+     * CORRECT: called in GigLensApp.onCreate() with application context
+     * WRONG:   called in Activity/Fragment (may not run before first offer share)
+     */
+    fun loadStateNameMap(context: Context) {
+        try {
+            val json = context.assets.open("state_name_map.json")
+                .bufferedReader()
+                .readText()
+            val obj = org.json.JSONObject(json)
+            STATE_NAME_MAP = obj.keys().asSequence().associateWith { obj.getString(it) }
+            Log.i(TAG, "Loaded ${STATE_NAME_MAP.size} state name mappings")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to load state_name_map.json: ${e.message}", e)
+            // Non-fatal — written-out state detection just won't work
+        }
+    }
 
     /**
      * Geocodes pickup and dropoff streets and returns estimated road distance.
@@ -195,7 +217,15 @@ object GeocodingHelper {
                     break
                 }
             }
-            // Written-out state detection handled by STATE_NAME_MAP (loaded from assets)
+            // Written-out state detection via STATE_NAME_MAP (loaded from assets)
+            if (detectedState == null) {
+                for ((fullName, abbr) in STATE_NAME_MAP) {
+                    if (rawOcrText.contains(fullName, ignoreCase = true)) {
+                        detectedState = abbr
+                        break
+                    }
+                }
+            }
         }
 
         // Find best town candidate — capitalized word, 4-20 chars, not a skip token

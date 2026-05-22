@@ -1,3 +1,12 @@
+## [0.1.29] - 2026-05-22
+### Fixed
+- Implemented GeocodingHelper.loadStateNameMap() — previously referenced but missing
+- Written-out state names (e.g. "New Jersey") now correctly detected in extractRegionHint()
+- STATE_NAME_MAP now populated from assets/state_name_map.json at app startup
+
+### Added
+- assets/state_name_map.json — all 50 states + DC, name-to-abbreviation mapping
+
 
 ## [0.1.8] - 2026-05-20
 
