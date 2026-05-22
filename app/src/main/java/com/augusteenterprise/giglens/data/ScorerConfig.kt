@@ -1,5 +1,5 @@
 package com.augusteenterprise.giglens.data
-// Author: Claude (Anthropic)
+// Author: Claude (Anthropic) - Added HOURLY_RATE key and default value (Issue #3)
 // Room entity for DB-driven scorer weights and thresholds.
 
 import androidx.room.Entity
@@ -42,6 +42,7 @@ object ScorerConfigKeys {
     const val THRESHOLD_TAKE          = "threshold_take"
     const val THRESHOLD_BORDERLINE    = "threshold_borderline"
     const val COST_PER_MILE           = "cost_per_mile"
+    const val HOURLY_RATE             = "hourly_rate"
 }
 
 fun defaultScorerConfig(): List<ScorerConfig> = listOf(
@@ -70,5 +71,6 @@ fun defaultScorerConfig(): List<ScorerConfig> = listOf(
     ScorerConfig(ScorerConfigKeys.FLOOR_TOTAL_PAY,          6.00, "Min total pay to pass floor"),
     ScorerConfig(ScorerConfigKeys.THRESHOLD_TAKE,           65.0, "Score >= this = TAKE"),
     ScorerConfig(ScorerConfigKeys.THRESHOLD_BORDERLINE,     40.0, "Score >= this = BORDERLINE"),
-    ScorerConfig(ScorerConfigKeys.COST_PER_MILE,            0.90, "Vehicle cost per mile driven (IRS standard $0.90)")
+    ScorerConfig(ScorerConfigKeys.COST_PER_MILE,            0.90, "Vehicle cost per mile driven (IRS standard $0.90)"),
+    ScorerConfig(ScorerConfigKeys.HOURLY_RATE,              15.00, "Driver hourly rate for time cost calculation")
 )

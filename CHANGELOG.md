@@ -1,3 +1,8 @@
+## [0.1.32] - 2026-05-22
+### Added
+- Settings UI: hourly rate field added to SCORING card (Issue #3)
+- Drivers can now configure their hourly rate (default $15.00/hr) which affects time cost calculation
+
 ## [0.1.31] - 2026-05-22
 ### Fixed
 - ShareReceiverActivity: replaced deprecated getParcelableExtra<Uri>() with type-safe getParcelableExtra(Uri::class.java) (Issue #2)

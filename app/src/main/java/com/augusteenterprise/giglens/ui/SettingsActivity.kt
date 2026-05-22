@@ -1,4 +1,5 @@
 package com.augusteenterprise.giglens.ui
+// Author: Claude - Added hourly rate field to Settings UI (Issue #3)
 
 import android.content.Intent
 import android.os.Bundle
@@ -76,6 +77,7 @@ class SettingsActivity : AppCompatActivity() {
             val manualRegion = appDao.getValue(AppConfigKeys.DRIVER_MANUAL_REGION) ?: ""
             val gpsEnabled = appDao.getValue(AppConfigKeys.GPS_ENABLED) == "true"
             val costPerMile = scorerDao.getValue(ScorerConfigKeys.COST_PER_MILE) ?: 0.90
+            val hourlyRate = scorerDao.getValue(ScorerConfigKeys.HOURLY_RATE) ?: 15.00
             val dataSharing = appDao.getValue(AppConfigKeys.DATA_SHARING) ?: "none"
             val widgetEnabled = appDao.getValue(AppConfigKeys.WIDGET_ENABLED) == "true"
             
@@ -90,6 +92,7 @@ class SettingsActivity : AppCompatActivity() {
                 }
                 binding.etRegion.setText(manualRegion)
                 binding.etCostPerMile.setText("%.2f".format(costPerMile))
+                binding.etHourlyRate.setText("%.2f".format(hourlyRate))
                 when (dataSharing) {
                     "aggregate" -> binding.rbSharingAggregate.isChecked = true
                     "individual" -> binding.rbSharingIndividual.isChecked = true
@@ -103,6 +106,7 @@ class SettingsActivity : AppCompatActivity() {
         val manualRegion = binding.etRegion.text.toString().trim()
         val gpsEnabled = binding.switchGps.isChecked
         val costPerMile = binding.etCostPerMile.text.toString().toDoubleOrNull() ?: 0.90
+        val hourlyRate = binding.etHourlyRate.text.toString().toDoubleOrNull() ?: 15.00
         val dataSharing = when {
             binding.rbSharingAggregate.isChecked -> "aggregate"
             binding.rbSharingIndividual.isChecked -> "individual"
@@ -117,6 +121,7 @@ class SettingsActivity : AppCompatActivity() {
             appDao.setValue(AppConfigKeys.GPS_ENABLED, gpsEnabled.toString())
             appDao.setValue(AppConfigKeys.DATA_SHARING, dataSharing)
             scorerDao.updateValue(ScorerConfigKeys.COST_PER_MILE, costPerMile)
+            scorerDao.updateValue(ScorerConfigKeys.HOURLY_RATE, hourlyRate)
             
             runOnUiThread {
                 Toast.makeText(this@SettingsActivity, "Settings saved", Toast.LENGTH_SHORT).show()
