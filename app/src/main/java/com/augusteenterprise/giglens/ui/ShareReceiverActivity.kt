@@ -1,4 +1,5 @@
 package com.augusteenterprise.giglens.ui
+// Author: Claude - Fixed deprecated getParcelableExtra (Issue #2)
 
 import android.content.Intent
 import android.net.Uri
@@ -40,7 +41,7 @@ class ShareReceiverActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         if (intent?.action == Intent.ACTION_SEND && intent.type?.startsWith("image/") == true) {
-            val imageUri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+            val imageUri = intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
             if (imageUri != null) {
                 processSharedImage(imageUri)
             } else {

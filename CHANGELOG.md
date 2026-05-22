@@ -1,3 +1,7 @@
+## [0.1.31] - 2026-05-22
+### Fixed
+- ShareReceiverActivity: replaced deprecated getParcelableExtra<Uri>() with type-safe getParcelableExtra(Uri::class.java) (Issue #2)
+
 ## [0.1.29] - 2026-05-22
 ### Fixed
 - Implemented GeocodingHelper.loadStateNameMap() — previously referenced but missing
