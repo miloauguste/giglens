@@ -1,9 +1,5 @@
 package com.augusteenterprise.giglens.ui
 
-// Author: Claude (Anthropic)
-// Receives shared screenshots, runs OCR, extracts streets, geocodes for distance,
-// scores offer with net value calculation, saves to DB.
-
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -13,13 +9,19 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.augusteenterprise.giglens.GigLensApp
 import com.augusteenterprise.giglens.data.OfferCapture
-import com.augusteenterprise.giglens.data.AppConfigKeys
 import com.augusteenterprise.giglens.geocoding.GeocodingHelper
 import com.augusteenterprise.giglens.location.LocationHelper
 import com.augusteenterprise.giglens.ocr.OfferParser
 import com.augusteenterprise.giglens.ocr.StreetExtractor
 import com.augusteenterprise.giglens.scoring.OfferScorer
-import com.augusteenterprise.giglens.scoring.Verdict
+import com.augusteenterprise.giglens.service.EXTRA_NET_VALUE
+import com.augusteenterprise.giglens.service.EXTRA_VERDICT
+import com.augusteenterprise.giglens.service.EXTRA_PAY_AMOUNT
+import com.augusteenterprise.giglens.service.EXTRA_RESTAURANT
+import com.augusteenterprise.giglens.service.EXTRA_PICKUP_MILES
+import com.augusteenterprise.giglens.service.EXTRA_TOTAL_MILES
+import com.augusteenterprise.giglens.service.EXTRA_VEHICLE_COST
+import com.augusteenterprise.giglens.service.OfferOverlayService
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
@@ -28,7 +30,6 @@ import java.io.File
 import java.io.FileOutputStream
 
 class ShareReceiverActivity : AppCompatActivity() {
-
     companion object {
         private const val TAG = "ShareReceiver"
     }
@@ -62,7 +63,7 @@ class ShareReceiverActivity : AppCompatActivity() {
             textRecognizer.process(inputImage)
                 .addOnSuccessListener { visionText ->
                     val rawText = visionText.text
-                    Log.d(TAG, "OCR result (${rawText.length} chars): ${rawText.take(300)}")
+                    Log.d(TAG, "OCR result (${rawText.length} chars)")
 
                     val parsed = OfferParser.parse(rawText)
 
@@ -70,108 +71,78 @@ class ShareReceiverActivity : AppCompatActivity() {
                         Log.i(TAG, "Offer: \$${parsed.payAmount} | ${parsed.distance} mi | ${parsed.restaurant}")
 
                         lifecycleScope.launch {
-                            val db         = GigLensApp.instance.database
+                            val db = GigLensApp.instance.database
                             val captureDao = db.offerCaptureDao()
-                            val configDao  = db.scorerConfigDao()
-                            val appDao     = db.appConfigDao()
-                            val scorer     = OfferScorer(configDao)
+                            val configDao = db.scorerConfigDao()
+                            val scorer = OfferScorer(configDao)
 
-                            // ── Step 1: Get driver GPS ────────────────────────
                             val location = LocationHelper.getCurrentLocation(applicationContext)
-                            Log.d(TAG, "Driver location: ${location?.latitude}, ${location?.longitude}")
-
-                            // ── Step 2: Extract streets from OCR ──────────────
                             val addresses = StreetExtractor.extract(rawText)
-                            Log.d(TAG, "Streets — pickup: ${addresses.pickupStreet} | dropoff: ${addresses.dropoffStreet}")
-
-                            // ── Step 3: Geocode streets → road distance estimate
+                            
                             val distanceEstimate = GeocodingHelper.estimateDeliveryDistance(
-                                pickupStreet  = addresses.pickupStreet,
+                                pickupStreet = addresses.pickupStreet,
                                 dropoffStreet = addresses.dropoffStreet,
-                                regionHint    = null
+                                regionHint = null
                             )
-                            Log.d(TAG, "Distance estimate: ${distanceEstimate.estimatedRoadMiles}mi (${distanceEstimate.method})")
 
-                            // ── Step 4: Pickup leg — driver GPS → restaurant ──
                             val pickupDistance: Double? =
                                 if (location != null && distanceEstimate.pickupPoint != null) {
                                     LocationHelper.straightLineDistance(
                                         location.latitude, location.longitude,
                                         distanceEstimate.pickupPoint.lat,
                                         distanceEstimate.pickupPoint.lon
-                                    ) * 1.3 // road factor
+                                    ) * 1.3
                                 } else null
-                            Log.d(TAG, "Pickup distance: $pickupDistance mi")
 
-                            // ── Step 5: Score the offer ───────────────────────
                             val personalAvg = captureDao.getAverageScore()
-                            Log.d(TAG, "Personal avg score: $personalAvg")
-
                             val result = scorer.score(
-                                payAmount        = parsed.payAmount,
+                                payAmount = parsed.payAmount,
                                 deliveryDistance = parsed.distance,
-                                pickupDistance   = pickupDistance,
+                                pickupDistance = pickupDistance,
                                 personalAvgScore = personalAvg
                             )
 
                             if (result != null) {
-                                Log.i(TAG, "Score: ${result.score} | Verdict: ${result.verdict} | " +
-                                    "Net: \$${"%.2f".format(result.netValue)} | " +
-                                    "Vehicle cost: \$${"%.2f".format(result.vehicleCost)} | " +
-                                    "\$/mi: ${"%.2f".format(result.payPerMile)} | " +
-                                    "vs avg: ${result.vsPersonalAvg?.let { "${"%.1f".format(it)}%" } ?: "n/a"} | " +
-                                    "failedFloor: ${result.failedFloor}")
-                            } else {
-                                Log.d(TAG, "Score: null (missing pay or distance)")
-                            }
-
-                            // ── Step 6: Save to DB ────────────────────────────
-                            val capture = OfferCapture(
-                                payAmount        = parsed.payAmount,
-                                distance         = parsed.distance,
-                                restaurant       = parsed.restaurant,
-                                screenshotPath   = savedPath,
-                                rawOcrText       = rawText,
-                                platform         = detectPlatform(rawText),
-                                score            = result?.score,
-                                verdict          = result?.verdict?.name,
-                                payPerMile       = result?.payPerMile,
-                                vsPersonalAvg    = result?.vsPersonalAvg,
-                                driverLat        = location?.latitude,
-                                driverLon        = location?.longitude,
-                                pickupDistance   = result?.pickupDistance,
-                                deliveryDistance = parsed.distance,
-                                totalDistance    = result?.totalDistance,
-                                truePayPerMile   = result?.truePayPerMile,
-                                vehicleCost      = result?.vehicleCost,
-                                netValue         = result?.netValue
-                            )
-                            val id = captureDao.insert(capture)
-                            Log.i(TAG, "Offer saved with id=$id score=${result?.score} verdict=${result?.verdict?.name}")
-
-                            // ── Step 7: Show verdict toast ────────────────────
-                            runOnUiThread {
-                                val verdictEmoji = when (result?.verdict) {
-                                    Verdict.TAKE       -> "🟢"
-                                    Verdict.BORDERLINE -> "🟡"
-                                    Verdict.SKIP       -> "🔴"
-                                    null               -> "📋"
+                                Log.i(TAG, "Score: ${result.score} | Verdict: ${result.verdict} | Net: ${result.netValue}")
+                                
+                                // Save to DB
+                                val capture = OfferCapture(
+                                    payAmount = parsed.payAmount,
+                                    distance = parsed.distance,
+                                    restaurant = parsed.restaurant,
+                                    screenshotPath = savedPath,
+                                    rawOcrText = rawText,
+                                    platform = detectPlatform(rawText),
+                                    score = result.score,
+                                    verdict = result.verdict.name,
+                                    payPerMile = result.payPerMile,
+                                    vsPersonalAvg = result.vsPersonalAvg,
+                                    driverLat = location?.latitude,
+                                    driverLon = location?.longitude,
+                                    pickupDistance = result.pickupDistance,
+                                    totalDistance = result.totalDistance,
+                                    truePayPerMile = result.truePayPerMile,
+                                    vehicleCost = result.vehicleCost,
+                                    netValue = result.netValue
+                                )
+                                captureDao.insert(capture)
+                                
+                                // Start floating pill service
+                                val serviceIntent = Intent(this@ShareReceiverActivity, OfferOverlayService::class.java).apply {
+                                    putExtra(EXTRA_NET_VALUE, result.netValue)
+                                    putExtra(EXTRA_VERDICT, result.verdict.name)
+                                    putExtra(EXTRA_PAY_AMOUNT, parsed.payAmount)
+                                    putExtra(EXTRA_RESTAURANT, parsed.restaurant ?: "")
+                                    putExtra(EXTRA_PICKUP_MILES, parsed.distance ?: 0.0)
+                                    putExtra(EXTRA_TOTAL_MILES, result.totalDistance ?: 0.0)
+                                    putExtra(EXTRA_VEHICLE_COST, result.vehicleCost)
                                 }
-                                val msg = buildString {
-                                    append("$verdictEmoji Offer captured!")
-                                    parsed.payAmount?.let { append(" \$${"%.2f".format(it)}") }
-                                    parsed.distance?.let { append(" • ${it} mi") }
-                                    result?.let {
-                                        append(" • Net: \$${"%.2f".format(it.netValue)}")
-                                        append(" • Score: ${it.score}")
-                                        if (it.failedFloor) append(" ⚠️")
-                                    }
-                                }
-                                Toast.makeText(this@ShareReceiverActivity, msg, Toast.LENGTH_LONG).show()
-                                finish()
+                                Log.d(TAG, "Starting OfferOverlayService with netValue=${result.netValue}")
+                                startService(serviceIntent)
                             }
+                            
+                            finish()
                         }
-
                     } else {
                         Log.d(TAG, "Not recognized as an offer screen")
                         Toast.makeText(this, "Couldn't detect an offer in this screenshot", Toast.LENGTH_LONG).show()
@@ -184,7 +155,6 @@ class ShareReceiverActivity : AppCompatActivity() {
                     Toast.makeText(this, "Error processing image", Toast.LENGTH_SHORT).show()
                     finish()
                 }
-
         } catch (e: Exception) {
             Log.e(TAG, "Error: ${e.message}", e)
             Toast.makeText(this, "Error processing image", Toast.LENGTH_SHORT).show()
@@ -215,11 +185,7 @@ class ShareReceiverActivity : AppCompatActivity() {
         val lower = text.lowercase()
         return when {
             lower.contains("doordash") || lower.contains("dasher") -> "DoorDash"
-            lower.contains("uber eats") || lower.contains("uber")  -> "Uber Eats"
-            lower.contains("grubhub")                              -> "Grubhub"
-            lower.contains("instacart")                            -> "Instacart"
-            lower.contains("amazon flex")                          -> "Amazon Flex"
-            else                                                   -> "Unknown"
+            else -> "Unknown"
         }
     }
 }

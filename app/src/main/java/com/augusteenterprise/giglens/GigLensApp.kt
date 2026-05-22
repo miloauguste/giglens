@@ -1,13 +1,10 @@
 package com.augusteenterprise.giglens
 
-// Author: Claude (Anthropic)
-
 import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
 import com.augusteenterprise.giglens.data.OfferDatabase
-import com.augusteenterprise.giglens.geocoding.GeocodingHelper
 
 class GigLensApp : Application() {
 
@@ -18,7 +15,6 @@ class GigLensApp : Application() {
         super.onCreate()
         instance = this
         database = OfferDatabase.getInstance(this)
-        GeocodingHelper.loadStateNameMap(this)
         createNotificationChannel()
     }
 
