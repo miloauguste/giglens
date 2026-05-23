@@ -1,3 +1,9 @@
+## [0.1.48] - 2026-05-23
+### Security
+- Created SECURITY.md — documents false positives, accepted risks, fixed issues
+- MobSF pre-commit output now shows score ceiling context (debug ~47, release ~75)
+- Documented Room DB schema hashes as known false positives
+
 ## [0.1.47] - 2026-05-23
 ### Security
 - Manifest: android:allowBackup set to false — prevents ADB data extraction
