@@ -74,3 +74,10 @@
 - Android emulator (giglens_test AVD) configured on milo-dev with KVM acceleration
 # security hook test
 # retest
+# deep scan test
+# mobsf test
+# full deep scan test
+# deep scan test
+# owasp graceful test
+# owasp 403 fix
+# owasp clean rewrite test
