@@ -1,6 +1,6 @@
 package com.augusteenterprise.giglens.service
 
-// Author: Claude (Anthropic) - Fixed duplicate pill on repeated shares (isViewAdded flag)
+// Author: Claude (Anthropic) - Feature #8: Widget morph — IDLE/CAMERA/PROCESSING/PILL/MINI/FULL
 // Persistent floating pill widget. Always visible when enabled in Settings.
 // Pill + drawer render as one draggable unit via WindowManager.
 // States: IDLE → PILL(result) → MINI(drawer) → FULL(detail) → PILL
@@ -40,8 +40,10 @@ const val EXTRA_TOTAL_COST     = "total_cost"
 const val EXTRA_MINUTES_ON_JOB = "minutes_on_job"
 const val EXTRA_SCORE          = "score"
 const val EXTRA_COST_PER_MILE  = "cost_per_mile"
+const val ACTION_SHOW_CAMERA   = "com.augusteenterprise.giglens.SHOW_CAMERA"
+const val ACTION_HIDE_CAMERA   = "com.augusteenterprise.giglens.HIDE_CAMERA"
 
-private enum class SheetState { IDLE, PILL, MINI, FULL }
+private enum class SheetState { IDLE, CAMERA, PROCESSING, PILL, MINI, FULL }
 
 class OfferOverlayService : Service() {
 
@@ -87,18 +89,32 @@ class OfferOverlayService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        intent?.let {
-            if (it.hasExtra(EXTRA_NET_VALUE)) {
-                loadExtras(it)
-                sheetState = SheetState.PILL
-                if (isViewAdded) {
-                    // Reuse existing pill — just update content
-                    updateWidget()
-                    Log.d(TAG, "Reusing existing pill for new offer")
-                } else {
-                    // First offer — build the view
-                    showWidget()
-                    updateWidget()
+        when (intent?.action) {
+            ACTION_SHOW_CAMERA -> {
+                // Offer screen detected — morph to camera button
+                sheetState = SheetState.CAMERA
+                if (isViewAdded) updateWidget() else { showWidget(); updateWidget() }
+                Log.d(TAG, "Widget morphed to CAMERA state")
+            }
+            ACTION_HIDE_CAMERA -> {
+                // Offer screen gone — morph back to pill or idle
+                if (sheetState == SheetState.CAMERA || sheetState == SheetState.PROCESSING) {
+                    sheetState = if (verdict == "UNKNOWN") SheetState.IDLE else SheetState.PILL
+                    if (isViewAdded) updateWidget() else { showWidget(); updateWidget() }
+                    Log.d(TAG, "Widget morphed back from CAMERA to $sheetState")
+                }
+            }
+            else -> {
+                if (intent?.hasExtra(EXTRA_NET_VALUE) == true) {
+                    loadExtras(intent)
+                    sheetState = SheetState.PILL
+                    if (isViewAdded) {
+                        updateWidget()
+                        Log.d(TAG, "Reusing existing pill for new offer")
+                    } else {
+                        showWidget()
+                        updateWidget()
+                    }
                 }
             }
         }
@@ -223,6 +239,37 @@ class OfferOverlayService : Service() {
         when (sheetState) {
             SheetState.IDLE -> {
                 root.addView(buildPill(color, false))
+            }
+
+            SheetState.CAMERA -> {
+                // Teal camera button — offer screen detected, waiting for capture
+                val camColor = Color.parseColor("#00BFA5")
+                val btn = TextView(this).apply {
+                    text = "📷"
+                    textSize = 20f
+                    setPadding(24, 18, 24, 18)
+                    background = GradientDrawable().apply {
+                        setColor(camColor)
+                        cornerRadius = 50f
+                    }
+                    setOnTouchListener(makeCameraTouchListener())
+                }
+                root.addView(btn)
+            }
+
+            SheetState.PROCESSING -> {
+                // Processing indicator — capture triggered
+                val camColor = Color.parseColor("#00BFA5")
+                val btn = TextView(this).apply {
+                    text = "⏳"
+                    textSize = 20f
+                    setPadding(24, 18, 24, 18)
+                    background = GradientDrawable().apply {
+                        setColor(camColor)
+                        cornerRadius = 50f
+                    }
+                }
+                root.addView(btn)
             }
 
             SheetState.PILL -> {
@@ -361,6 +408,47 @@ class OfferOverlayService : Service() {
         windowManager.updateViewLayout(root, params)
     }
 
+    // ── Camera touch listener — drag + tap to trigger capture ──────────────────
+    private fun makeCameraTouchListener() = View.OnTouchListener { _, event ->
+        val params = layoutParams ?: return@OnTouchListener false
+        when (event.action) {
+            MotionEvent.ACTION_DOWN -> {
+                initialX = params.x
+                initialY = params.y
+                initialTouchX = event.rawX
+                initialTouchY = event.rawY
+                isDragging = false
+                true
+            }
+            MotionEvent.ACTION_MOVE -> {
+                val dx = (event.rawX - initialTouchX).toInt()
+                val dy = (event.rawY - initialTouchY).toInt()
+                if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
+                    isDragging = true
+                    params.x = initialX + dx
+                    params.y = initialY + dy
+                    posX = params.x
+                    posY = params.y
+                    rootView?.let { windowManager.updateViewLayout(it, params) }
+                }
+                true
+            }
+            MotionEvent.ACTION_UP -> {
+                if (!isDragging) {
+                    // Tap — trigger manual capture
+                    sheetState = SheetState.PROCESSING
+                    updateWidget()
+                    Log.i(TAG, "Camera button tapped — triggering capture")
+                    val intent = Intent(OfferDetectorService.ACTION_OFFER_DETECTED)
+                    intent.setPackage(packageName)
+                    sendBroadcast(intent)
+                }
+                true
+            }
+            else -> false
+        }
+    }
+
     // ── Touch listener — drag + tap to cycle states ───────────────────────────
     private fun makeTouchListener() = View.OnTouchListener { _, event ->
         val params = layoutParams ?: return@OnTouchListener false
@@ -390,10 +478,12 @@ class OfferOverlayService : Service() {
                 if (!isDragging) {
                     // Tap — cycle states
                     sheetState = when (sheetState) {
-                        SheetState.IDLE -> SheetState.IDLE
-                        SheetState.PILL -> SheetState.MINI
-                        SheetState.MINI -> SheetState.FULL
-                        SheetState.FULL -> SheetState.PILL
+                        SheetState.IDLE       -> SheetState.IDLE
+                        SheetState.CAMERA     -> SheetState.CAMERA     // handled by camera listener
+                        SheetState.PROCESSING -> SheetState.PROCESSING // wait for result
+                        SheetState.PILL       -> SheetState.MINI
+                        SheetState.MINI       -> SheetState.FULL
+                        SheetState.FULL       -> SheetState.PILL
                     }
                     updateWidget()
                 }

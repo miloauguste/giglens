@@ -1,3 +1,11 @@
+## [0.1.49] - 2026-05-23
+### Added
+- Feature #8: Widget morph — IDLE/CAMERA/PROCESSING/PILL/MINI/FULL states
+- Feature #8: OfferOverlayService handles ACTION_SHOW_CAMERA + ACTION_HIDE_CAMERA intents
+- Feature #8: Camera button tap triggers manual capture broadcast
+- Feature #8: OfferDetectorService morphs widget to camera on offer detection
+- Feature #8: Auto-capture only triggered when mode = accessibility or both
+
 ## [0.1.48] - 2026-05-23
 ### Security
 - Created SECURITY.md — documents false positives, accepted risks, fixed issues

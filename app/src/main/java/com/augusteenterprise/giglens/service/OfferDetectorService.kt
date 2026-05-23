@@ -1,12 +1,15 @@
 package com.augusteenterprise.giglens.service
 
-// Author: Claude (Anthropic) - Feature #8: Checks auto_capture_mode + enabled_platforms before triggering
+// Author: Claude (Anthropic) - Feature #8: Widget morph — signals SHOW_CAMERA to overlay + auto-captures if mode allows
 // Accessibility Service that monitors supported gig app offer screens.
 // When an offer screen is detected, it signals the ScreenCaptureService
 // to take a screenshot and run OCR.
 
 import android.accessibilityservice.AccessibilityService
 import android.content.Intent
+import android.app.ActivityManager
+import com.augusteenterprise.giglens.service.ACTION_SHOW_CAMERA
+import com.augusteenterprise.giglens.service.ACTION_HIDE_CAMERA
 import com.augusteenterprise.giglens.GigLensApp
 import com.augusteenterprise.giglens.data.AppConfigKeys
 import com.augusteenterprise.giglens.data.PlatformRegistry
@@ -115,12 +118,44 @@ class OfferDetectorService : AccessibilityService() {
     }
 
     /**
-     * Sends a broadcast to ScreenCaptureService to trigger a screenshot.
+     * Signals the overlay widget to morph to camera button.
+     * If mode is accessibility or both, also auto-triggers capture.
+     *
+     * CORRECT: morph widget first, then conditionally auto-capture
+     * WRONG:   always triggering capture regardless of mode setting
      */
     private fun signalCapture() {
-        val intent = Intent(ACTION_OFFER_DETECTED)
-        intent.setPackage(packageName)
-        sendBroadcast(intent)
+        // Always morph overlay widget to camera button
+        val overlayIntent = Intent(this, OfferOverlayService::class.java).apply {
+            action = ACTION_SHOW_CAMERA
+        }
+        startService(overlayIntent)
+        Log.d(TAG, "Sent SHOW_CAMERA to overlay")
+
+        // Auto-capture only if mode allows it
+        val mode = runBlocking {
+            GigLensApp.instance.database.appConfigDao()
+                .getValue(AppConfigKeys.AUTO_CAPTURE_MODE) ?: "off"
+        }
+        if (mode == "accessibility" || mode == "both") {
+            Log.i(TAG, "Auto-capture mode=$mode — triggering capture")
+            val captureIntent = Intent(ACTION_OFFER_DETECTED)
+            captureIntent.setPackage(packageName)
+            sendBroadcast(captureIntent)
+        } else {
+            Log.d(TAG, "Mode=$mode — waiting for driver to tap camera button")
+        }
+    }
+
+    /**
+     * Signals the overlay widget to morph back to pill when offer screen is gone.
+     */
+    fun signalOfferGone() {
+        val overlayIntent = Intent(this, OfferOverlayService::class.java).apply {
+            action = ACTION_HIDE_CAMERA
+        }
+        startService(overlayIntent)
+        Log.d(TAG, "Sent HIDE_CAMERA to overlay")
     }
 
     override fun onInterrupt() {
