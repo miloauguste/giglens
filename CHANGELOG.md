@@ -1,3 +1,10 @@
+## [0.1.36] - 2026-05-23
+### Added
+- Feature #8: CaptureButtonService — floating teal camera button over gig apps
+- Button is draggable, flashes green on tap to confirm capture triggered
+- CaptureButtonService auto-starts/stops when capture mode is saved in Settings
+- CaptureButtonService registered in AndroidManifest with specialUse foreground type
+
 ## [0.1.35] - 2026-05-23
 ### Added
 - Feature #8: PlatformRegistry.kt — defines DoorDash (active) + Uber Eats/Grubhub/Instacart (coming soon)

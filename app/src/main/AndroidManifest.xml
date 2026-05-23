@@ -77,6 +77,16 @@
             </intent-filter>
         </receiver>
 
+        <!-- CAPTURE BUTTON: Floating manual capture trigger -->
+        <service
+            android:name=".service.CaptureButtonService"
+            android:foregroundServiceType="specialUse"
+            android:exported="false">
+            <property
+                android:name="android.foreground_service_type_special_use"
+                android:value="floating capture button for gig offer capture" />
+        </service>
+
         <!-- OVERLAY: Floating pill widget over DoorDash -->
         <service
             android:name=".service.OfferOverlayService"

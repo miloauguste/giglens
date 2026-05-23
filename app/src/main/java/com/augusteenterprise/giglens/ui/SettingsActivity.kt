@@ -12,6 +12,7 @@ import android.content.ComponentName
 import android.provider.Settings
 import com.augusteenterprise.giglens.GigLensApp
 import com.augusteenterprise.giglens.data.PlatformRegistry
+import com.augusteenterprise.giglens.service.CaptureButtonService
 import com.augusteenterprise.giglens.databinding.ActivitySettingsBinding
 import com.augusteenterprise.giglens.data.AppConfigKeys
 import com.augusteenterprise.giglens.data.ScorerConfigKeys
@@ -156,7 +157,21 @@ class SettingsActivity : AppCompatActivity() {
             scorerDao.updateValue(ScorerConfigKeys.COST_PER_MILE, costPerMile)
             scorerDao.updateValue(ScorerConfigKeys.HOURLY_RATE, hourlyRate)
             
+            // Start/stop CaptureButtonService based on mode
+            val savedMode = captureMode
             runOnUiThread {
+                when (savedMode) {
+                    "button", "both" -> {
+                        if (!CaptureButtonService.isRunning) {
+                            startService(Intent(this@SettingsActivity, CaptureButtonService::class.java))
+                        }
+                    }
+                    else -> {
+                        if (CaptureButtonService.isRunning) {
+                            stopService(Intent(this@SettingsActivity, CaptureButtonService::class.java))
+                        }
+                    }
+                }
                 Toast.makeText(this@SettingsActivity, "Settings saved", Toast.LENGTH_SHORT).show()
             }
         }
