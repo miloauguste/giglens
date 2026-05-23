@@ -22,6 +22,10 @@ import com.augusteenterprise.giglens.service.EXTRA_RESTAURANT
 import com.augusteenterprise.giglens.service.EXTRA_PICKUP_MILES
 import com.augusteenterprise.giglens.service.EXTRA_TOTAL_MILES
 import com.augusteenterprise.giglens.service.EXTRA_VEHICLE_COST
+import com.augusteenterprise.giglens.service.EXTRA_TIME_COST
+import com.augusteenterprise.giglens.service.EXTRA_TOTAL_COST
+import com.augusteenterprise.giglens.service.EXTRA_MINUTES_ON_JOB
+import com.augusteenterprise.giglens.service.EXTRA_SCORE
 import com.augusteenterprise.giglens.service.OfferOverlayService
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
@@ -130,13 +134,17 @@ class ShareReceiverActivity : AppCompatActivity() {
                                 
                                 // Start floating pill service
                                 val serviceIntent = Intent(this@ShareReceiverActivity, OfferOverlayService::class.java).apply {
-                                    putExtra(EXTRA_NET_VALUE, result.netValue)
-                                    putExtra(EXTRA_VERDICT, result.verdict.name)
-                                    putExtra(EXTRA_PAY_AMOUNT, parsed.payAmount)
-                                    putExtra(EXTRA_RESTAURANT, parsed.restaurant ?: "")
-                                    putExtra(EXTRA_PICKUP_MILES, parsed.distance ?: 0.0)
-                                    putExtra(EXTRA_TOTAL_MILES, result.totalDistance ?: 0.0)
-                                    putExtra(EXTRA_VEHICLE_COST, result.vehicleCost)
+                                    putExtra(EXTRA_NET_VALUE,      result.netValue)
+                                    putExtra(EXTRA_VERDICT,        result.verdict.name)
+                                    putExtra(EXTRA_PAY_AMOUNT,     parsed.payAmount)
+                                    putExtra(EXTRA_RESTAURANT,     parsed.restaurant ?: "")
+                                    putExtra(EXTRA_PICKUP_MILES,   parsed.distance ?: 0.0)
+                                    putExtra(EXTRA_TOTAL_MILES,    result.totalDistance ?: 0.0)
+                                    putExtra(EXTRA_VEHICLE_COST,   result.vehicleCost)
+                                    putExtra(EXTRA_TIME_COST,      result.timeCost)
+                                    putExtra(EXTRA_TOTAL_COST,     result.totalCost)
+                                    putExtra(EXTRA_MINUTES_ON_JOB, result.minutesOnJob)
+                                    putExtra(EXTRA_SCORE,          result.score)
                                 }
                                 Log.d(TAG, "Starting OfferOverlayService with netValue=${result.netValue}")
                                 startService(serviceIntent)

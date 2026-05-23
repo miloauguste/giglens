@@ -1,3 +1,10 @@
+## [0.1.33] - 2026-05-22
+### Fixed
+- OfferScorer: Added timeCost, totalCost, minutesOnJob fields to ScoreResult (Bug A)
+- OfferScorer: Net value now deducts both vehicle cost AND time cost (full formula)
+- ShareReceiverActivity: Now passes EXTRA_TIME_COST, EXTRA_TOTAL_COST, EXTRA_MINUTES_ON_JOB, EXTRA_SCORE to overlay service (Bug B)
+- Widget full detail now shows correct time cost, total cost, and score
+
 ## [0.1.32] - 2026-05-22
 ### Added
 - Settings UI: hourly rate field added to SCORING card (Issue #3)

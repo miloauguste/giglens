@@ -1,5 +1,5 @@
 package com.augusteenterprise.giglens.scoring
-// Author: Claude (Anthropic)
+// Author: Claude (Anthropic) - Added timeCost, totalCost, minutesOnJob to ScoreResult (Bug A/B fix)
 // Predictive net value scorer.
 // Estimates what an offer is truly worth after vehicle costs before driver accepts.
 // Formula: net_value = offer_pay - (total_miles × cost_per_mile)
@@ -20,7 +20,10 @@ data class ScoreResult(
     val totalDistance: Double?,
     // ── Net value (the real money after costs) ─────────────────────────────────
     val vehicleCost: Double,          // total_miles × cost_per_mile
-    val netValue: Double,             // offer_pay - vehicle_cost
+    val timeCost: Double,             // (minutesOnJob / 60) × hourly_rate
+    val totalCost: Double,            // vehicleCost + timeCost
+    val minutesOnJob: Double,         // estimated minutes for the full trip
+    val netValue: Double,             // offer_pay - totalCost
     val costPerMileUsed: Double,      // what rate was applied ($0.90 default)
     // ── Context ────────────────────────────────────────────────────────────────
     val vsPersonalAvg: Double?,
@@ -43,6 +46,7 @@ class OfferScorer(private val configDao: ScorerConfigDao) {
 
         // ── Load config ───────────────────────────────────────────────────────
         val costPerMile        = cfg(ScorerConfigKeys.COST_PER_MILE,             0.90)
+        val hourlyRate         = cfg(ScorerConfigKeys.HOURLY_RATE,                15.00)
 
         val weightNetValue     = cfg(ScorerConfigKeys.WEIGHT_PICKUP_PENALTY,     0.50) // reused key
         val weightPickup       = cfg(ScorerConfigKeys.WEIGHT_DELIVERY_LEG,       0.30) // reused key
@@ -67,7 +71,14 @@ class OfferScorer(private val configDao: ScorerConfigDao) {
 
         // ── Net value calculation ─────────────────────────────────────────────
         val vehicleCost    = totalDistance * costPerMile
-        val netValue       = payAmount - vehicleCost
+        // Estimate minutes: drive to pickup + 2min prep + delivery drive (45mph avg)
+        val driveToPickupMin  = ((pickupDistance ?: 0.0) / 45.0) * 60.0
+        val prepTimeMin       = 2.0
+        val deliveryDriveMin  = (deliveryDistance / 45.0) * 60.0
+        val minutesOnJob      = driveToPickupMin + prepTimeMin + deliveryDriveMin
+        val timeCost          = (minutesOnJob / 60.0) * hourlyRate
+        val totalCost         = vehicleCost + timeCost
+        val netValue          = payAmount - totalCost
         val payPerMile     = payAmount / deliveryDistance
         val truePayPerMile = payAmount / totalDistance
 
@@ -91,6 +102,7 @@ class OfferScorer(private val configDao: ScorerConfigDao) {
         val score = (raw * 100).toInt().coerceIn(0, 100)
 
         // ── Floor check (net value must be positive to pass) ──────────────────
+        // Floor: net after ALL costs (vehicle + time) must be positive
         val failedFloor = netValue <= 0.0 ||
                           payPerMile < floorPayPerMile ||
                           payAmount < floorTotalPay
@@ -114,6 +126,9 @@ class OfferScorer(private val configDao: ScorerConfigDao) {
             pickupDistance = pickupDistance,
             totalDistance  = totalDistance,
             vehicleCost    = vehicleCost,
+            timeCost       = timeCost,
+            totalCost      = totalCost,
+            minutesOnJob   = minutesOnJob,
             netValue       = netValue,
             costPerMileUsed= costPerMile,
             vsPersonalAvg  = vsPersonalAvg,
