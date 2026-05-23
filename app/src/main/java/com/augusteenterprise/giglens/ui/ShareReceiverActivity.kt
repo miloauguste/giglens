@@ -26,6 +26,7 @@ import com.augusteenterprise.giglens.service.EXTRA_TIME_COST
 import com.augusteenterprise.giglens.service.EXTRA_TOTAL_COST
 import com.augusteenterprise.giglens.service.EXTRA_MINUTES_ON_JOB
 import com.augusteenterprise.giglens.service.EXTRA_SCORE
+import com.augusteenterprise.giglens.service.EXTRA_COST_PER_MILE
 import com.augusteenterprise.giglens.service.OfferOverlayService
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
@@ -145,6 +146,7 @@ class ShareReceiverActivity : AppCompatActivity() {
                                     putExtra(EXTRA_TOTAL_COST,     result.totalCost)
                                     putExtra(EXTRA_MINUTES_ON_JOB, result.minutesOnJob)
                                     putExtra(EXTRA_SCORE,          result.score)
+                                    putExtra(EXTRA_COST_PER_MILE,  result.costPerMileUsed)
                                 }
                                 Log.d(TAG, "Starting OfferOverlayService with netValue=${result.netValue}")
                                 startService(serviceIntent)
