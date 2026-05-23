@@ -1,5 +1,5 @@
 package com.augusteenterprise.giglens.data
-// Author: Claude (Anthropic)
+// Author: Claude (Anthropic) - Feature #8: Added AUTO_CAPTURE_MODE + ENABLED_PLATFORMS keys
 // Key-value store for string app configuration.
 // Numeric settings use scorer_config; string settings use app_config.
 
@@ -21,6 +21,8 @@ object AppConfigKeys {
     const val MAPS_API_KEY         = "maps_api_key"          // Pro tier: Google Maps Distance Matrix
     const val DATA_SHARING         = "data_sharing"          // "none" | "aggregate" | "individual"
     const val WIDGET_ENABLED       = "widget_enabled"         // "true" | "false"
+    const val AUTO_CAPTURE_MODE    = "auto_capture_mode"     // "off" | "accessibility" | "button" | "both"
+    const val ENABLED_PLATFORMS    = "enabled_platforms"     // comma-separated platform IDs e.g. "doordash"
 }
 
 fun defaultAppConfig(): List<AppConfig> = listOf(
@@ -30,5 +32,7 @@ fun defaultAppConfig(): List<AppConfig> = listOf(
     AppConfig(AppConfigKeys.GPS_ENABLED,          "false","GPS location enabled: true | false"),
     AppConfig(AppConfigKeys.MAPS_API_KEY,         "",     "Google Maps Distance Matrix API key (Pro tier)"),
     AppConfig(AppConfigKeys.DATA_SHARING,         "none", "Community data sharing: none | aggregate | individual"),
-    AppConfig(AppConfigKeys.WIDGET_ENABLED,       "false","Widget overlay enabled/disabled")
+    AppConfig(AppConfigKeys.WIDGET_ENABLED,       "false","Widget overlay enabled/disabled"),
+    AppConfig(AppConfigKeys.AUTO_CAPTURE_MODE,    "off",  "Auto capture mode: off | accessibility | button | both"),
+    AppConfig(AppConfigKeys.ENABLED_PLATFORMS,    "doordash", "Enabled gig platforms (comma-separated)")
 )

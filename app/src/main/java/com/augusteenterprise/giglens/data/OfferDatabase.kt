@@ -1,6 +1,6 @@
 package com.augusteenterprise.giglens.data
-// Author: Claude (Anthropic)
-// Room database singleton — v4 adds app_config string settings table
+// Author: Claude (Anthropic) - Feature #8: Migration 4→5 adds auto_capture_mode + enabled_platforms
+// Room database singleton — v5 adds auto capture + platform config keys
 
 import android.content.Context
 import androidx.room.Database
@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [OfferCapture::class, ScorerConfig::class, AppConfig::class],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class OfferDatabase : RoomDatabase() {
@@ -65,6 +65,14 @@ abstract class OfferDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("INSERT OR IGNORE INTO app_config VALUES('auto_capture_mode', 'off', 'Auto capture: off | accessibility | button | both')")
+                db.execSQL("INSERT OR IGNORE INTO app_config VALUES('enabled_platforms', 'doordash', 'Enabled gig platforms comma-separated')")
+                db.execSQL("INSERT OR IGNORE INTO scorer_config VALUES('hourly_rate', 15.00, 'Driver hourly rate for time cost')")
+            }
+        }
+
         val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("""
@@ -84,7 +92,7 @@ abstract class OfferDatabase : RoomDatabase() {
                     OfferDatabase::class.java,
                     "giglens_offers.db"
                 )
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                 .fallbackToDestructiveMigration()
                 .setJournalMode(JournalMode.TRUNCATE)
                 .build()

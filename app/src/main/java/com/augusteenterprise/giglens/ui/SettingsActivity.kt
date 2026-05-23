@@ -1,5 +1,5 @@
 package com.augusteenterprise.giglens.ui
-// Author: Claude - Added hourly rate field to Settings UI (Issue #3)
+// Author: Claude - Feature #8: Added auto capture mode + supported platforms UI
 
 import android.content.Intent
 import android.os.Bundle
@@ -8,7 +8,10 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import android.content.ComponentName
+import android.provider.Settings
 import com.augusteenterprise.giglens.GigLensApp
+import com.augusteenterprise.giglens.data.PlatformRegistry
 import com.augusteenterprise.giglens.databinding.ActivitySettingsBinding
 import com.augusteenterprise.giglens.data.AppConfigKeys
 import com.augusteenterprise.giglens.data.ScorerConfigKeys
@@ -63,6 +66,14 @@ class SettingsActivity : AppCompatActivity() {
             OverlayPermissionHelper.requestPermission(this)
         }
         
+        binding.rgCaptureMode.setOnCheckedChangeListener { _, _ ->
+            updateAccessibilityPermUI()
+        }
+
+        binding.btnGrantAccessibility.setOnClickListener {
+            startActivity(android.content.Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+        }
+
         binding.btnSaveSettings.setOnClickListener {
             saveSettings()
         }
@@ -80,10 +91,21 @@ class SettingsActivity : AppCompatActivity() {
             val hourlyRate = scorerDao.getValue(ScorerConfigKeys.HOURLY_RATE) ?: 15.00
             val dataSharing = appDao.getValue(AppConfigKeys.DATA_SHARING) ?: "none"
             val widgetEnabled = appDao.getValue(AppConfigKeys.WIDGET_ENABLED) == "true"
+            val captureMode = appDao.getValue(AppConfigKeys.AUTO_CAPTURE_MODE) ?: "off"
+            val enabledPlatforms = appDao.getValue(AppConfigKeys.ENABLED_PLATFORMS) ?: "doordash"
             
             runOnUiThread {
                 updateWidgetPermUI()
                 binding.switchWidget.isChecked = widgetEnabled
+                when (captureMode) {
+                    "accessibility" -> binding.rbCaptureAccessibility.isChecked = true
+                    "button"        -> binding.rbCaptureButton.isChecked = true
+                    "both"          -> binding.rbCaptureBoth.isChecked = true
+                    else            -> binding.rbCaptureOff.isChecked = true
+                }
+                val platforms = enabledPlatforms.split(",").map { it.trim() }
+                binding.cbPlatformDoordash.isChecked = "doordash" in platforms
+                updateAccessibilityPermUI()
                 binding.switchGps.isChecked = gpsEnabled
                 binding.tvDetectedRegion.text = if (detectedRegion.isNotBlank()) {
                     "Detected region: $detectedRegion"
@@ -119,6 +141,17 @@ class SettingsActivity : AppCompatActivity() {
             
             appDao.setValue(AppConfigKeys.DRIVER_MANUAL_REGION, manualRegion)
             appDao.setValue(AppConfigKeys.GPS_ENABLED, gpsEnabled.toString())
+            val captureMode = when {
+                binding.rbCaptureAccessibility.isChecked -> "accessibility"
+                binding.rbCaptureButton.isChecked        -> "button"
+                binding.rbCaptureBoth.isChecked          -> "both"
+                else                                     -> "off"
+            }
+            appDao.setValue(AppConfigKeys.AUTO_CAPTURE_MODE, captureMode)
+            val enabledPlatforms = mutableListOf<String>()
+            if (binding.cbPlatformDoordash.isChecked) enabledPlatforms.add("doordash")
+            appDao.setValue(AppConfigKeys.ENABLED_PLATFORMS,
+                if (enabledPlatforms.isEmpty()) "doordash" else enabledPlatforms.joinToString(","))
             appDao.setValue(AppConfigKeys.DATA_SHARING, dataSharing)
             scorerDao.updateValue(ScorerConfigKeys.COST_PER_MILE, costPerMile)
             scorerDao.updateValue(ScorerConfigKeys.HOURLY_RATE, hourlyRate)
@@ -129,6 +162,31 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
     
+    private fun isAccessibilityEnabled(): Boolean {
+        val service = "$packageName/.service.OfferDetectorService"
+        val enabled = Settings.Secure.getString(
+            contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+        ) ?: return false
+        return enabled.contains(service)
+    }
+
+    private fun updateAccessibilityPermUI() {
+        val mode = when {
+            binding.rbCaptureAccessibility.isChecked -> "accessibility"
+            binding.rbCaptureButton.isChecked -> "button"
+            binding.rbCaptureBoth.isChecked -> "both"
+            else -> "off"
+        }
+        val needsAccessibility = mode == "accessibility" || mode == "both"
+        if (needsAccessibility && !isAccessibilityEnabled()) {
+            binding.tvAccessibilityPermStatus.visibility = android.view.View.VISIBLE
+            binding.btnGrantAccessibility.visibility = android.view.View.VISIBLE
+        } else {
+            binding.tvAccessibilityPermStatus.visibility = android.view.View.GONE
+            binding.btnGrantAccessibility.visibility = android.view.View.GONE
+        }
+    }
+
     private fun startWidgetService() {
         val intent = Intent(this, OfferOverlayService::class.java)
         startService(intent)

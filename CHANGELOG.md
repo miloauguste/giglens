@@ -1,4 +1,14 @@
 ## [0.1.35] - 2026-05-23
+### Added
+- Feature #8: PlatformRegistry.kt — defines DoorDash (active) + Uber Eats/Grubhub/Instacart (coming soon)
+- Feature #8: AUTO_CAPTURE_MODE config key — off | accessibility | button | both
+- Feature #8: ENABLED_PLATFORMS config key — comma-separated active platform IDs
+- Feature #8: Settings UI — AUTO CAPTURE card with 4 mode options + accessibility permission button
+- Feature #8: Settings UI — SUPPORTED PLATFORMS card (DoorDash enabled, others grayed out)
+- Feature #8: OfferDetectorService now checks auto_capture_mode + enabled_platforms before triggering
+- DB Migration 4→5 — seeds auto_capture_mode, enabled_platforms, hourly_rate
+
+## [0.1.35] - 2026-05-23
 ### Fixed
 - OfferOverlayService: New shares now reuse existing pill instead of adding a duplicate (isViewAdded flag)
 - Each new offer updates the existing widget in place via updateWidget()

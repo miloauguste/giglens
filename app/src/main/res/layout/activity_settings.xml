@@ -258,6 +258,156 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="AUTO CAPTURE"
+            android:textSize="12sp"
+            android:textColor="?attr/colorPrimary"
+            android:layout_marginBottom="8dp"/>
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Capture mode"
+                    android:textSize="16sp"
+                    android:textColor="?attr/colorOnBackground"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="How GigLens detects and analyzes offer screens."
+                    android:textSize="13sp"
+                    android:textColor="#999999"
+                    android:layout_marginTop="2dp"
+                    android:layout_marginBottom="12dp"/>
+
+                <RadioGroup
+                    android:id="@+id/rgCaptureMode"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <RadioButton
+                        android:id="@+id/rbCaptureOff"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Off (manual share only)"/>
+
+                    <RadioButton
+                        android:id="@+id/rbCaptureAccessibility"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Accessibility (fully automatic)"/>
+
+                    <RadioButton
+                        android:id="@+id/rbCaptureButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Floating button (tap to capture)"/>
+
+                    <RadioButton
+                        android:id="@+id/rbCaptureBoth"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Both (auto + floating button)"/>
+
+                </RadioGroup>
+
+                <TextView
+                    android:id="@+id/tvAccessibilityPermStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Accessibility permission required"
+                    android:textSize="12sp"
+                    android:paddingTop="12dp"
+                    android:textColor="#FF9800"
+                    android:visibility="gone"/>
+
+                <Button
+                    android:id="@+id/btnGrantAccessibility"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Grant Accessibility Permission"
+                    android:textSize="12sp"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone"/>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SUPPORTED PLATFORMS"
+            android:textSize="12sp"
+            android:textColor="?attr/colorPrimary"
+            android:layout_marginBottom="8dp"/>
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Select which apps GigLens monitors"
+                    android:textSize="13sp"
+                    android:textColor="#999999"
+                    android:layout_marginBottom="12dp"/>
+
+                <CheckBox
+                    android:id="@+id/cbPlatformDoordash"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="DoorDash"
+                    android:enabled="true"/>
+
+                <CheckBox
+                    android:id="@+id/cbPlatformUbereats"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Uber Eats (coming soon)"
+                    android:enabled="false"
+                    android:textColor="#666666"/>
+
+                <CheckBox
+                    android:id="@+id/cbPlatformGrubhub"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Grubhub (coming soon)"
+                    android:enabled="false"
+                    android:textColor="#666666"/>
+
+                <CheckBox
+                    android:id="@+id/cbPlatformInstacart"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Instacart (coming soon)"
+                    android:enabled="false"
+                    android:textColor="#666666"/>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

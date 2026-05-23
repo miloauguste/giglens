@@ -1,12 +1,19 @@
 package com.augusteenterprise.giglens.service
 
-// Author: Claude (Anthropic)
-// Accessibility Service that monitors DoorDash for offer screens.
+// Author: Claude (Anthropic) - Feature #8: Checks auto_capture_mode + enabled_platforms before triggering
+// Accessibility Service that monitors supported gig app offer screens.
 // When an offer screen is detected, it signals the ScreenCaptureService
 // to take a screenshot and run OCR.
 
 import android.accessibilityservice.AccessibilityService
 import android.content.Intent
+import com.augusteenterprise.giglens.GigLensApp
+import com.augusteenterprise.giglens.data.AppConfigKeys
+import com.augusteenterprise.giglens.data.PlatformRegistry
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
@@ -38,9 +45,22 @@ class OfferDetectorService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
 
-        // Only process DoorDash events
+        // Check auto capture mode is enabled
+        val mode = runBlocking {
+            GigLensApp.instance.database.appConfigDao()
+                .getValue(AppConfigKeys.AUTO_CAPTURE_MODE) ?: "off"
+        }
+        if (mode == "off" || mode == "button") return
+
+        // Check package is a supported + enabled platform
         val packageName = event.packageName?.toString() ?: return
-        if (packageName != DOORDASH_PACKAGE) return
+        val enabledPlatforms = runBlocking {
+            GigLensApp.instance.database.appConfigDao()
+                .getValue(AppConfigKeys.ENABLED_PLATFORMS) ?: "doordash"
+        }
+        val platform = PlatformRegistry.byPackage(packageName) ?: return
+        if (!platform.supported) return
+        if (platform.id !in enabledPlatforms.split(",").map { it.trim() }) return
 
         // Only process content/window changes
         if (event.eventType != AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED
