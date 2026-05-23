@@ -1,6 +1,6 @@
 package com.augusteenterprise.giglens.service
 
-// Author: Claude (Anthropic)
+// Author: Claude (Anthropic) - Fixed duplicate pill on repeated shares (isViewAdded flag)
 // Persistent floating pill widget. Always visible when enabled in Settings.
 // Pill + drawer render as one draggable unit via WindowManager.
 // States: IDLE → PILL(result) → MINI(drawer) → FULL(detail) → PILL
@@ -39,6 +39,7 @@ const val EXTRA_TIME_COST      = "time_cost"
 const val EXTRA_TOTAL_COST     = "total_cost"
 const val EXTRA_MINUTES_ON_JOB = "minutes_on_job"
 const val EXTRA_SCORE          = "score"
+const val EXTRA_COST_PER_MILE  = "cost_per_mile"
 
 private enum class SheetState { IDLE, PILL, MINI, FULL }
 
@@ -48,6 +49,7 @@ class OfferOverlayService : Service() {
     private var rootView: LinearLayout? = null
     private var layoutParams: WindowManager.LayoutParams? = null
     private var sheetState = SheetState.IDLE
+    private var isViewAdded = false
 
     // Position
     private var posX = 30
@@ -72,6 +74,7 @@ class OfferOverlayService : Service() {
     private var totalCost    = 0.0
     private var minutesOnJob = 0.0
     private var score        = 0
+    private var costPerMile  = 0.90
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -88,7 +91,15 @@ class OfferOverlayService : Service() {
             if (it.hasExtra(EXTRA_NET_VALUE)) {
                 loadExtras(it)
                 sheetState = SheetState.PILL
-                updateWidget()
+                if (isViewAdded) {
+                    // Reuse existing pill — just update content
+                    updateWidget()
+                    Log.d(TAG, "Reusing existing pill for new offer")
+                } else {
+                    // First offer — build the view
+                    showWidget()
+                    updateWidget()
+                }
             }
         }
         return START_STICKY  // restart if killed
@@ -97,6 +108,7 @@ class OfferOverlayService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         rootView?.let { try { windowManager.removeView(it) } catch (e: Exception) {} }
+        isViewAdded = false
     }
 
     // ── Load result data ──────────────────────────────────────────────────────
@@ -112,6 +124,7 @@ class OfferOverlayService : Service() {
         totalCost    = intent.getDoubleExtra(EXTRA_TOTAL_COST,     0.0)
         minutesOnJob = intent.getDoubleExtra(EXTRA_MINUTES_ON_JOB, 0.0)
         score        = intent.getIntExtra(EXTRA_SCORE,             0)
+        costPerMile  = intent.getDoubleExtra(EXTRA_COST_PER_MILE,  0.90)
         Log.d(TAG, "Result: verdict=$verdict net=$netValue restaurant=$restaurant")
     }
 
@@ -189,8 +202,13 @@ class OfferOverlayService : Service() {
 
         rootView = root
         layoutParams = params
-        windowManager.addView(root, params)
-        Log.d(TAG, "Widget added to WindowManager")
+        if (!isViewAdded) {
+            windowManager.addView(root, params)
+            isViewAdded = true
+            Log.d(TAG, "Widget added to WindowManager")
+        } else {
+            Log.d(TAG, "Widget already added — skipping addView")
+        }
     }
 
     // ── Update widget in place ────────────────────────────────────────────────
@@ -325,7 +343,7 @@ class OfferOverlayService : Service() {
                 drawer.addView(rowLayout("To pickup", "${"%.1f".format(pickupMiles)} mi"))
                 drawer.addView(rowLayout("Est. total", "${"%.1f".format(totalMiles)} mi"))
                 drawer.addView(divider())
-                drawer.addView(rowLayout("Vehicle cost", "$${"%.2f".format(vehicleCost)}"))
+                drawer.addView(rowLayout("Vehicle (${"$%.2f".format(costPerMile)}/mi)", "$${"%.2f".format(vehicleCost)}"))
                 drawer.addView(rowLayout("Time (${"%.0f".format(minutesOnJob)}min)",
                     "$${"%.2f".format(timeCost)}"))
                 drawer.addView(rowLayout("Total cost", "$${"%.2f".format(totalCost)}"))

@@ -1,3 +1,13 @@
+## [0.1.35] - 2026-05-23
+### Fixed
+- OfferOverlayService: New shares now reuse existing pill instead of adding a duplicate (isViewAdded flag)
+- Each new offer updates the existing widget in place via updateWidget()
+
+## [0.1.34] - 2026-05-22
+### Fixed
+- Widget full detail now shows configured cost-per-mile rate in vehicle cost label (e.g. "Vehicle ($0.90/mi)")
+- costPerMileUsed from ScoreResult now passed through intent to overlay service
+
 ## [0.1.33] - 2026-05-22
 ### Fixed
 - OfferScorer: Added timeCost, totalCost, minutesOnJob fields to ScoreResult (Bug A)
