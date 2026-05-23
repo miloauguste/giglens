@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Author: Claude (Anthropic) -->
+<!-- Author: Claude (Anthropic) - Security hardening: allowBackup=false, BootReceiver unexported, ShareReceiverActivity permission -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Foreground service for auto mode (screenshots) -->
@@ -15,7 +15,7 @@
 
     <application
         android:name=".GigLensApp"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@android:drawable/sym_def_app_icon"
         android:label="GigLens"
         android:supportsRtl="true"
@@ -40,6 +40,7 @@
         <activity
             android:name=".ui.ShareReceiverActivity"
             android:exported="true"
+            android:permission="android.permission.MANAGE_DOCUMENTS"
             android:theme="@style/Theme.GigLens.Transparent"
             android:label="GigLens">
             <intent-filter>
@@ -71,7 +72,7 @@
         <!-- Boot receiver — auto-starts widget if enabled -->
         <receiver
             android:name=".service.BootReceiver"
-            android:exported="true">
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>

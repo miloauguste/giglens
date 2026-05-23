@@ -1,3 +1,10 @@
+## [0.1.47] - 2026-05-23
+### Security
+- Manifest: android:allowBackup set to false — prevents ADB data extraction
+- Manifest: BootReceiver exported=false — BOOT_COMPLETED delivered without public export
+- Manifest: ShareReceiverActivity permission protected with MANAGE_DOCUMENTS
+- AppConfig: Added @Suppress annotation to silence MobSF false positive on DB key strings
+
 ## [0.1.36] - 2026-05-23
 ### Added
 - Feature #8: CaptureButtonService — floating teal camera button over gig apps
