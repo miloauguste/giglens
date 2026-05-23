@@ -72,3 +72,5 @@
 - tools/ocr_test.py — Linux Tesseract harness for fast parser iteration
 - tools/run_ocr.sh — venv wrapper for ocr_test.py
 - Android emulator (giglens_test AVD) configured on milo-dev with KVM acceleration
+# security hook test
+# retest
