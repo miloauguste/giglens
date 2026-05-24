@@ -1,3 +1,7 @@
+## [0.1.54] - 2026-05-24
+### Changed
+- Feature #8: Only the timer segment (· 8s) blinks under 10s — net value stays solid white
+
 ## [0.1.53] - 2026-05-24
 ### Fixed
 - Feature #8: Countdown now persists when pill expanded to MINI/FULL (was disappearing on tap)

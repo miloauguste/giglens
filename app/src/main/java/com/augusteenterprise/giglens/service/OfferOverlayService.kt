@@ -1,6 +1,6 @@
 package com.augusteenterprise.giglens.service
 
-// Author: Claude (Anthropic) - Feature #8: Countdown blinks <10s, persists across MINI/FULL
+// Author: Claude (Anthropic) - Feature #8: Only the timer segment blinks, not the net value
 // Persistent floating pill widget. Always visible when enabled in Settings.
 // Pill + drawer render as one draggable unit via WindowManager.
 // States: IDLE → PILL(result) → MINI(drawer) → FULL(detail) → PILL
@@ -14,6 +14,9 @@ import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.text.SpannableString
+import android.text.Spannable
+import android.text.style.ForegroundColorSpan
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
@@ -247,23 +250,44 @@ class OfferOverlayService : Service() {
 
     // ── Build pill TextView ───────────────────────────────────────────────────
     private fun buildPill(color: Int, hasDrawer: Boolean): TextView {
-        // Blink when countdown < 10s: alternate text alpha each tick
-        val isResultState = sheetState == SheetState.PILL ||
-                            sheetState == SheetState.MINI ||
-                            sheetState == SheetState.FULL
-        val blinking = isResultState && secondsRemaining in 1..9
-        val textColor = if (blinking && !blinkVisible)
-            Color.argb(60, 255, 255, 255)   // dim frame
-        else Color.WHITE
         return TextView(this).apply {
-            text = if (sheetState == SheetState.IDLE) "GL" else netLabel()
-            setTextColor(textColor)
+            text = if (sheetState == SheetState.IDLE)
+                SpannableString("GL")
+            else
+                netLabelSpannable()  // net value white, timer blinks when <10s
+            setTextColor(Color.WHITE)
             textSize = if (sheetState == SheetState.IDLE) 12f else 14f
             setTypeface(null, Typeface.BOLD)
             setPadding(40, 18, 40, 18)
             background = pillBg(color, hasDrawer)
             setOnTouchListener(makeTouchListener())
         }
+    }
+
+    // ── Build pill text with ONLY the timer segment blinking ──────────────────
+    private fun netLabelSpannable(): SpannableString {
+        val sign = if (netValue >= 0) "+" else ""
+        val base = "$sign$${"%.2f".format(netValue)}"
+        val isResultState = sheetState == SheetState.PILL ||
+                            sheetState == SheetState.MINI ||
+                            sheetState == SheetState.FULL
+        if (!isResultState || secondsRemaining <= 0) {
+            return SpannableString(base)
+        }
+        val timerText = " · ${secondsRemaining}s"
+        val full = base + timerText
+        val span = SpannableString(full)
+        // Blink ONLY the timer segment when under 10s
+        val blinking = secondsRemaining in 1..9
+        if (blinking && !blinkVisible) {
+            val start = base.length
+            val end = full.length
+            span.setSpan(
+                ForegroundColorSpan(Color.argb(40, 255, 255, 255)),
+                start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
+        return span
     }
 
     // ── Show initial widget (idle state) ──────────────────────────────────────
