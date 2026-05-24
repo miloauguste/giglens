@@ -1,6 +1,6 @@
 package com.augusteenterprise.giglens.service
 
-// Author: Claude (Anthropic) - Feature #8: Only the timer segment blinks, not the net value
+// Author: Claude (Anthropic) - Feature #8: Removed blink — static countdown timer
 // Persistent floating pill widget. Always visible when enabled in Settings.
 // Pill + drawer render as one draggable unit via WindowManager.
 // States: IDLE → PILL(result) → MINI(drawer) → FULL(detail) → PILL
@@ -155,7 +155,6 @@ class OfferOverlayService : Service() {
                                     sheetState == SheetState.MINI ||
                                     sheetState == SheetState.FULL
                 secondsRemaining--
-                blinkVisible = !blinkVisible  // toggle for blink effect
                 if (secondsRemaining <= 0) {
                     if (isResultState) {
                         verdict = "UNKNOWN"
@@ -275,19 +274,7 @@ class OfferOverlayService : Service() {
             return SpannableString(base)
         }
         val timerText = " · ${secondsRemaining}s"
-        val full = base + timerText
-        val span = SpannableString(full)
-        // Blink ONLY the timer segment when under 10s
-        val blinking = secondsRemaining in 1..9
-        if (blinking && !blinkVisible) {
-            val start = base.length
-            val end = full.length
-            span.setSpan(
-                ForegroundColorSpan(Color.argb(40, 255, 255, 255)),
-                start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-        }
-        return span
+        return SpannableString(base + timerText)
     }
 
     // ── Show initial widget (idle state) ──────────────────────────────────────

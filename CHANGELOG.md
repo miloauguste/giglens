@@ -1,3 +1,11 @@
+## [0.1.56] - 2026-05-24
+### Note
+- Stop-sign octagon for SKIP deferred — keeping red rounded pill for now
+
+## [0.1.55] - 2026-05-24
+### Changed
+- Feature #8: Removed countdown blink — timer now displays statically
+
 ## [0.1.54] - 2026-05-24
 ### Changed
 - Feature #8: Only the timer segment (· 8s) blinks under 10s — net value stays solid white
