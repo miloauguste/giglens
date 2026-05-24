@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [OfferCapture::class, ScorerConfig::class, AppConfig::class],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 abstract class OfferDatabase : RoomDatabase() {
@@ -65,6 +65,12 @@ abstract class OfferDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("INSERT OR IGNORE INTO scorer_config VALUES('result_display_seconds', 60.0, 'Seconds to show result pill before reverting to idle')")
+            }
+        }
+
         val MIGRATION_4_5 = object : Migration(4, 5) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("INSERT OR IGNORE INTO app_config VALUES('auto_capture_mode', 'off', 'Auto capture: off | accessibility | button | both')")
@@ -92,7 +98,7 @@ abstract class OfferDatabase : RoomDatabase() {
                     OfferDatabase::class.java,
                     "giglens_offers.db"
                 )
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                 .fallbackToDestructiveMigration()
                 .setJournalMode(JournalMode.TRUNCATE)
                 .build()

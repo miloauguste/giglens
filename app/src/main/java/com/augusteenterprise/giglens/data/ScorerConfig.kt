@@ -43,6 +43,7 @@ object ScorerConfigKeys {
     const val THRESHOLD_BORDERLINE    = "threshold_borderline"
     const val COST_PER_MILE           = "cost_per_mile"
     const val HOURLY_RATE             = "hourly_rate"
+    const val RESULT_DISPLAY_SECONDS  = "result_display_seconds"
 }
 
 fun defaultScorerConfig(): List<ScorerConfig> = listOf(
@@ -72,5 +73,6 @@ fun defaultScorerConfig(): List<ScorerConfig> = listOf(
     ScorerConfig(ScorerConfigKeys.THRESHOLD_TAKE,           65.0, "Score >= this = TAKE"),
     ScorerConfig(ScorerConfigKeys.THRESHOLD_BORDERLINE,     40.0, "Score >= this = BORDERLINE"),
     ScorerConfig(ScorerConfigKeys.COST_PER_MILE,            0.90, "Vehicle cost per mile driven (IRS standard $0.90)"),
-    ScorerConfig(ScorerConfigKeys.HOURLY_RATE,              15.00, "Driver hourly rate for time cost calculation")
+    ScorerConfig(ScorerConfigKeys.HOURLY_RATE,              15.00, "Driver hourly rate for time cost calculation"),
+    ScorerConfig(ScorerConfigKeys.RESULT_DISPLAY_SECONDS,   60.0,  "Seconds to show result pill before reverting to idle")
 )

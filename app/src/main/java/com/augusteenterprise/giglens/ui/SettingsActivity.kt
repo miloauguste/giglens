@@ -90,6 +90,7 @@ class SettingsActivity : AppCompatActivity() {
             val gpsEnabled = appDao.getValue(AppConfigKeys.GPS_ENABLED) == "true"
             val costPerMile = scorerDao.getValue(ScorerConfigKeys.COST_PER_MILE) ?: 0.90
             val hourlyRate = scorerDao.getValue(ScorerConfigKeys.HOURLY_RATE) ?: 15.00
+            val resultDuration = scorerDao.getValue(ScorerConfigKeys.RESULT_DISPLAY_SECONDS) ?: 60.0
             val dataSharing = appDao.getValue(AppConfigKeys.DATA_SHARING) ?: "none"
             val widgetEnabled = appDao.getValue(AppConfigKeys.WIDGET_ENABLED) == "true"
             val captureMode = appDao.getValue(AppConfigKeys.AUTO_CAPTURE_MODE) ?: "off"
@@ -116,6 +117,7 @@ class SettingsActivity : AppCompatActivity() {
                 binding.etRegion.setText(manualRegion)
                 binding.etCostPerMile.setText("%.2f".format(costPerMile))
                 binding.etHourlyRate.setText("%.2f".format(hourlyRate))
+                binding.etResultDuration.setText("%.0f".format(resultDuration))
                 when (dataSharing) {
                     "aggregate" -> binding.rbSharingAggregate.isChecked = true
                     "individual" -> binding.rbSharingIndividual.isChecked = true
@@ -130,6 +132,7 @@ class SettingsActivity : AppCompatActivity() {
         val gpsEnabled = binding.switchGps.isChecked
         val costPerMile = binding.etCostPerMile.text.toString().toDoubleOrNull() ?: 0.90
         val hourlyRate = binding.etHourlyRate.text.toString().toDoubleOrNull() ?: 15.00
+        val resultDuration = binding.etResultDuration.text.toString().toDoubleOrNull()?.coerceIn(5.0, 300.0) ?: 60.0
         val dataSharing = when {
             binding.rbSharingAggregate.isChecked -> "aggregate"
             binding.rbSharingIndividual.isChecked -> "individual"
@@ -156,6 +159,7 @@ class SettingsActivity : AppCompatActivity() {
             appDao.setValue(AppConfigKeys.DATA_SHARING, dataSharing)
             scorerDao.updateValue(ScorerConfigKeys.COST_PER_MILE, costPerMile)
             scorerDao.updateValue(ScorerConfigKeys.HOURLY_RATE, hourlyRate)
+            scorerDao.updateValue(ScorerConfigKeys.RESULT_DISPLAY_SECONDS, resultDuration)
             
             // Start/stop CaptureButtonService based on mode
             val savedMode = captureMode

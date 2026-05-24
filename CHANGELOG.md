@@ -1,3 +1,9 @@
+## [0.1.52] - 2026-05-24
+### Added
+- Feature #8: Countdown timer now displayed on the result pill (e.g. +$5.40 · 58s)
+- Feature #8: Result display duration configurable in FLOATING WIDGET settings (default 60s, range 5-300s)
+- DB Migration 5→6 — seeds result_display_seconds config key
+
 ## [0.1.51] - 2026-05-24
 ### Added
 - Feature #8: Result pill auto-reverts to IDLE after 60s if no new offer

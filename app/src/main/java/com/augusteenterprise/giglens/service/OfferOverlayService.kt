@@ -1,6 +1,6 @@
 package com.augusteenterprise.giglens.service
 
-// Author: Claude (Anthropic) - Feature #8: 60s auto-revert to IDLE after result pill shown
+// Author: Claude (Anthropic) - Feature #8: Configurable countdown timer displayed on pill
 // Persistent floating pill widget. Always visible when enabled in Settings.
 // Pill + drawer render as one draggable unit via WindowManager.
 // States: IDLE → PILL(result) → MINI(drawer) → FULL(detail) → PILL
@@ -26,6 +26,9 @@ import android.view.WindowManager
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.app.NotificationCompat
+import com.augusteenterprise.giglens.GigLensApp
+import com.augusteenterprise.giglens.data.ScorerConfigKeys
+import kotlinx.coroutines.runBlocking
 
 private const val TAG = "OfferOverlayService"
 private const val CHANNEL_ID = "giglens_overlay"
@@ -80,10 +83,15 @@ class OfferOverlayService : Service() {
     private var score        = 0
     private var costPerMile  = 0.90
 
-    // 60s auto-revert timer — result pill reverts to IDLE if no new offer
+    // Configurable auto-revert timer — result pill reverts to IDLE if no new offer
     private val revertHandler = Handler(Looper.getMainLooper())
     private var revertRunnable: Runnable? = null
-    private val REVERT_DELAY_MS = 60_000L
+    private var tickRunnable: Runnable? = null
+    private var secondsRemaining = 60
+    private fun revertDelaySeconds(): Int = runBlocking {
+        (GigLensApp.instance.database.scorerConfigDao()
+            .getValue(ScorerConfigKeys.RESULT_DISPLAY_SECONDS) ?: 60.0).toInt()
+    }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -130,25 +138,38 @@ class OfferOverlayService : Service() {
         return START_STICKY  // restart if killed
     }
 
-    // ── 60s auto-revert timer ───────────────────────────────────────────────
+    // ── Configurable auto-revert timer with countdown tick ────────────────────
     private fun startRevertTimer() {
         cancelRevertTimer()
-        revertRunnable = Runnable {
-            // Only revert if still showing a result pill (not mid-interaction)
-            if (sheetState == SheetState.PILL) {
-                verdict = "UNKNOWN"
-                sheetState = SheetState.IDLE
-                updateWidget()
-                Log.d(TAG, "60s elapsed — reverted result pill to IDLE")
+        secondsRemaining = revertDelaySeconds()
+        Log.d(TAG, "Revert timer started (${secondsRemaining}s)")
+
+        // Tick every second to update the countdown on the pill
+        tickRunnable = object : Runnable {
+            override fun run() {
+                secondsRemaining--
+                if (secondsRemaining <= 0) {
+                    if (sheetState == SheetState.PILL) {
+                        verdict = "UNKNOWN"
+                        sheetState = SheetState.IDLE
+                        updateWidget()
+                        Log.d(TAG, "Countdown elapsed — reverted to IDLE")
+                    }
+                } else {
+                    // Only re-render the pill (not mini/full drawer) to update countdown
+                    if (sheetState == SheetState.PILL) updateWidget()
+                    revertHandler.postDelayed(this, 1000L)
+                }
             }
         }
-        revertHandler.postDelayed(revertRunnable!!, REVERT_DELAY_MS)
-        Log.d(TAG, "Revert timer started (60s)")
+        revertHandler.postDelayed(tickRunnable!!, 1000L)
     }
 
     private fun cancelRevertTimer() {
         revertRunnable?.let { revertHandler.removeCallbacks(it) }
+        tickRunnable?.let { revertHandler.removeCallbacks(it) }
         revertRunnable = null
+        tickRunnable = null
     }
 
     override fun onDestroy() {
@@ -185,7 +206,11 @@ class OfferOverlayService : Service() {
 
     private fun netLabel(): String {
         val sign = if (netValue >= 0) "+" else ""
-        return "$sign$${"%.2f".format(netValue)}"
+        val base = "$sign$${"%.2f".format(netValue)}"
+        // Show countdown on the pill while result is displayed
+        return if (sheetState == SheetState.PILL && secondsRemaining > 0) {
+            "$base · ${secondsRemaining}s"
+        } else base
     }
 
     private fun pillBg(color: Int, topLeft: Boolean = true): GradientDrawable {
