@@ -1,6 +1,6 @@
 package com.augusteenterprise.giglens.service
 
-// Author: Claude (Anthropic) - Feature #8: Widget morph — signals SHOW_CAMERA to overlay + auto-captures if mode allows
+// Author: Claude (Anthropic) - Feature #8: Offer fingerprint prevents re-triggering camera on same offer
 // Accessibility Service that monitors supported gig app offer screens.
 // When an offer screen is detected, it signals the ScreenCaptureService
 // to take a screenshot and run OCR.
@@ -38,6 +38,7 @@ class OfferDetectorService : AccessibilityService() {
     }
 
     private var lastCaptureTime = 0L
+    private var lastOfferFingerprint = ""  // detects new vs same offer screen
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -77,12 +78,45 @@ class OfferDetectorService : AccessibilityService() {
         // Walk the accessibility tree looking for offer keywords
         val rootNode = rootInActiveWindow ?: return
         if (looksLikeOfferScreen(rootNode)) {
-            Log.i(TAG, "Offer screen detected — signaling capture")
+            // Build a fingerprint from offer text to detect NEW vs SAME offer
+            val fingerprint = buildOfferFingerprint(rootNode)
+            if (fingerprint == lastOfferFingerprint) {
+                // Same offer still on screen — don't re-trigger
+                rootNode.recycle()
+                return
+            }
+            Log.i(TAG, "NEW offer screen detected — signaling capture")
+            lastOfferFingerprint = fingerprint
             lastCaptureTime = now
             signalCapture()
         }
 
         rootNode.recycle()
+    }
+
+    /**
+     * Builds a lightweight fingerprint of the offer screen from visible text.
+     * Used to detect whether this is a NEW offer or the same one still showing.
+     *
+     * CORRECT: hash the dollar amounts + distances → unique per offer
+     * WRONG:   re-triggering camera every 500ms on the same static offer screen
+     */
+    private fun buildOfferFingerprint(root: AccessibilityNodeInfo): String {
+        val sb = StringBuilder()
+        fun walk(node: AccessibilityNodeInfo) {
+            val text = node.text?.toString() ?: ""
+            // Only include text with $ or mi — the parts unique to an offer
+            if (text.contains("$") || text.contains("mi")) {
+                sb.append(text).append("|")
+            }
+            for (i in 0 until node.childCount) {
+                val child = node.getChild(i) ?: continue
+                walk(child)
+                child.recycle()
+            }
+        }
+        walk(root)
+        return sb.toString().hashCode().toString()
     }
 
     /**

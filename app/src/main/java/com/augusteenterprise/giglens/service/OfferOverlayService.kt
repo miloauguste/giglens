@@ -1,6 +1,6 @@
 package com.augusteenterprise.giglens.service
 
-// Author: Claude (Anthropic) - Feature #8: Widget morph — IDLE/CAMERA/PROCESSING/PILL/MINI/FULL
+// Author: Claude (Anthropic) - Feature #8: 60s auto-revert to IDLE after result pill shown
 // Persistent floating pill widget. Always visible when enabled in Settings.
 // Pill + drawer render as one draggable unit via WindowManager.
 // States: IDLE → PILL(result) → MINI(drawer) → FULL(detail) → PILL
@@ -14,7 +14,9 @@ import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.Gravity
@@ -78,6 +80,11 @@ class OfferOverlayService : Service() {
     private var score        = 0
     private var costPerMile  = 0.90
 
+    // 60s auto-revert timer — result pill reverts to IDLE if no new offer
+    private val revertHandler = Handler(Looper.getMainLooper())
+    private var revertRunnable: Runnable? = null
+    private val REVERT_DELAY_MS = 60_000L
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
@@ -91,7 +98,8 @@ class OfferOverlayService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_SHOW_CAMERA -> {
-                // Offer screen detected — morph to camera button
+                // New offer detected — cancel any pending revert, morph to camera
+                cancelRevertTimer()
                 sheetState = SheetState.CAMERA
                 if (isViewAdded) updateWidget() else { showWidget(); updateWidget() }
                 Log.d(TAG, "Widget morphed to CAMERA state")
@@ -115,14 +123,37 @@ class OfferOverlayService : Service() {
                         showWidget()
                         updateWidget()
                     }
+                    startRevertTimer()  // 60s → revert to IDLE if no new offer
                 }
             }
         }
         return START_STICKY  // restart if killed
     }
 
+    // ── 60s auto-revert timer ───────────────────────────────────────────────
+    private fun startRevertTimer() {
+        cancelRevertTimer()
+        revertRunnable = Runnable {
+            // Only revert if still showing a result pill (not mid-interaction)
+            if (sheetState == SheetState.PILL) {
+                verdict = "UNKNOWN"
+                sheetState = SheetState.IDLE
+                updateWidget()
+                Log.d(TAG, "60s elapsed — reverted result pill to IDLE")
+            }
+        }
+        revertHandler.postDelayed(revertRunnable!!, REVERT_DELAY_MS)
+        Log.d(TAG, "Revert timer started (60s)")
+    }
+
+    private fun cancelRevertTimer() {
+        revertRunnable?.let { revertHandler.removeCallbacks(it) }
+        revertRunnable = null
+    }
+
     override fun onDestroy() {
         super.onDestroy()
+        cancelRevertTimer()
         rootView?.let { try { windowManager.removeView(it) } catch (e: Exception) {} }
         isViewAdded = false
     }
@@ -229,8 +260,9 @@ class OfferOverlayService : Service() {
 
     // ── Update widget in place ────────────────────────────────────────────────
     private fun updateWidget() {
-        val root = rootView ?: return
-        val params = layoutParams ?: return
+        val root = rootView ?: run { Log.w(TAG, "updateWidget: rootView is null!"); return }
+        val params = layoutParams ?: run { Log.w(TAG, "updateWidget: layoutParams is null!"); return }
+        Log.d(TAG, "updateWidget rendering state=$sheetState")
         val color = if (sheetState == SheetState.IDLE)
             Color.parseColor("#666666") else verdictColor()
 
@@ -485,6 +517,8 @@ class OfferOverlayService : Service() {
                         SheetState.MINI       -> SheetState.FULL
                         SheetState.FULL       -> SheetState.PILL
                     }
+                    // Driver is interacting — restart the 60s revert timer
+                    if (sheetState != SheetState.IDLE) startRevertTimer()
                     updateWidget()
                 }
                 true

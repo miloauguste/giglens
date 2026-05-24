@@ -1,3 +1,17 @@
+## [0.1.51] - 2026-05-24
+### Added
+- Feature #8: Result pill auto-reverts to IDLE after 60s if no new offer
+- Feature #8: Driver interaction (tap to expand) restarts the 60s timer
+- Feature #8: New offer detected cancels revert timer + morphs to camera
+- Feature #8: OfferDetectorService fingerprints offers — same offer won't re-trigger camera
+
+## [0.1.50] - 2026-05-23
+### Added
+- DEBUG ONLY: DebugTriggerReceiver — lets ADB trigger widget states for testing
+- ADB usage: am broadcast -a com.augusteenterprise.giglens.DEBUG_TRIGGER --es state [camera|hide|offer]
+### Note
+- DebugTriggerReceiver must be removed or guarded before release build
+
 ## [0.1.49] - 2026-05-23
 ### Added
 - Feature #8: Widget morph — IDLE/CAMERA/PROCESSING/PILL/MINI/FULL states
