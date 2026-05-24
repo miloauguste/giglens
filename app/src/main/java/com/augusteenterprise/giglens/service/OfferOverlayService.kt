@@ -1,6 +1,6 @@
 package com.augusteenterprise.giglens.service
 
-// Author: Claude (Anthropic) - Feature #8: Configurable countdown timer displayed on pill
+// Author: Claude (Anthropic) - Feature #8: Countdown blinks <10s, persists across MINI/FULL
 // Persistent floating pill widget. Always visible when enabled in Settings.
 // Pill + drawer render as one draggable unit via WindowManager.
 // States: IDLE → PILL(result) → MINI(drawer) → FULL(detail) → PILL
@@ -88,6 +88,7 @@ class OfferOverlayService : Service() {
     private var revertRunnable: Runnable? = null
     private var tickRunnable: Runnable? = null
     private var secondsRemaining = 60
+    private var blinkVisible = true  // toggles each tick when countdown < 10s
     private fun revertDelaySeconds(): Int = runBlocking {
         (GigLensApp.instance.database.scorerConfigDao()
             .getValue(ScorerConfigKeys.RESULT_DISPLAY_SECONDS) ?: 60.0).toInt()
@@ -147,17 +148,22 @@ class OfferOverlayService : Service() {
         // Tick every second to update the countdown on the pill
         tickRunnable = object : Runnable {
             override fun run() {
+                val isResultState = sheetState == SheetState.PILL ||
+                                    sheetState == SheetState.MINI ||
+                                    sheetState == SheetState.FULL
                 secondsRemaining--
+                blinkVisible = !blinkVisible  // toggle for blink effect
                 if (secondsRemaining <= 0) {
-                    if (sheetState == SheetState.PILL) {
+                    if (isResultState) {
                         verdict = "UNKNOWN"
                         sheetState = SheetState.IDLE
+                        secondsRemaining = 0
                         updateWidget()
                         Log.d(TAG, "Countdown elapsed — reverted to IDLE")
                     }
                 } else {
-                    // Only re-render the pill (not mini/full drawer) to update countdown
-                    if (sheetState == SheetState.PILL) updateWidget()
+                    // Re-render in any result state to update countdown + blink
+                    if (isResultState) updateWidget()
                     revertHandler.postDelayed(this, 1000L)
                 }
             }
@@ -207,8 +213,11 @@ class OfferOverlayService : Service() {
     private fun netLabel(): String {
         val sign = if (netValue >= 0) "+" else ""
         val base = "$sign$${"%.2f".format(netValue)}"
-        // Show countdown on the pill while result is displayed
-        return if (sheetState == SheetState.PILL && secondsRemaining > 0) {
+        // Show countdown across all result states (PILL, MINI, FULL)
+        val isResultState = sheetState == SheetState.PILL ||
+                            sheetState == SheetState.MINI ||
+                            sheetState == SheetState.FULL
+        return if (isResultState && secondsRemaining > 0) {
             "$base · ${secondsRemaining}s"
         } else base
     }
@@ -238,9 +247,17 @@ class OfferOverlayService : Service() {
 
     // ── Build pill TextView ───────────────────────────────────────────────────
     private fun buildPill(color: Int, hasDrawer: Boolean): TextView {
+        // Blink when countdown < 10s: alternate text alpha each tick
+        val isResultState = sheetState == SheetState.PILL ||
+                            sheetState == SheetState.MINI ||
+                            sheetState == SheetState.FULL
+        val blinking = isResultState && secondsRemaining in 1..9
+        val textColor = if (blinking && !blinkVisible)
+            Color.argb(60, 255, 255, 255)   // dim frame
+        else Color.WHITE
         return TextView(this).apply {
             text = if (sheetState == SheetState.IDLE) "GL" else netLabel()
-            setTextColor(Color.WHITE)
+            setTextColor(textColor)
             textSize = if (sheetState == SheetState.IDLE) 12f else 14f
             setTypeface(null, Typeface.BOLD)
             setPadding(40, 18, 40, 18)

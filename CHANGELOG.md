@@ -1,3 +1,9 @@
+## [0.1.53] - 2026-05-24
+### Fixed
+- Feature #8: Countdown now persists when pill expanded to MINI/FULL (was disappearing on tap)
+### Added
+- Feature #8: Countdown blinks (alternating alpha) when under 10 seconds for urgency
+
 ## [0.1.52] - 2026-05-24
 ### Added
 - Feature #8: Countdown timer now displayed on the result pill (e.g. +$5.40 · 58s)
