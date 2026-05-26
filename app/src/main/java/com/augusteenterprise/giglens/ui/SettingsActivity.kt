@@ -27,6 +27,14 @@ class SettingsActivity : AppCompatActivity() {
     
     private lateinit var binding: ActivitySettingsBinding
     
+    override fun onResume() {
+        super.onResume()
+        // Author: Claude (Anthropic) - May 26 2026: Re-check accessibility state on resume
+        // CORRECT: re-evaluate when returning from system Accessibility settings screen
+        // WRONG:   only checking on onCreate — misses state changes made in system settings
+        updateAccessibilityPermUI()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivitySettingsBinding.inflate(layoutInflater)
@@ -182,11 +190,15 @@ class SettingsActivity : AppCompatActivity() {
     }
     
     private fun isAccessibilityEnabled(): Boolean {
-        val service = "$packageName/.service.OfferDetectorService"
+        // Author: Claude (Anthropic) - May 26 2026: Fix relative vs fully-qualified service name mismatch
+        // CORRECT: match both relative and fully-qualified forms
+        // WRONG:   only checking "$packageName/.service.OfferDetectorService" — misses full path form
         val enabled = Settings.Secure.getString(
             contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
         ) ?: return false
-        return enabled.contains(service)
+        val shortForm = "$packageName/.service.OfferDetectorService"
+        val fullForm  = "$packageName/com.augusteenterprise.giglens.service.OfferDetectorService"
+        return enabled.contains(shortForm) || enabled.contains(fullForm)
     }
 
     private fun updateAccessibilityPermUI() {
