@@ -1,12 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Author: Claude (Anthropic) -->
+<!-- Author: Claude (Anthropic) - May 25 2026: Expanded platform allowlist, removed flagIncludeNotImportantViews -->
 <!-- Accessibility Service config for GigLens offer detection -->
+<!--
+    SECURITY POLICY:
+    android:packageNames = OS-level hard filter. Android drops all events from
+    packages not listed here before any Kotlin code runs.
+
+    Phase 1  (active): DoorDash only
+    Phase 2  (planned): + Uber Eats, Grubhub
+    Phase 3  (planned): + Instacart, Amazon Flex, Shipt
+
+    TO ADD A PLATFORM: add package here AND in PlatformRegistry.kt
+-->
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+
     android:accessibilityEventTypes="typeWindowContentChanged|typeWindowStateChanged"
+
     android:accessibilityFeedbackType="feedbackGeneric"
-    android:accessibilityFlags="flagDefault|flagIncludeNotImportantViews|flagReportViewIds"
+
+    android:accessibilityFlags="flagDefault|flagReportViewIds"
+
     android:canRetrieveWindowContent="true"
+
     android:description="@string/accessibility_service_description"
+
     android:notificationTimeout="500"
-    android:packageNames="com.dd.doordash" />
-    <!-- Phase 1: DoorDash only. Phase 3 will add more package names -->
+
+    android:packageNames="
+        com.dd.doordash,
+        com.ubereats.driver,
+        com.grubhub.driver,
+        com.instacart.shopper,
+        com.amazon.rabbit,
+        com.shipt.shopper" />

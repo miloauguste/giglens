@@ -201,56 +201,69 @@ object OfferParser {
      * or a capitalized line that isn't a known UI element.
      */
     private fun extractRestaurant(text: String): String? {
+        // Author: Claude (Anthropic) - May 25 2026: Bug E fix
+        // Strip leading non-letter OCR noise (e.g. "| McDonald's" → "McDonald's")
+        // Restaurant appears AFTER "@ Pickup" line in DoorDash OCR output
         val lines = text.lines().map { it.trim() }.filter { it.isNotBlank() }
 
-        // Strategy 1: Line immediately after "Pickup"
+        // Cleans OCR prefix garbage: "| McDonald's" → "McDonald's", "@ Pickup" → "Pickup"
+        fun cleanLine(line: String): String {
+            return line.trimStart { !it.isLetter() }.trim()
+        }
+
+        // Status words that appear near restaurant but are NOT the name
+        val statusWords = setOf(
+            "busy", "popular", "trending", "closed", "unavailable",
+            "accept", "decline", "total", "guaranteed", "incl",
+            "delivery", "deliver", "doordash", "instructions",
+            "items", "customer", "dropoff", "pickup", "mapbox",
+            "center", "rd", "ave", "st", "blvd", "turnpike",
+            "township", "borough", "county"
+        )
+
+        // Strategy 1: Line immediately after "@ Pickup" or "Pickup"
+        // DoorDash OCR structure: ... → "@ Pickup" → "| McDonald's" → "fy Customer dropoff"
         for ((i, line) in lines.withIndex()) {
-            val lineLower = line.lowercase()
-            if (lineLower == "pickup" || lineLower == "pick up"
-                || lineLower.contains("delivery for")
-                || lineLower.contains("pick up from")
+            val cleaned = cleanLine(line).lowercase()
+            if (cleaned == "pickup" || cleaned == "pick up"
+                || cleaned.contains("delivery for")
+                || cleaned.contains("pick up from")
             ) {
-                // Check next few lines — OCR may insert garbage between Pickup and restaurant name
                 for (j in 1..3) {
                     if (i + j >= lines.size) break
-                    val candidate = lines[i + j].trim()
-                    if (candidate.length in 3..50
+                    val raw = lines[i + j]
+                    val candidate = cleanLine(raw)
+                    if (candidate.length in 2..50
+                        && candidate.isNotEmpty()
                         && candidate[0].isUpperCase()
                         && candidate.any { it.isLetter() }
                         && !PAY_REGEX.containsMatchIn(candidate)
                         && !DISTANCE_REGEX.containsMatchIn(candidate)
-                        && !candidate.lowercase().let { c ->
-                            c.contains("accept") || c.contains("decline")
-                            || c.contains("customer") || c.contains("dropoff")
-                            || c.contains("mapbox") || c.contains("deliver")
-                            || c.contains("center") || c.contains("township")
-                            || c.contains("guaranteed") || c.contains("incl")
-                        }
+                        && statusWords.none { candidate.lowercase().contains(it) }
                     ) {
+                        Log.d(TAG, "extractRestaurant: Strategy 1 found '$candidate' (raw: '$raw')")
                         return candidate
                     }
                 }
             }
         }
 
-        // Strategy 2: Look for known restaurant-like lines
-        val skipWords = setOf(
-            "accept", "decline", "total", "guaranteed",
-            "delivery", "deliver", "doordash", "instructions",
-            "items", "customer", "dropoff", "pickup", "mapbox",
-            "center", "rd", "ave", "st", "blvd", "turnpike"
-        )
+        // Strategy 2: Fallback — scan all lines for restaurant-like text
         for (line in lines) {
-            if (line.length in 3..40
-                && line[0].isUpperCase()
-                && !PAY_REGEX.containsMatchIn(line)
-                && !DISTANCE_REGEX.containsMatchIn(line)
-                && skipWords.none { line.lowercase().contains(it) }
+            val candidate = cleanLine(line)
+            if (candidate.length in 2..40
+                && candidate.isNotEmpty()
+                && candidate[0].isUpperCase()
+                && !PAY_REGEX.containsMatchIn(candidate)
+                && !DISTANCE_REGEX.containsMatchIn(candidate)
+                && statusWords.none { candidate.lowercase().contains(it) }
             ) {
-                return line
+                Log.d(TAG, "extractRestaurant: Strategy 2 found '$candidate' (raw: '$line')")
+                return candidate
             }
         }
 
+        Log.w(TAG, "extractRestaurant: no restaurant found in ${lines.size} lines")
         return null
     }
 }
