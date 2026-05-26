@@ -31,7 +31,23 @@ import com.augusteenterprise.giglens.data.OfferCapture
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import com.augusteenterprise.giglens.geocoding.GeocodingHelper
+import com.augusteenterprise.giglens.location.LocationHelper
 import com.augusteenterprise.giglens.ocr.OfferParser
+import com.augusteenterprise.giglens.ocr.StreetExtractor
+import com.augusteenterprise.giglens.scoring.OfferScorer
+import com.augusteenterprise.giglens.service.EXTRA_NET_VALUE
+import com.augusteenterprise.giglens.service.EXTRA_VERDICT
+import com.augusteenterprise.giglens.service.EXTRA_PAY_AMOUNT
+import com.augusteenterprise.giglens.service.EXTRA_RESTAURANT
+import com.augusteenterprise.giglens.service.EXTRA_PICKUP_MILES
+import com.augusteenterprise.giglens.service.EXTRA_TOTAL_MILES
+import com.augusteenterprise.giglens.service.EXTRA_VEHICLE_COST
+import com.augusteenterprise.giglens.service.EXTRA_TIME_COST
+import com.augusteenterprise.giglens.service.EXTRA_TOTAL_COST
+import com.augusteenterprise.giglens.service.EXTRA_MINUTES_ON_JOB
+import com.augusteenterprise.giglens.service.EXTRA_SCORE
+import com.augusteenterprise.giglens.service.EXTRA_COST_PER_MILE
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -197,7 +213,11 @@ class ScreenCaptureService : Service() {
     }
 
     /**
-     * Runs ML Kit OCR on the bitmap and stores parsed results in Room DB.
+     * Runs ML Kit OCR on the bitmap, scores the offer, saves to DB, and shows overlay pill.
+     * Author: Claude (Anthropic) - May 25 2026: Wired full scoring + overlay pipeline (was DB-only)
+     *
+     * CORRECT: parse → score → save to DB → launch OfferOverlayService
+     * WRONG:   parse → save to DB (no score, no overlay — old broken behavior)
      */
     private fun runOcr(bitmap: Bitmap, screenshotPath: String?) {
         val inputImage = InputImage.fromBitmap(bitmap, 0)
@@ -205,7 +225,7 @@ class ScreenCaptureService : Service() {
         textRecognizer.process(inputImage)
             .addOnSuccessListener { visionText ->
                 val rawText = visionText.text
-                Log.d(TAG, "OCR result (${rawText.length} chars): ${rawText.take(200)}")
+                Log.d(TAG, "OCR result (${rawText.length} chars)")
 
                 val parsed = OfferParser.parse(rawText)
 
@@ -213,25 +233,108 @@ class ScreenCaptureService : Service() {
                     Log.i(TAG, "Valid offer: \$${parsed.payAmount} | ${parsed.distance} mi | ${parsed.restaurant}")
 
                     serviceScope.launch {
-                        val capture = OfferCapture(
-                            payAmount = parsed.payAmount,
-                            distance = parsed.distance,
-                            restaurant = parsed.restaurant,
-                            screenshotPath = screenshotPath,
-                            rawOcrText = rawText
+                        val db = GigLensApp.instance.database
+                        val captureDao = db.offerCaptureDao()
+                        val configDao  = db.scorerConfigDao()
+                        val scorer     = OfferScorer(configDao)
+
+                        // Get driver location + estimate delivery distance
+                        val location  = LocationHelper.getCurrentLocation(applicationContext)
+                        val addresses = StreetExtractor.extract(rawText)
+                        val distanceEstimate = GeocodingHelper.estimateDeliveryDistance(
+                            pickupStreet  = addresses.pickupStreet,
+                            dropoffStreet = addresses.dropoffStreet,
+                            regionHint    = null
                         )
-                        val id = GigLensApp.instance.database.offerCaptureDao().insert(capture)
-                        Log.i(TAG, "Offer saved to DB with id=$id")
+
+                        val pickupDistance: Double? =
+                            if (location != null && distanceEstimate.pickupPoint != null) {
+                                LocationHelper.straightLineDistance(
+                                    location.latitude, location.longitude,
+                                    distanceEstimate.pickupPoint.lat,
+                                    distanceEstimate.pickupPoint.lon
+                                ) * 1.3
+                            } else null
+
+                        val personalAvg = captureDao.getAverageScore()
+                        val result = scorer.score(
+                            payAmount        = parsed.payAmount,
+                            deliveryDistance = parsed.distance,
+                            pickupDistance   = pickupDistance,
+                            personalAvgScore = personalAvg
+                        )
+
+                        if (result != null) {
+                            Log.i(TAG, "Score: ${result.score} | Verdict: ${result.verdict} | Net: ${result.netValue}")
+
+                            // Save full result to DB
+                            val capture = OfferCapture(
+                                payAmount      = parsed.payAmount,
+                                distance       = parsed.distance,
+                                restaurant     = parsed.restaurant,
+                                screenshotPath = screenshotPath,
+                                rawOcrText     = rawText,
+                                platform       = detectPlatform(rawText),
+                                score          = result.score,
+                                verdict        = result.verdict.name,
+                                payPerMile     = result.payPerMile,
+                                vsPersonalAvg  = result.vsPersonalAvg,
+                                driverLat      = location?.latitude,
+                                driverLon      = location?.longitude,
+                                pickupDistance = result.pickupDistance,
+                                totalDistance  = result.totalDistance,
+                                truePayPerMile = result.truePayPerMile,
+                                vehicleCost    = result.vehicleCost,
+                                netValue       = result.netValue
+                            )
+                            captureDao.insert(capture)
+
+                            // Launch floating pill overlay
+                            val serviceIntent = Intent(applicationContext, OfferOverlayService::class.java).apply {
+                                putExtra(EXTRA_NET_VALUE,      result.netValue)
+                                putExtra(EXTRA_VERDICT,        result.verdict.name)
+                                putExtra(EXTRA_PAY_AMOUNT,     parsed.payAmount)
+                                putExtra(EXTRA_RESTAURANT,     parsed.restaurant ?: "")
+                                putExtra(EXTRA_PICKUP_MILES,   parsed.distance ?: 0.0)
+                                putExtra(EXTRA_TOTAL_MILES,    result.totalDistance ?: 0.0)
+                                putExtra(EXTRA_VEHICLE_COST,   result.vehicleCost)
+                                putExtra(EXTRA_TIME_COST,      result.timeCost)
+                                putExtra(EXTRA_TOTAL_COST,     result.totalCost)
+                                putExtra(EXTRA_MINUTES_ON_JOB, result.minutesOnJob)
+                                putExtra(EXTRA_SCORE,          result.score)
+                                putExtra(EXTRA_COST_PER_MILE,  result.costPerMileUsed)
+                            }
+                            Log.d(TAG, "Starting OfferOverlayService: verdict=${result.verdict} net=${result.netValue}")
+                            startService(serviceIntent)
+                        } else {
+                            Log.w(TAG, "Scorer returned null — payAmount or distance missing")
+                            screenshotPath?.let { File(it).delete() }
+                        }
                     }
                 } else {
-                    Log.d(TAG, "OCR text did not match offer pattern — skipping")
-                    // Delete the screenshot if it wasn't an offer
+                    Log.d(TAG, "OCR did not match offer pattern — skipping")
                     screenshotPath?.let { File(it).delete() }
                 }
             }
             .addOnFailureListener { e ->
                 Log.e(TAG, "OCR failed: ${e.message}", e)
             }
+    }
+
+    /**
+     * Detects gig platform from OCR text.
+     * CORRECT: check for platform-specific keywords
+     * WRONG:   hardcoding "DoorDash" always
+     */
+    private fun detectPlatform(text: String): String {
+        val lower = text.lowercase()
+        return when {
+            lower.contains("doordash") || lower.contains("dasher") -> "DoorDash"
+            lower.contains("uber eats") || lower.contains("ubereats") -> "Uber Eats"
+            lower.contains("grubhub") -> "Grubhub"
+            lower.contains("instacart") -> "Instacart"
+            else -> "Unknown"
+        }
     }
 
     private fun buildNotification(): Notification {
