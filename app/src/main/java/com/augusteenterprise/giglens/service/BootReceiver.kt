@@ -1,6 +1,6 @@
 package com.augusteenterprise.giglens.service
 
-// Author: Claude (Anthropic)
+// Author: Claude - Feature #8: Also starts CaptureButtonService on boot if mode is button/both
 // Restarts the overlay widget service on device boot if driver had it enabled.
 
 import android.content.BroadcastReceiver

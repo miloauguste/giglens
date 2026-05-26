@@ -23,8 +23,8 @@ android {
         applicationId = "com.augusteenterprise.giglens"
         minSdk = 26
         targetSdk = 34
-        versionCode = 60
-        versionName = "0.1.59"
+        versionCode = 62
+        versionName = "0.1.61"
     }
 
     buildTypes {

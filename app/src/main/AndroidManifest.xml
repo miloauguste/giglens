@@ -39,9 +39,7 @@
 
         <activity
             android:name=".ui.ShareReceiverActivity"
-            android:exported="true"
-            android:permission="android.permission.MANAGE_DOCUMENTS"
-            android:theme="@style/Theme.GigLens.Transparent"
+            android:exported="true" android:theme="@style/Theme.GigLens.Transparent"
             android:label="GigLens">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
@@ -87,6 +85,15 @@
                 android:name="android.foreground_service_type_special_use"
                 android:value="floating capture button for gig offer capture" />
         </service>
+
+        <!-- DEBUG ONLY: ADB trigger receiver for testing widget states -->
+        <receiver
+            android:name=".service.DebugTriggerReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.augusteenterprise.giglens.DEBUG_TRIGGER" />
+            </intent-filter>
+        </receiver>
 
         <!-- OVERLAY: Floating pill widget over DoorDash -->
         <service
