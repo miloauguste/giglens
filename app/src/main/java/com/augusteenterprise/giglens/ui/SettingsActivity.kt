@@ -212,9 +212,15 @@ class SettingsActivity : AppCompatActivity() {
         if (needsAccessibility && !isAccessibilityEnabled()) {
             binding.tvAccessibilityPermStatus.visibility = android.view.View.VISIBLE
             binding.btnGrantAccessibility.visibility = android.view.View.VISIBLE
+            binding.tvAccessibilityActive.visibility = android.view.View.GONE
+        } else if (needsAccessibility && isAccessibilityEnabled()) {
+            binding.tvAccessibilityPermStatus.visibility = android.view.View.GONE
+            binding.btnGrantAccessibility.visibility = android.view.View.GONE
+            binding.tvAccessibilityActive.visibility = android.view.View.VISIBLE
         } else {
             binding.tvAccessibilityPermStatus.visibility = android.view.View.GONE
             binding.btnGrantAccessibility.visibility = android.view.View.GONE
+            binding.tvAccessibilityActive.visibility = android.view.View.GONE
         }
     }
 
