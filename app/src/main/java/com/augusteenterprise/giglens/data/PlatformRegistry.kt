@@ -17,7 +17,7 @@ object PlatformRegistry {
         GigPlatform(
             id           = "doordash",
             displayName  = "DoorDash",
-            packageName  = "com.dd.doordash",
+            packageName  = "com.doordash.driverapp",
             offerKeywords = listOf("accept", "decline", "$", "mi"),
             supported    = true
         ),

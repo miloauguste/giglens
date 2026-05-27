@@ -31,7 +31,7 @@ class OfferDetectorService : AccessibilityService() {
         private const val CAPTURE_COOLDOWN_MS = 3000L
 
         // DoorDash package
-        private const val DOORDASH_PACKAGE = "com.dd.doordash"
+        private const val DOORDASH_PACKAGE = "com.doordash.driverapp"
 
         var isRunning = false
             private set
