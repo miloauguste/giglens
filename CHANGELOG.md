@@ -141,3 +141,20 @@
 # owasp 403 fix
 # owasp clean rewrite test
 # mobsf rescan
+
+## [0.1.66] - 2026-06-01
+### Fixed
+- MediaProjection.Callback registration now required before createVirtualDisplay() on Android 14+ — fixes IllegalStateException crash on Pixel 10 Pro XL
+- Bitmap recycle race condition — bitmap was being recycled before ML Kit OCR completed, causing "Failed to lock pixels" error
+- Switched ML Kit dependency from bundled to GMS-based (play-services-mlkit-text-recognition:19.0.0) for Android 16 compatibility
+- targetSdk bumped from 34 to 35 — required for Play Store submission
+- AndroidManifest icon reference fixed from system default to @mipmap/ic_launcher
+- App icon added — all mipmap densities (mdpi through xxxhdpi) plus round variants
+
+### Added
+- Play Store Internal Testing track — GigLens v0.1.66 published
+- 512x512 Play Store listing icon
+
+### Security
+- Removed keystores and sensitive files from git tracking
+- Updated .gitignore to prevent future accidental commits of keystores and temp files
