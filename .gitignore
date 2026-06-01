@@ -12,3 +12,12 @@ security_reports/
 *.jks
 *.keystore
 keystore.properties
+giglens-release.keystore*
+key.sh
+out
+claude_tranisiot.md
+"Enable Screen Capture"
+"Failed"
+"Get"
+"Run"
+"Screen Capture Active"
