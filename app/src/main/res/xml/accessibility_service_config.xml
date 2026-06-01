@@ -26,10 +26,5 @@
 
     android:notificationTimeout="500"
 
-    android:packageNames="
-        com.dd.doordash,
-        com.ubereats.driver,
-        com.grubhub.driver,
-        com.instacart.shopper,
-        com.amazon.rabbit,
-        com.shipt.shopper" />
+    android:packageNames="com.doordash.driverapp"
+    android:isAccessibilityTool="true" />

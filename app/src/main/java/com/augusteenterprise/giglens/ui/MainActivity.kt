@@ -49,7 +49,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.btnToggleCapture.setOnClickListener { showAutoModeDialog() }
+        binding.btnToggleCapture.setOnClickListener { android.util.Log.e("GigLens_DEBUG", "btnToggleCapture tapped"); showAutoModeDialog() }
         binding.btnViewHistory.setOnClickListener { openHistory() }
         binding.btnSettings.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
@@ -67,46 +67,63 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateUI() {
-        val autoMode = OfferDetectorService.isRunning
+        // Author: Claude (Anthropic) - May 26 2026: Fix status logic
+        // CORRECT: check both OfferDetectorService AND ScreenCaptureService
+        // WRONG:   checking only OfferDetectorService — misses missing MediaProjection permission
+        val accessibilityActive = OfferDetectorService.isRunning
+        val captureActive = ScreenCaptureService.isRunning
 
-        binding.tvStatus.text = if (autoMode) {
-            "Auto mode active — offers captured automatically"
-        } else {
-            "Screenshot an offer → Share → GigLens"
+        binding.tvStatus.text = when {
+            accessibilityActive && captureActive ->
+                "✓ Auto capture active — offers captured automatically"
+            accessibilityActive && !captureActive ->
+                "⚠ Screen recording needed — tap button to enable"
+            else ->
+                "Screenshot an offer → Share → GigLens"
         }
-
-        binding.btnToggleCapture.text = if (autoMode) {
-            "Auto Mode Active"
-        } else {
-            "Enable Auto Mode"
+        binding.btnToggleCapture.text = when {
+            captureActive -> "Screen Capture Active"
+            accessibilityActive -> "Enable Screen Capture"
+            else -> "Enable Auto Mode"
         }
     }
+
 
     /**
      * Shows dialog explaining auto mode before requesting permission.
      */
     private fun showAutoModeDialog() {
-        if (OfferDetectorService.isRunning) {
-            Toast.makeText(this, "Auto mode is already active", Toast.LENGTH_SHORT).show()
+        // Author: Claude (Anthropic) - May 26 2026: Wire MediaProjection request
+        // CORRECT: request screen capture permission so ScreenCaptureService can take screenshots
+        // WRONG:   only opening Accessibility Settings — never requesting MediaProjection
+        android.util.Log.e("GigLens_DEBUG", "showAutoModeDialog called isRunning=${ScreenCaptureService.isRunning}")
+        if (ScreenCaptureService.isRunning) {
+            Toast.makeText(this, "Screen capture already active", Toast.LENGTH_SHORT).show()
             return
         }
-
         AlertDialog.Builder(this)
-            .setTitle("Enable Auto Mode?")
+            .setTitle("Enable Offer Capture?")
             .setMessage(
-                "Auto mode captures offers automatically without you needing to screenshot.\n\n" +
-                "How it works:\n" +
-                "• GigLens watches for offer screens in DoorDash\n" +
-                "• When an offer appears, it captures and logs it automatically\n\n" +
-                "This requires Accessibility Service permission. " +
-                "GigLens only monitors DoorDash — no other apps are accessed."
+                "GigLens will capture offer screens automatically.\n\n" +
+                "Tap the floating camera button over DoorDash to capture an offer.\n\n" +
+                "Screen recording permission is required. " +
+                "GigLens only reads DoorDash offer screens."
             )
             .setPositiveButton("Enable") { _, _ ->
-                startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+                requestScreenCapturePermission()
             }
             .setNegativeButton("Not now", null)
             .show()
     }
+
+    private fun requestScreenCapturePermission() {
+        android.util.Log.e("GigLens_DEBUG", "requestScreenCapturePermission called")
+        val projectionManager = getSystemService(MEDIA_PROJECTION_SERVICE)
+            as android.media.projection.MediaProjectionManager
+        mediaProjectionLauncher.launch(projectionManager.createScreenCaptureIntent())
+    }
+
+        
 
     private fun startCaptureService(resultCode: Int, data: Intent) {
         val serviceIntent = Intent(this, ScreenCaptureService::class.java).apply {

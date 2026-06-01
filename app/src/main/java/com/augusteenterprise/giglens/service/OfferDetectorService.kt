@@ -43,7 +43,23 @@ class OfferDetectorService : AccessibilityService() {
     override fun onServiceConnected() {
         super.onServiceConnected()
         isRunning = true
-        Log.i(TAG, "OfferDetectorService connected")
+
+        // Author: Claude (Anthropic) - May 26 2026: Android 16 requires runtime setServiceInfo()
+        // XML config alone is insufficient on Android 16 (SDK 36) — must set programmatically
+        // CORRECT: set ServiceInfo in onServiceConnected so OS delivers events
+        // WRONG:   relying only on accessibility_service_config.xml — events never delivered on API 36
+        val info = android.accessibilityservice.AccessibilityServiceInfo().apply {
+            eventTypes = android.view.accessibility.AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED or
+                         android.view.accessibility.AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED
+            feedbackType = android.accessibilityservice.AccessibilityServiceInfo.FEEDBACK_GENERIC
+            notificationTimeout = 500
+            flags = android.accessibilityservice.AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS or
+                    android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS
+            // packageNames = arrayOf("com.doordash.driverapp") // TEMP: removed for Android 16 testing
+        }
+        serviceInfo = info
+
+        Log.i(TAG, "OfferDetectorService connected — serviceInfo set programmatically")
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {

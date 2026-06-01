@@ -127,6 +127,18 @@ class ScreenCaptureService : Service() {
         val projectionManager = getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
         mediaProjection = projectionManager.getMediaProjection(resultCode, resultData)
 
+        // CORRECT: register callback before createVirtualDisplay() — required on Android 14+
+        // WRONG:   calling createVirtualDisplay() without callback — crashes with IllegalStateException
+        mediaProjection?.registerCallback(object : MediaProjection.Callback() {
+            override fun onStop() {
+                Log.i(TAG, "MediaProjection stopped")
+                isRunning = false
+                virtualDisplay?.release()
+                imageReader?.close()
+                stopSelf()
+            }
+        }, null)
+
         // Set up ImageReader for screen capture
         imageReader = ImageReader.newInstance(
             screenWidth, screenHeight,
@@ -170,14 +182,14 @@ class ScreenCaptureService : Service() {
             bitmap.copyPixelsFromBuffer(buffer)
 
             // Crop to actual screen size (remove padding)
+            // CORRECT: keep croppedBitmap alive until OCR fully completes inside runOcr()
+            // WRONG:   recycling bitmap here while ML Kit processes it async — causes locked pixel error
             val croppedBitmap = Bitmap.createBitmap(bitmap, 0, 0, screenWidth, screenHeight)
-            if (croppedBitmap != bitmap) bitmap.recycle()
+            bitmap.recycle()
 
-            // Save screenshot and run OCR
             serviceScope.launch {
                 val savedPath = saveScreenshot(croppedBitmap)
                 runOcr(croppedBitmap, savedPath)
-                croppedBitmap.recycle()
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error capturing screen: ${e.message}", e)
@@ -224,6 +236,8 @@ class ScreenCaptureService : Service() {
 
         textRecognizer.process(inputImage)
             .addOnSuccessListener { visionText ->
+                // CORRECT: bitmap is still alive here — recycle after OCR completes
+                // WRONG:   recycling before addOnSuccessListener fires
                 val rawText = visionText.text
                 Log.d(TAG, "OCR result (${rawText.length} chars)")
 
@@ -315,9 +329,12 @@ class ScreenCaptureService : Service() {
                     Log.d(TAG, "OCR did not match offer pattern — skipping")
                     screenshotPath?.let { File(it).delete() }
                 }
+                // CORRECT: recycle after OCR success listener completes
+                if (!bitmap.isRecycled) bitmap.recycle()
             }
             .addOnFailureListener { e ->
                 Log.e(TAG, "OCR failed: ${e.message}", e)
+                if (!bitmap.isRecycled) bitmap.recycle()
             }
     }
 

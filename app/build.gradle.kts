@@ -22,18 +22,28 @@ android {
     defaultConfig {
         applicationId = "com.augusteenterprise.giglens"
         minSdk = 26
-        targetSdk = 34
-        versionCode = 66
-        versionName = "0.1.65"
+        targetSdk = 35
+        versionCode = 68
+        versionName = "0.1.66"
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("/home/poppa/giglens/giglens-release.keystore")
+            storePassword = System.getenv("GIGLENS_STORE_PASSWORD") ?: ""
+            keyAlias = "giglens"
+            keyPassword = System.getenv("GIGLENS_KEY_PASSWORD") ?: ""
+        }
+    }
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
@@ -61,7 +71,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
 
     // Google ML Kit - OCR text recognition
-    implementation("com.google.mlkit:text-recognition:16.0.0")
+    implementation("com.google.android.gms:play-services-mlkit-text-recognition:19.0.0")
 
     // Room database (replaces raw SQLite)
     implementation("androidx.room:room-runtime:2.6.1")
