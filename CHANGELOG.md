@@ -158,3 +158,19 @@
 ### Security
 - Removed keystores and sensitive files from git tracking
 - Updated .gitignore to prevent future accidental commits of keystores and temp files
+
+## [0.1.67] - 2026-06-01
+### Changed
+- Consolidated screen capture + floating button into single Settings toggle — no more separate "Enable Auto Mode" button in MainActivity
+- MainActivity simplified to status card only — shows capture state with color indicator
+- Floating button radio in Settings now triggers MediaProjection permission automatically
+
+### Fixed
+- ScreenCaptureService double-stop bug — nulling references before stopSelf() prevents crash in onDestroy()
+- CaptureButtonService now flashes red and shows toast when ScreenCaptureService is not running
+- Bitmap recycle race condition in ScreenCaptureService
+
+### Added
+- MPG and gas price fields in Settings for gas-based vehicle cost calculation
+- Vehicle fuel cost replaces flat IRS cost-per-mile in scorer
+- EPA fueleconomy.gov link in Settings for MPG lookup

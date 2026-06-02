@@ -45,14 +45,54 @@
         android:textColor="?attr/colorPrimary"
         android:layout_marginTop="16dp" />
 
-    <!-- Start/Stop button -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnToggleCapture"
+    <!-- Capture status indicator -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardCaptureStatus"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:text="@string/btn_start_capture"
-        android:textSize="16sp"
-        android:layout_marginTop="32dp" />
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tvCaptureStatusDot"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="●"
+                android:textSize="20sp"
+                android:textColor="#999999"
+                android:layout_marginEnd="12dp"/>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvCaptureStatusTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Screen capture off"
+                    android:textSize="16sp"
+                    android:textColor="?attr/colorOnBackground"/>
+
+                <TextView
+                    android:id="@+id/tvCaptureStatusSub"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Enable in Settings to use floating button"
+                    android:textSize="13sp"
+                    android:textColor="#999999"
+                    android:layout_marginTop="2dp"/>
+            </LinearLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
     <!-- View History button -->
     <com.google.android.material.button.MaterialButton

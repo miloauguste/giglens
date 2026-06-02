@@ -171,10 +171,35 @@ class CaptureButtonService : Service() {
     }
 
     // ── Trigger capture on tap ────────────────────────────────────────────────
+    // CORRECT: check ScreenCaptureService is running before broadcasting — show warning if dead
+    // WRONG:   blindly broadcasting with no receiver alive — tap appears to do nothing
     private fun onCaptureTapped() {
         Log.i(TAG, "Capture button tapped — signaling ScreenCaptureService")
 
-        // Flash button to confirm tap
+        if (!ScreenCaptureService.isRunning) {
+            Log.w(TAG, "ScreenCaptureService not running — showing warning")
+            android.widget.Toast.makeText(
+                this,
+                "Screen capture stopped. Re-enable in GigLens.",
+                android.widget.Toast.LENGTH_LONG
+            ).show()
+            // Flash red to signal failure
+            btnView?.apply {
+                background = GradientDrawable().apply {
+                    setColor(Color.parseColor("#CCF44336"))  // flash red
+                    cornerRadius = 50f
+                }
+                postDelayed({
+                    background = GradientDrawable().apply {
+                        setColor(Color.parseColor("#CC00BFA5"))  // back to teal
+                        cornerRadius = 50f
+                    }
+                }, 600)
+            }
+            return
+        }
+
+        // Flash button green to confirm tap
         btnView?.apply {
             background = GradientDrawable().apply {
                 setColor(Color.parseColor("#CC4CAF50"))  // flash green

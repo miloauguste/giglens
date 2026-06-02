@@ -131,10 +131,15 @@ class ScreenCaptureService : Service() {
         // WRONG:   calling createVirtualDisplay() without callback — crashes with IllegalStateException
         mediaProjection?.registerCallback(object : MediaProjection.Callback() {
             override fun onStop() {
-                Log.i(TAG, "MediaProjection stopped")
+                // CORRECT: null references before stopSelf() to prevent double-release in onDestroy()
+                // WRONG:   releasing here AND in onDestroy() — double-stop corrupts session
+                Log.i(TAG, "MediaProjection stopped by system")
                 isRunning = false
                 virtualDisplay?.release()
+                virtualDisplay = null
                 imageReader?.close()
+                imageReader = null
+                mediaProjection = null
                 stopSelf()
             }
         }, null)
@@ -354,6 +359,27 @@ class ScreenCaptureService : Service() {
         }
     }
 
+    private fun showRestartNotification() {
+        val intent = android.content.Intent(this, com.augusteenterprise.giglens.ui.MainActivity::class.java).apply {
+            flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val pendingIntent = android.app.PendingIntent.getActivity(
+            this, 0, intent,
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+        )
+        val notification = androidx.core.app.NotificationCompat.Builder(this, GigLensApp.NOTIFICATION_CHANNEL_ID)
+            .setContentTitle("GigLens — Screen capture stopped")
+            .setContentText("Tap to re-enable screen capture")
+            .setSmallIcon(android.R.drawable.ic_menu_camera)
+            .setPriority(androidx.core.app.NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .build()
+        val nm = getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager
+        nm.notify(1002, notification)
+        Log.i(TAG, "Restart notification shown")
+    }
+
     private fun buildNotification(): Notification {
         return NotificationCompat.Builder(this, GigLensApp.NOTIFICATION_CHANNEL_ID)
             .setContentTitle(getString(R.string.notification_title))
@@ -367,11 +393,22 @@ class ScreenCaptureService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
+        // CORRECT: only stop mediaProjection if it hasn't already stopped via callback
+        // WRONG:   always calling mediaProjection?.stop() — causes double-stop crash
         isRunning = false
         try { unregisterReceiver(captureReceiver) } catch (_: Exception) {}
-        virtualDisplay?.release()
-        imageReader?.close()
-        mediaProjection?.stop()
+        if (virtualDisplay != null) {
+            virtualDisplay?.release()
+            virtualDisplay = null
+        }
+        if (imageReader != null) {
+            imageReader?.close()
+            imageReader = null
+        }
+        if (mediaProjection != null) {
+            mediaProjection?.stop()
+            mediaProjection = null
+        }
         serviceJob.cancel()
         Log.i(TAG, "ScreenCaptureService destroyed")
         super.onDestroy()

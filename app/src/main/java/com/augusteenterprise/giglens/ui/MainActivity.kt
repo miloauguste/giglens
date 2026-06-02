@@ -49,7 +49,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.btnToggleCapture.setOnClickListener { android.util.Log.e("GigLens_DEBUG", "btnToggleCapture tapped"); showAutoModeDialog() }
+        // No button listener needed — capture enabled via Settings
         binding.btnViewHistory.setOnClickListener { openHistory() }
         binding.btnSettings.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
@@ -74,17 +74,18 @@ class MainActivity : AppCompatActivity() {
         val captureActive = ScreenCaptureService.isRunning
 
         binding.tvStatus.text = when {
-            accessibilityActive && captureActive ->
-                "✓ Auto capture active — offers captured automatically"
-            accessibilityActive && !captureActive ->
-                "⚠ Screen recording needed — tap button to enable"
-            else ->
-                "Screenshot an offer → Share → GigLens"
+            captureActive -> "Tap the 📷 button over DoorDash to capture an offer"
+            else -> "Screenshot an offer → Share → GigLens"
         }
-        binding.btnToggleCapture.text = when {
-            captureActive -> "Screen Capture Active"
-            accessibilityActive -> "Enable Screen Capture"
-            else -> "Enable Auto Mode"
+        // Update status card
+        if (captureActive) {
+            binding.tvCaptureStatusDot.setTextColor(android.graphics.Color.parseColor("#00C9A7"))
+            binding.tvCaptureStatusTitle.text = "Screen capture active"
+            binding.tvCaptureStatusSub.text = "Tap the 📷 button over DoorDash to score an offer"
+        } else {
+            binding.tvCaptureStatusDot.setTextColor(android.graphics.Color.parseColor("#999999"))
+            binding.tvCaptureStatusTitle.text = "Screen capture off"
+            binding.tvCaptureStatusSub.text = "Enable in Settings → Floating button"
         }
     }
 

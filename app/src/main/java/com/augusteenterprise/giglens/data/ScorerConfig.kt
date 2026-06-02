@@ -44,6 +44,9 @@ object ScorerConfigKeys {
     const val COST_PER_MILE           = "cost_per_mile"
     const val HOURLY_RATE             = "hourly_rate"
     const val RESULT_DISPLAY_SECONDS  = "result_display_seconds"
+    // Gas-based vehicle cost (replaces flat cost_per_mile)
+    const val MPG                     = "mpg"
+    const val GAS_PRICE               = "gas_price_per_gallon"
 }
 
 fun defaultScorerConfig(): List<ScorerConfig> = listOf(
@@ -72,7 +75,9 @@ fun defaultScorerConfig(): List<ScorerConfig> = listOf(
     ScorerConfig(ScorerConfigKeys.FLOOR_TOTAL_PAY,          6.00, "Min total pay to pass floor"),
     ScorerConfig(ScorerConfigKeys.THRESHOLD_TAKE,           65.0, "Score >= this = TAKE"),
     ScorerConfig(ScorerConfigKeys.THRESHOLD_BORDERLINE,     40.0, "Score >= this = BORDERLINE"),
-    ScorerConfig(ScorerConfigKeys.COST_PER_MILE,            0.90, "Vehicle cost per mile driven (IRS standard $0.90)"),
+    ScorerConfig(ScorerConfigKeys.COST_PER_MILE,            0.90, "Vehicle cost per mile driven (IRS standard $0.90) — fallback only"),
+    ScorerConfig(ScorerConfigKeys.MPG,                      30.0, "Vehicle fuel economy in MPG — look up at fueleconomy.gov"),
+    ScorerConfig(ScorerConfigKeys.GAS_PRICE,                3.20, "Current gas price per gallon in your area"),
     ScorerConfig(ScorerConfigKeys.HOURLY_RATE,              15.00, "Driver hourly rate for time cost calculation"),
     ScorerConfig(ScorerConfigKeys.RESULT_DISPLAY_SECONDS,   60.0,  "Seconds to show result pill before reverting to idle")
 )

@@ -47,6 +47,8 @@ class OfferScorer(private val configDao: ScorerConfigDao) {
         // ── Load config ───────────────────────────────────────────────────────
         val costPerMile        = cfg(ScorerConfigKeys.COST_PER_MILE,             0.90)
         val hourlyRate         = cfg(ScorerConfigKeys.HOURLY_RATE,                15.00)
+        val mpg                = cfg(ScorerConfigKeys.MPG,                        30.0)
+        val gasPrice           = cfg(ScorerConfigKeys.GAS_PRICE,                  3.20)
 
         val weightNetValue     = cfg(ScorerConfigKeys.WEIGHT_PICKUP_PENALTY,     0.50) // reused key
         val weightPickup       = cfg(ScorerConfigKeys.WEIGHT_DELIVERY_LEG,       0.30) // reused key
@@ -70,7 +72,13 @@ class OfferScorer(private val configDao: ScorerConfigDao) {
         } else deliveryDistance  // fall back to delivery only
 
         // ── Net value calculation ─────────────────────────────────────────────
-        val vehicleCost    = totalDistance * costPerMile
+        // CORRECT: gas_cost = (total_miles / mpg) × gas_price — actual driver fuel cost
+        // WRONG:   total_miles × flat cost_per_mile — overestimates cost for fleet rentals
+        val vehicleCost = if (mpg > 0) {
+            (totalDistance / mpg) * gasPrice
+        } else {
+            totalDistance * costPerMile  // fallback to flat rate if MPG not set
+        }
         // Estimate minutes: drive to pickup + 2min prep + delivery drive (45mph avg)
         val driveToPickupMin  = ((pickupDistance ?: 0.0) / 45.0) * 60.0
         val prepTimeMin       = 2.0

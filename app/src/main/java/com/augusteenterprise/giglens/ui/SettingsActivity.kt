@@ -27,6 +27,31 @@ class SettingsActivity : AppCompatActivity() {
     
     private lateinit var binding: ActivitySettingsBinding
     
+    // MediaProjection permission launcher
+    // CORRECT: request from Settings when driver enables floating button — one step
+    // WRONG:   requiring driver to go to MainActivity separately to grant permission
+    private val mediaProjectionLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK && result.data != null) {
+            val serviceIntent = android.content.Intent(this, com.augusteenterprise.giglens.service.ScreenCaptureService::class.java).apply {
+                putExtra(com.augusteenterprise.giglens.service.ScreenCaptureService.EXTRA_RESULT_CODE, result.resultCode)
+                putExtra(com.augusteenterprise.giglens.service.ScreenCaptureService.EXTRA_RESULT_DATA, result.data)
+            }
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                startForegroundService(serviceIntent)
+            } else {
+                startService(serviceIntent)
+            }
+            if (!CaptureButtonService.isRunning) {
+                startService(android.content.Intent(this, CaptureButtonService::class.java))
+            }
+            android.widget.Toast.makeText(this, "Screen capture enabled", android.widget.Toast.LENGTH_SHORT).show()
+        } else {
+            android.widget.Toast.makeText(this, "Screen capture permission denied", android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         // Author: Claude (Anthropic) - May 26 2026: Re-check accessibility state on resume
@@ -83,6 +108,14 @@ class SettingsActivity : AppCompatActivity() {
             startActivity(android.content.Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
         }
 
+        binding.btnLookupMpg.setOnClickListener {
+            // CORRECT: open EPA fueleconomy.gov so driver can look up their exact MPG
+            // WRONG:   hardcoding MPG — every vehicle is different
+            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW,
+                android.net.Uri.parse("https://www.fueleconomy.gov/feg/Find.do"))
+            startActivity(intent)
+        }
+
         binding.btnSaveSettings.setOnClickListener {
             saveSettings()
         }
@@ -99,6 +132,8 @@ class SettingsActivity : AppCompatActivity() {
             val costPerMile = scorerDao.getValue(ScorerConfigKeys.COST_PER_MILE) ?: 0.90
             val hourlyRate = scorerDao.getValue(ScorerConfigKeys.HOURLY_RATE) ?: 15.00
             val resultDuration = scorerDao.getValue(ScorerConfigKeys.RESULT_DISPLAY_SECONDS) ?: 60.0
+            val mpg = scorerDao.getValue(ScorerConfigKeys.MPG) ?: 30.0
+            val gasPrice = scorerDao.getValue(ScorerConfigKeys.GAS_PRICE) ?: 3.20
             val dataSharing = appDao.getValue(AppConfigKeys.DATA_SHARING) ?: "none"
             val widgetEnabled = appDao.getValue(AppConfigKeys.WIDGET_ENABLED) == "true"
             val captureMode = appDao.getValue(AppConfigKeys.AUTO_CAPTURE_MODE) ?: "off"
@@ -126,6 +161,8 @@ class SettingsActivity : AppCompatActivity() {
                 binding.etCostPerMile.setText("%.2f".format(costPerMile))
                 binding.etHourlyRate.setText("%.2f".format(hourlyRate))
                 binding.etResultDuration.setText("%.0f".format(resultDuration))
+                binding.etMpg.setText("%.1f".format(mpg))
+                binding.etGasPrice.setText("%.2f".format(gasPrice))
                 when (dataSharing) {
                     "aggregate" -> binding.rbSharingAggregate.isChecked = true
                     "individual" -> binding.rbSharingIndividual.isChecked = true
@@ -165,26 +202,41 @@ class SettingsActivity : AppCompatActivity() {
             appDao.setValue(AppConfigKeys.ENABLED_PLATFORMS,
                 if (enabledPlatforms.isEmpty()) "doordash" else enabledPlatforms.joinToString(","))
             appDao.setValue(AppConfigKeys.DATA_SHARING, dataSharing)
+            val mpg = binding.etMpg.text.toString().toDoubleOrNull()?.coerceIn(1.0, 150.0) ?: 30.0
+            val gasPrice = binding.etGasPrice.text.toString().toDoubleOrNull()?.coerceIn(0.50, 10.0) ?: 3.20
             scorerDao.updateValue(ScorerConfigKeys.COST_PER_MILE, costPerMile)
             scorerDao.updateValue(ScorerConfigKeys.HOURLY_RATE, hourlyRate)
             scorerDao.updateValue(ScorerConfigKeys.RESULT_DISPLAY_SECONDS, resultDuration)
+            scorerDao.updateValue(ScorerConfigKeys.MPG, mpg)
+            scorerDao.updateValue(ScorerConfigKeys.GAS_PRICE, gasPrice)
             
-            // Start/stop CaptureButtonService based on mode
             val savedMode = captureMode
             runOnUiThread {
                 when (savedMode) {
                     "button", "both" -> {
-                        if (!CaptureButtonService.isRunning) {
-                            startService(Intent(this@SettingsActivity, CaptureButtonService::class.java))
+                        // CORRECT: check MediaProjection first — start both services together
+                        // WRONG:   starting CaptureButtonService without ScreenCaptureService
+                        if (!com.augusteenterprise.giglens.service.ScreenCaptureService.isRunning) {
+                            val projectionManager = getSystemService(MEDIA_PROJECTION_SERVICE)
+                                as android.media.projection.MediaProjectionManager
+                            mediaProjectionLauncher.launch(projectionManager.createScreenCaptureIntent())
+                        } else {
+                            if (!CaptureButtonService.isRunning) {
+                                startService(Intent(this@SettingsActivity, CaptureButtonService::class.java))
+                            }
+                            Toast.makeText(this@SettingsActivity, "Settings saved", Toast.LENGTH_SHORT).show()
                         }
                     }
                     else -> {
                         if (CaptureButtonService.isRunning) {
                             stopService(Intent(this@SettingsActivity, CaptureButtonService::class.java))
                         }
+                        if (com.augusteenterprise.giglens.service.ScreenCaptureService.isRunning) {
+                            stopService(Intent(this@SettingsActivity, com.augusteenterprise.giglens.service.ScreenCaptureService::class.java))
+                        }
+                        Toast.makeText(this@SettingsActivity, "Settings saved", Toast.LENGTH_SHORT).show()
                     }
                 }
-                Toast.makeText(this@SettingsActivity, "Settings saved", Toast.LENGTH_SHORT).show()
             }
         }
     }
