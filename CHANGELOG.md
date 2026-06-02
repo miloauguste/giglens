@@ -183,3 +183,24 @@
 - extractRestaurant(): reject time patterns (\d{1,2}:\d{2}), high digit ratio candidates, min length 4 — fixes "D 44:55" and "G l" misreads
 - ScreenCaptureService: wire showRestartNotification() to MediaProjection.onStop() — driver now gets tappable notification when session expires
 - ScreenCaptureService: session health watchdog — detects 3 consecutive null frames, triggers restart notification proactively before silent failure
+
+## [v0.1.74] - 2026-06-02
+
+### Added
+- MainActivity full analytics dashboard redesign
+  - Controls card: floating button toggle, auto capture toggle, offer history row, settings row
+  - Today stats: offer count, avg pay, avg $/mile
+  - Earnings overview card: weekly net earnings, avg net/offer, avg gas cost, true $/mile, avg distance
+  - Analytics chart: Chart.js line chart via WebView, 7d/30d/All tab switching
+  - Verdict breakdown: TAKE/BORDERLINE/SKIP progress bars with counts and percentages
+  - Recent offers: last 3 offers with verdict badge, restaurant, pay/distance/score, net value
+  - LIVE badge with smooth ObjectAnimator ease-in-out blink (not harsh flash)
+- DailyNetValue.kt — new Room projection class for analytics chart data
+- OfferCaptureDao: 14 new query methods (today stats, weekly earnings, verdict counts, chart data, best/avg/worst net, recent offers)
+- OfferCapture: added timeCost and minutesOnJob fields
+- OfferDatabase: version 7, MIGRATION_6_7 adds timeCost + minutesOnJob columns
+
+### Fixed
+- extractRestaurant(): time pattern rejection, digit ratio guard, minimum length 4 — fixes "D 44:55" and "G l" misreads
+- ScreenCaptureService: showRestartNotification() now fires when MediaProjection session expires
+- ScreenCaptureService: health watchdog detects 3 consecutive null frames and triggers restart notification proactively
