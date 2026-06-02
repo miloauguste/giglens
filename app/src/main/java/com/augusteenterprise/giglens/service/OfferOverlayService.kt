@@ -475,7 +475,7 @@ class OfferOverlayService : Service() {
                 drawer.addView(rowLayout("To pickup", "${"%.1f".format(pickupMiles)} mi"))
                 drawer.addView(rowLayout("Est. total", "${"%.1f".format(totalMiles)} mi"))
                 drawer.addView(divider())
-                drawer.addView(rowLayout("Vehicle (${"$%.2f".format(costPerMile)}/mi)", "$${"%.2f".format(vehicleCost)}"))
+                drawer.addView(rowLayout("Vehicle (gas cost)", "$${"%.2f".format(vehicleCost)}"))
                 drawer.addView(rowLayout("Time (${"%.0f".format(minutesOnJob)}min)",
                     "$${"%.2f".format(timeCost)}"))
                 drawer.addView(rowLayout("Total cost", "$${"%.2f".format(totalCost)}"))

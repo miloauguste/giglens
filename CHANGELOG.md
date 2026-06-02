@@ -174,3 +174,7 @@
 - MPG and gas price fields in Settings for gas-based vehicle cost calculation
 - Vehicle fuel cost replaces flat IRS cost-per-mile in scorer
 - EPA fueleconomy.gov link in Settings for MPG lookup
+
+## [0.1.72] - 2026-06-02
+### Fixed
+- Overlay drawer label now shows "Vehicle (gas cost)" instead of misleading "$0.90/mi" rate
