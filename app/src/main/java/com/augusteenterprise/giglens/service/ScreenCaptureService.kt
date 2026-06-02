@@ -1,6 +1,7 @@
 package com.augusteenterprise.giglens.service
 
 // Author: Claude (Anthropic)
+// Last modified: DeepSeek (Ollama) - June 02 2026 - showRestartNotification() wired to onStop() + session health watchdog
 // Foreground service that captures screenshots via MediaProjection API
 // and runs ML Kit OCR to extract offer details.
 
@@ -76,6 +77,31 @@ class ScreenCaptureService : Service() {
     private var mediaProjection: MediaProjection? = null
     private var virtualDisplay: VirtualDisplay? = null
     private var imageReader: ImageReader? = null
+    // Health watchdog — counts consecutive null frames from ImageReader
+    // CORRECT: increment on null, reset on valid frame, trigger restart at 3
+    // WRONG:   resetting counter inside captureScreen() success path only — misses silent death
+    private var nullFrameCount = 0
+    private val watchdogHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val watchdogRunnable = object : Runnable {
+        override fun run() {
+            if (!isRunning) return
+            val image = imageReader?.acquireLatestImage()
+            if (image == null) {
+                nullFrameCount++
+                Log.w(TAG, "Watchdog: null frame $nullFrameCount/3")
+                if (nullFrameCount >= 3) {
+                    Log.e(TAG, "Watchdog: session appears dead — triggering restart notification")
+                    showRestartNotification()
+                    stopSelf()
+                    return
+                }
+            } else {
+                nullFrameCount = 0
+                image.close()
+            }
+            watchdogHandler.postDelayed(this, 30_000L)
+        }
+    }
     private var screenWidth = 0
     private var screenHeight = 0
     private var screenDensity = 0
@@ -140,6 +166,7 @@ class ScreenCaptureService : Service() {
                 imageReader?.close()
                 imageReader = null
                 mediaProjection = null
+                showRestartNotification()
                 stopSelf()
             }
         }, null)
@@ -157,6 +184,7 @@ class ScreenCaptureService : Service() {
             imageReader!!.surface, null, null
         )
 
+        watchdogHandler.postDelayed(watchdogRunnable, 30_000L)
         isRunning = true
         Log.i(TAG, "ScreenCaptureService started — ${screenWidth}x${screenHeight}")
         return START_STICKY
@@ -409,6 +437,8 @@ class ScreenCaptureService : Service() {
             mediaProjection?.stop()
             mediaProjection = null
         }
+        nullFrameCount = 0
+        watchdogHandler.removeCallbacks(watchdogRunnable)
         serviceJob.cancel()
         Log.i(TAG, "ScreenCaptureService destroyed")
         super.onDestroy()

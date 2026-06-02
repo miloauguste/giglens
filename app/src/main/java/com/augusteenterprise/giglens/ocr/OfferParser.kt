@@ -1,6 +1,7 @@
 package com.augusteenterprise.giglens.ocr
 
 // Author: Claude (Anthropic)
+// Last modified: DeepSeek (Ollama) - June 02 2026 - extractRestaurant() time pattern + digit ratio guard + min length 4
 // Parses ML Kit OCR text output to extract offer details from gig app screenshots
 
 import android.util.Log
@@ -23,6 +24,14 @@ data class ParsedOffer(
 object OfferParser {
 
     private const val TAG = "OfferParser"
+
+    // Pre-processing: fix fragmented single characters
+    private fun fixFragmentedChars(text: String): String {
+        // Match 3 or more single chars separated by single spaces
+        return text.replace(Regex("""(\b[A-Za-z]\b ?){3,}""")) { match ->
+            match.value.replace(" ", "")
+        }
+    }
 
     // Keywords that indicate this is a delivery offer screen
     private val OFFER_KEYWORDS = listOf(
@@ -201,10 +210,14 @@ object OfferParser {
      * or a capitalized line that isn't a known UI element.
      */
     private fun extractRestaurant(text: String): String? {
+        // First, fix any fragmented characters (e.g., "G r i l l" -> "Grill")
+        val fixedText = fixFragmentedChars(text)
+        
         // Author: Claude (Anthropic) - May 25 2026: Bug E fix
+        // Last modified: DeepSeek (Ollama) - June 02 2026 - extractRestaurant() time pattern + digit ratio guard + min length 4
         // Strip leading non-letter OCR noise (e.g. "| McDonald's" → "McDonald's")
         // Restaurant appears AFTER "@ Pickup" line in DoorDash OCR output
-        val lines = text.lines().map { it.trim() }.filter { it.isNotBlank() }
+        val lines = fixedText.lines().map { it.trim() }.filter { it.isNotBlank() }
 
         // Cleans OCR prefix garbage: "| McDonald's" → "McDonald's", "@ Pickup" → "Pickup"
         fun cleanLine(line: String): String {
@@ -233,12 +246,14 @@ object OfferParser {
                     if (i + j >= lines.size) break
                     val raw = lines[i + j]
                     val candidate = cleanLine(raw)
-                    if (candidate.length in 2..50
+                    if (candidate.length in 4..50
                         && candidate.isNotEmpty()
                         && candidate[0].isUpperCase()
                         && candidate.any { it.isLetter() }
                         && !PAY_REGEX.containsMatchIn(candidate)
                         && !DISTANCE_REGEX.containsMatchIn(candidate)
+                        && !Regex("""\d{1,2}:\d{2}""").containsMatchIn(candidate)
+                        && candidate.count { it.isDigit() }.toFloat() / candidate.length.toFloat() <= 0.6f
                         && statusWords.none { candidate.lowercase().contains(it) }
                     ) {
                         Log.d(TAG, "extractRestaurant: Strategy 1 found '$candidate' (raw: '$raw')")
@@ -251,11 +266,13 @@ object OfferParser {
         // Strategy 2: Fallback — scan all lines for restaurant-like text
         for (line in lines) {
             val candidate = cleanLine(line)
-            if (candidate.length in 2..40
+            if (candidate.length in 4..40
                 && candidate.isNotEmpty()
                 && candidate[0].isUpperCase()
                 && !PAY_REGEX.containsMatchIn(candidate)
                 && !DISTANCE_REGEX.containsMatchIn(candidate)
+                && !Regex("""\d{1,2}:\d{2}""").containsMatchIn(candidate)
+                && candidate.count { it.isDigit() }.toFloat() / candidate.length.toFloat() <= 0.6f
                 && statusWords.none { candidate.lowercase().contains(it) }
             ) {
                 Log.d(TAG, "extractRestaurant: Strategy 2 found '$candidate' (raw: '$line')")

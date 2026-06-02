@@ -178,3 +178,8 @@
 ## [0.1.72] - 2026-06-02
 ### Fixed
 - Overlay drawer label now shows "Vehicle (gas cost)" instead of misleading "$0.90/mi" rate
+
+### Fixed
+- extractRestaurant(): reject time patterns (\d{1,2}:\d{2}), high digit ratio candidates, min length 4 — fixes "D 44:55" and "G l" misreads
+- ScreenCaptureService: wire showRestartNotification() to MediaProjection.onStop() — driver now gets tappable notification when session expires
+- ScreenCaptureService: session health watchdog — detects 3 consecutive null frames, triggers restart notification proactively before silent failure
