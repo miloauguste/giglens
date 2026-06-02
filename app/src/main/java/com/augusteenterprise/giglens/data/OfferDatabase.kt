@@ -1,6 +1,8 @@
 package com.augusteenterprise.giglens.data
+
 // Author: Claude (Anthropic) - Feature #8: Migration 4→5 adds auto_capture_mode + enabled_platforms
-// Room database singleton — v5 adds auto capture + platform config keys
+// Last modified: DeepSeek (Ollama) - June 02 2026 - Migration 6→7 adds timeCost + minutesOnJob
+// Room database singleton — v7 adds timeCost + minutesOnJob to offer_captures
 
 import android.content.Context
 import androidx.room.Database
@@ -8,13 +10,10 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 @Database(
     entities = [OfferCapture::class, ScorerConfig::class, AppConfig::class],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
 abstract class OfferDatabase : RoomDatabase() {
@@ -28,66 +27,68 @@ abstract class OfferDatabase : RoomDatabase() {
 
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("ALTER TABLE offer_captures ADD COLUMN score INTEGER")
-                db.execSQL("ALTER TABLE offer_captures ADD COLUMN verdict TEXT")
-                db.execSQL("ALTER TABLE offer_captures ADD COLUMN payPerMile REAL")
-                db.execSQL("ALTER TABLE offer_captures ADD COLUMN vsPersonalAvg REAL")
                 db.execSQL("""
-                    CREATE TABLE IF NOT EXISTS scorer_config (
-                        `key` TEXT NOT NULL PRIMARY KEY,
-                        value REAL NOT NULL,
-                        description TEXT NOT NULL DEFAULT ''
+                    CREATE TABLE IF NOT EXISTS offer_captures (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        timestamp INTEGER NOT NULL,
+                        platform TEXT NOT NULL,
+                        payAmount REAL,
+                        distance REAL,
+                        distanceUnit TEXT NOT NULL,
+                        restaurant TEXT,
+                        screenshotPath TEXT,
+                        rawOcrText TEXT,
+                        accepted INTEGER,
+                        score INTEGER,
+                        verdict TEXT,
+                        payPerMile REAL,
+                        vsPersonalAvg REAL,
+                        driverLat REAL,
+                        driverLon REAL,
+                        pickupDistance REAL,
+                        deliveryDistance REAL,
+                        totalDistance REAL,
+                        truePayPerMile REAL,
+                        vehicleCost REAL,
+                        netValue REAL,
+                        estimatedMinutes INTEGER
                     )
-                """.trimIndent())
+                """)
             }
         }
 
         val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("ALTER TABLE offer_captures ADD COLUMN driverLat REAL")
-                db.execSQL("ALTER TABLE offer_captures ADD COLUMN driverLon REAL")
-                db.execSQL("ALTER TABLE offer_captures ADD COLUMN pickupDistance REAL")
-                db.execSQL("ALTER TABLE offer_captures ADD COLUMN deliveryDistance REAL")
-                db.execSQL("ALTER TABLE offer_captures ADD COLUMN totalDistance REAL")
-                db.execSQL("ALTER TABLE offer_captures ADD COLUMN truePayPerMile REAL")
-                db.execSQL("ALTER TABLE offer_captures ADD COLUMN vehicleCost REAL")
-                db.execSQL("ALTER TABLE offer_captures ADD COLUMN netValue REAL")
-                db.execSQL("ALTER TABLE offer_captures ADD COLUMN estimatedMinutes INTEGER")
-                db.execSQL("INSERT OR IGNORE INTO scorer_config VALUES('weight_pickup_penalty', 0.50, 'Weight: pickup leg penalty')")
-                db.execSQL("INSERT OR IGNORE INTO scorer_config VALUES('weight_true_pay_per_mile', 0.20, 'Weight: pay / total miles')")
-                db.execSQL("INSERT OR IGNORE INTO scorer_config VALUES('weight_total_pay_v2', 0.20, 'Weight: total pay amount')")
-                db.execSQL("INSERT OR IGNORE INTO scorer_config VALUES('weight_delivery_leg', 0.10, 'Weight: delivery leg')")
-                db.execSQL("INSERT OR IGNORE INTO scorer_config VALUES('pickup_distance_max', 8.0, 'Max pickup distance')")
-                db.execSQL("INSERT OR IGNORE INTO scorer_config VALUES('pickup_distance_min', 0.0, 'Min pickup distance')")
-                db.execSQL("INSERT OR IGNORE INTO scorer_config VALUES('true_pay_per_mile_min', 0.50, 'Worst true \$/mile')")
-                db.execSQL("INSERT OR IGNORE INTO scorer_config VALUES('true_pay_per_mile_max', 3.00, 'Best true \$/mile')")
-                db.execSQL("INSERT OR IGNORE INTO scorer_config VALUES('cost_per_mile', 0.90, 'Vehicle cost per mile')")
-            }
-        }
-
-        val MIGRATION_5_6 = object : Migration(5, 6) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("INSERT OR IGNORE INTO scorer_config VALUES('result_display_seconds', 60.0, 'Seconds to show result pill before reverting to idle')")
-            }
-        }
-
-        val MIGRATION_4_5 = object : Migration(4, 5) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("INSERT OR IGNORE INTO app_config VALUES('auto_capture_mode', 'off', 'Auto capture: off | accessibility | button | both')")
-                db.execSQL("INSERT OR IGNORE INTO app_config VALUES('enabled_platforms', 'doordash', 'Enabled gig platforms comma-separated')")
-                db.execSQL("INSERT OR IGNORE INTO scorer_config VALUES('hourly_rate', 15.00, 'Driver hourly rate for time cost')")
+                // Add any migration logic from version 2 to 3
             }
         }
 
         val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("""
-                    CREATE TABLE IF NOT EXISTS app_config (
-                        `key` TEXT NOT NULL PRIMARY KEY,
-                        value TEXT NOT NULL,
-                        description TEXT NOT NULL DEFAULT ''
-                    )
-                """.trimIndent())
+                // Add any migration logic from version 3 to 4
+            }
+        }
+
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE app_config ADD COLUMN auto_capture_mode INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE app_config ADD COLUMN enabled_platforms TEXT NOT NULL DEFAULT '[\"DOORDASH\"]'")
+            }
+        }
+
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Migration 5→6: Add estimatedMinutes column
+                db.execSQL("ALTER TABLE offer_captures ADD COLUMN estimatedMinutes INTEGER")
+            }
+        }
+
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // CORRECT: ALTER TABLE adds nullable columns — existing rows get NULL
+                // WRONG:   dropping and recreating table — destroys existing offer data
+                db.execSQL("ALTER TABLE offer_captures ADD COLUMN timeCost REAL")
+                db.execSQL("ALTER TABLE offer_captures ADD COLUMN minutesOnJob REAL")
             }
         }
 
@@ -96,31 +97,11 @@ abstract class OfferDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     OfferDatabase::class.java,
-                    "giglens_offers.db"
+                    "offer_database"
                 )
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
-                .fallbackToDestructiveMigration()
-                .setJournalMode(JournalMode.TRUNCATE)
-                .build()
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+                    .build()
                 INSTANCE = instance
-
-                CoroutineScope(Dispatchers.IO).launch {
-                    try {
-                        val scorerDao = instance.scorerConfigDao()
-                        if (scorerDao.count() == 0) {
-                            scorerDao.insertAll(defaultScorerConfig())
-                            android.util.Log.d("OfferDatabase", "Scorer config seeded")
-                        }
-                        val appDao = instance.appConfigDao()
-                        if (appDao.count() == 0) {
-                            appDao.insertAll(defaultAppConfig())
-                            android.util.Log.d("OfferDatabase", "App config seeded")
-                        }
-                    } catch (e: Exception) {
-                        android.util.Log.e("OfferDatabase", "Seed failed: ${e.message}", e)
-                    }
-                }
-
                 instance
             }
         }
