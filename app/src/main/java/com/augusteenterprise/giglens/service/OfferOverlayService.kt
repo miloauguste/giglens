@@ -321,9 +321,14 @@ class OfferOverlayService : Service() {
         rootView = root
         layoutParams = params
         if (!isViewAdded) {
-            windowManager.addView(root, params)
-            isViewAdded = true
-            Log.d(TAG, "Widget added to WindowManager")
+            try {
+                windowManager.addView(root, params)
+                isViewAdded = true
+                Log.d(TAG, "Widget added to WindowManager")
+            } catch (e: android.view.WindowManager.BadTokenException) {
+                Log.e(TAG, "Overlay permission not granted — cannot add widget: ${e.message}")
+                stopSelf()
+            }
         } else {
             Log.d(TAG, "Widget already added — skipping addView")
         }

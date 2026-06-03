@@ -1,5 +1,13 @@
 ## [Unreleased]
 ### Fixed
+- Grey idle pill now appears immediately when toggle is ON (was only appearing after DoorDash opened)
+- Root cause: onResume was gating on ScreenCaptureService.isRunning instead of overlay permission
+- Overlay permission (SYSTEM_ALERT_WINDOW) added as step 0 of onboarding flow
+- BadTokenException crash fixed — showWidget() now catches permission denied gracefully
+- canDrawOverlays() false-negative on fresh process handled via pendingOverlayForOnboarding flag
+
+## [Unreleased]
+### Fixed
 - Camera button now appears on DoorDash without visiting Settings
 - Root cause: OfferDetectorService was using sendBroadcast() to signal OfferOverlayService,
   but OfferOverlayService handles signals via onStartCommand() not a BroadcastReceiver.

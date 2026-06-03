@@ -4,6 +4,7 @@ package com.augusteenterprise.giglens.ui
 // Last modified: DeepSeek (Ollama) - June 02 2026 - Full analytics UI rebuild
 // Main activity: analytics dashboard with controls, earnings, chart, verdict breakdown
 
+import android.util.Log
 import android.animation.ObjectAnimator
 import android.app.Activity
 import android.content.Intent
@@ -45,6 +46,8 @@ class MainActivity : AppCompatActivity() {
     // CORRECT: continue onboarding flow when they return
     // WRONG:   dropping them back to main screen with toggle reset to OFF
     private var pendingAccessibilityEnable = false
+    private var pendingOverlayForOnboarding = false
+    private val REQUEST_OVERLAY_PERMISSION = 1001
 
     // Track if screen capture permission dialog is in progress
     // CORRECT: keep toggle ON while waiting for user to grant permission
@@ -189,9 +192,15 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         // CORRECT: start overlay service while app is in foreground — avoids Android 12+ bg restriction
         // WRONG:   starting from ScreenCaptureService (background) — throws ForegroundServiceStartNotAllowedException
-        // CORRECT: only start overlay if screen capture is already running (user enabled it)
-        // WRONG:   starting overlay unconditionally — pill appears before user enables anything
-        if (!OfferOverlayService.isRunning && ScreenCaptureService.isRunning) {
+        // CORRECT: start overlay as soon as overlay permission is granted — pill should
+        //          always be visible when toggle is ON, independent of screen capture state
+        // WRONG:   gating on ScreenCaptureService.isRunning — pill never shows until DoorDash opens
+        val prefs = getSharedPreferences("giglens_ui", MODE_PRIVATE)
+        val toggleEnabled = prefs.getBoolean("floating_button_enabled", false)
+        val canDraw = android.provider.Settings.canDrawOverlays(this)
+        Log.d("MainActivity", "onResume: isRunning=${OfferOverlayService.isRunning} toggleEnabled=$toggleEnabled canDraw=$canDraw")
+        if (!OfferOverlayService.isRunning && toggleEnabled && canDraw) {
+            Log.d("MainActivity", "onResume: starting OfferOverlayService")
             val overlayIntent = Intent(this, OfferOverlayService::class.java)
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
                 startService(overlayIntent)
@@ -212,6 +221,21 @@ class MainActivity : AppCompatActivity() {
             updateUI()
             loadStats()
         }, 300L)
+
+        // Returned from overlay permission settings
+        if (pendingOverlayForOnboarding) {
+            pendingOverlayForOnboarding = false
+            if (android.provider.Settings.canDrawOverlays(this)) {
+                Log.d("MainActivity", "Overlay permission granted — continuing onboarding")
+                showCaptureOnboardingFlow()
+            } else {
+                Log.d("MainActivity", "Overlay permission still denied — resetting toggle")
+                val prefs = getSharedPreferences("giglens_ui", MODE_PRIVATE)
+                prefs.edit().putBoolean("floating_button_enabled", false).apply()
+                binding.switchFloatingButton.setOnCheckedChangeListener(null)
+                binding.switchFloatingButton.isChecked = false
+            }
+        }
 
         if (pendingAccessibilityEnable) {
             pendingAccessibilityEnable = false
@@ -296,6 +320,38 @@ class MainActivity : AppCompatActivity() {
     // CORRECT: check accessibility → then request screen capture permission
     // WRONG:   requesting screen capture without accessibility — capture button never shows
     private fun showCaptureOnboardingFlow() {
+        // Step 0: overlay permission must be granted before anything else
+        if (!android.provider.Settings.canDrawOverlays(this)) {
+            pendingOverlayForOnboarding = true
+            android.app.AlertDialog.Builder(this)
+                .setTitle("Display Permission Required")
+                .setMessage("GigLens needs permission to display the offer pill over other apps. Tap Continue to grant it.")
+                .setPositiveButton("Continue") { _, _ ->
+                    val intent = android.content.Intent(
+                        android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        android.net.Uri.parse("package:$packageName")
+                    )
+                    startActivityForResult(intent, REQUEST_OVERLAY_PERMISSION)
+                }
+                .setNegativeButton("Cancel") { _, _ ->
+                    val prefs = getSharedPreferences("giglens_ui", MODE_PRIVATE)
+                    prefs.edit().putBoolean("floating_button_enabled", false).apply()
+                    binding.switchFloatingButton.setOnCheckedChangeListener(null)
+                    binding.switchFloatingButton.isChecked = false
+                    binding.switchFloatingButton.setOnCheckedChangeListener { _, isChecked ->
+                        val p = getSharedPreferences("giglens_ui", MODE_PRIVATE)
+                        p.edit().putBoolean("floating_button_enabled", isChecked).apply()
+                        if (isChecked && !ScreenCaptureService.isRunning) showCaptureOnboardingFlow()
+                        else if (!isChecked) {
+                            if (ScreenCaptureService.isRunning) stopService(Intent(this, ScreenCaptureService::class.java))
+                            if (OfferOverlayService.isRunning) stopService(Intent(this, OfferOverlayService::class.java))
+                        }
+                    }
+                }
+                .show()
+            return
+        }
+        // Step 1: accessibility
         if (!isAccessibilityEnabled()) {
             showAccessibilityDialog()
         } else {
