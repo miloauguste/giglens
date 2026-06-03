@@ -21,6 +21,8 @@ import com.augusteenterprise.giglens.GigLensApp
 import com.augusteenterprise.giglens.data.DailyNetValue
 import com.augusteenterprise.giglens.data.OfferCapture
 import com.augusteenterprise.giglens.databinding.ActivityMainBinding
+import com.augusteenterprise.giglens.data.AppConfigKeys
+import com.augusteenterprise.giglens.service.OfferOverlayService
 import com.augusteenterprise.giglens.service.ScreenCaptureService
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -38,6 +40,16 @@ class MainActivity : AppCompatActivity() {
     // CORRECT: track tab so re-renders don't reset selection
     // WRONG:   always defaulting to 7d on every onResume
     private var activeChartTab = "7d"
+
+    // Track if we sent user to accessibility settings
+    // CORRECT: continue onboarding flow when they return
+    // WRONG:   dropping them back to main screen with toggle reset to OFF
+    private var pendingAccessibilityEnable = false
+
+    // Track if screen capture permission dialog is in progress
+    // CORRECT: keep toggle ON while waiting for user to grant permission
+    // WRONG:   resetting toggle to OFF when onResume fires during permission flow
+    private var pendingScreenCaptureGrant = false
 
     private val mediaProjectionLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -66,8 +78,19 @@ class MainActivity : AppCompatActivity() {
                 "Screen recording permission is required. " +
                 "GigLens only reads DoorDash offer screens."
             )
-            .setPositiveButton("Enable") { _, _ -> requestScreenCapturePermission() }
-            .setNegativeButton("Not now", null)
+            .setPositiveButton("Enable") { _, _ ->
+                requestScreenCapturePermission()
+            }
+            .setNegativeButton("Not now") { _, _ ->
+                pendingScreenCaptureGrant = false
+                binding.switchFloatingButton.setOnCheckedChangeListener(null)
+                binding.switchFloatingButton.isChecked = false
+                binding.switchFloatingButton.setOnCheckedChangeListener { _, isChecked ->
+                    if (isChecked && !ScreenCaptureService.isRunning) showCaptureOnboardingFlow()
+                    else if (!isChecked && ScreenCaptureService.isRunning)
+                        stopService(Intent(this, ScreenCaptureService::class.java))
+                }
+            }
             .show()
     }
 
@@ -78,6 +101,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startCaptureService(resultCode: Int, data: Intent) {
+        pendingScreenCaptureGrant = false
         val serviceIntent = Intent(this, ScreenCaptureService::class.java).apply {
             putExtra(ScreenCaptureService.EXTRA_RESULT_CODE, resultCode)
             putExtra(ScreenCaptureService.EXTRA_RESULT_DATA, data)
@@ -86,6 +110,16 @@ class MainActivity : AppCompatActivity() {
             startForegroundService(serviceIntent)
         } else {
             startService(serviceIntent)
+        }
+        // CORRECT: sync DB so SettingsActivity reflects enabled state
+        // WRONG:   only updating SharedPreferences — Settings shows wrong state
+        lifecycleScope.launch {
+            val appDao = GigLensApp.instance.database.appConfigDao()
+            appDao.setValue(AppConfigKeys.WIDGET_ENABLED, "true")
+            // CORRECT: "both" when accessibility + screen capture active
+            // WRONG:   hardcoding "button" — accessibility mode not reflected in Settings
+            appDao.setValue(AppConfigKeys.AUTO_CAPTURE_MODE,
+                if (isAccessibilityEnabled()) "both" else "button")
         }
     }
 
@@ -98,9 +132,16 @@ class MainActivity : AppCompatActivity() {
         // CORRECT: show dialog if not running, stop service if turning off
         // WRONG:   directly starting service without MediaProjection permission
         binding.switchFloatingButton.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked && !ScreenCaptureService.isRunning) showAutoModeDialog()
-            else if (!isChecked && ScreenCaptureService.isRunning)
-                stopService(Intent(this, ScreenCaptureService::class.java))
+            val prefs = getSharedPreferences("giglens_ui", MODE_PRIVATE)
+            prefs.edit().putBoolean("floating_button_enabled", isChecked).apply()
+            if (isChecked && !ScreenCaptureService.isRunning) {
+                showCaptureOnboardingFlow()
+            } else if (!isChecked) {
+                if (ScreenCaptureService.isRunning)
+                    stopService(Intent(this, ScreenCaptureService::class.java))
+                if (OfferOverlayService.isRunning)
+                    stopService(Intent(this, OfferOverlayService::class.java))
+            }
         }
 
         // Auto capture — blocked on Android 16, show tooltip
@@ -146,13 +187,120 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        updateUI()
-        loadStats()
+        // CORRECT: start overlay service while app is in foreground — avoids Android 12+ bg restriction
+        // WRONG:   starting from ScreenCaptureService (background) — throws ForegroundServiceStartNotAllowedException
+        // CORRECT: only start overlay if screen capture is already running (user enabled it)
+        // WRONG:   starting overlay unconditionally — pill appears before user enables anything
+        if (!OfferOverlayService.isRunning && ScreenCaptureService.isRunning) {
+            val overlayIntent = Intent(this, OfferOverlayService::class.java)
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                startService(overlayIntent)
+            } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                startForegroundService(overlayIntent)
+            } else {
+                startService(overlayIntent)
+            }
+        }
+
+        // CORRECT: if returning from accessibility settings and it's now enabled,
+        //          continue onboarding to screen capture permission
+        // WRONG:   resetting toggle to OFF — user enabled accessibility but nothing happens
+        // CORRECT: short delay after service start — isRunning needs time to flip true
+        // WRONG:   calling updateUI() immediately — service not yet running, toggle resets to OFF
+        // Small delay to allow ScreenCaptureService.isRunning to flip true after grant
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+            updateUI()
+            loadStats()
+        }, 300L)
+
+        if (pendingAccessibilityEnable) {
+            pendingAccessibilityEnable = false
+            if (isAccessibilityEnabled()) {
+                // Keep toggle ON and continue to screen capture dialog
+                binding.switchFloatingButton.setOnCheckedChangeListener(null)
+                binding.switchFloatingButton.isChecked = true
+                binding.switchFloatingButton.setOnCheckedChangeListener { _, isChecked ->
+                    if (isChecked && !ScreenCaptureService.isRunning) showCaptureOnboardingFlow()
+                    else if (!isChecked && ScreenCaptureService.isRunning)
+                        stopService(Intent(this, ScreenCaptureService::class.java))
+                }
+                showAutoModeDialog()
+            } else {
+                // User didn't enable it — reset toggle to OFF
+                binding.switchFloatingButton.setOnCheckedChangeListener(null)
+                binding.switchFloatingButton.isChecked = false
+                binding.switchFloatingButton.setOnCheckedChangeListener { _, isChecked ->
+                    if (isChecked && !ScreenCaptureService.isRunning) showCaptureOnboardingFlow()
+                    else if (!isChecked && ScreenCaptureService.isRunning)
+                        stopService(Intent(this, ScreenCaptureService::class.java))
+                }
+                Toast.makeText(this,
+                    "Please enable GigLens in Accessibility Settings to use the capture button",
+                    Toast.LENGTH_LONG).show()
+            }
+        }
+
+        // updateUI/loadStats called via delayed handler above
     }
 
     override fun onDestroy() {
         stopLiveBadgeAnimation()
         super.onDestroy()
+    }
+
+    // CORRECT: check if GigLens accessibility service is enabled
+    // WRONG:   assuming it's enabled — capture button never appears without it
+    private fun isAccessibilityEnabled(): Boolean {
+        // CORRECT: match both short (.service.X) and full (package.service.X) formats
+        // WRONG:   only matching short format — system stores full class name
+        val shortForm = "${packageName}/.service.OfferDetectorService"
+        val fullForm  = "${packageName}/${packageName}.service.OfferDetectorService"
+        val enabled = android.provider.Settings.Secure.getString(
+            contentResolver,
+            android.provider.Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+        ) ?: return false
+        return enabled.split(":").any {
+            it.equals(shortForm, ignoreCase = true) ||
+            it.equals(fullForm,  ignoreCase = true)
+        }
+    }
+
+    private fun showAccessibilityDialog() {
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Enable Accessibility Service")
+            .setMessage(
+                "GigLens needs the Accessibility Service to detect DoorDash offer screens " +
+                "and show the capture button automatically.\n\n" +
+                "Tap Enable to open Accessibility Settings, then find GigLens and turn it on."
+            )
+            .setPositiveButton("Enable") { _, _ ->
+                pendingAccessibilityEnable = true
+                startActivity(android.content.Intent(
+                    android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS
+                ))
+            }
+            .setNegativeButton("Not now") { _, _ ->
+                // Reset toggle — user declined accessibility
+                binding.switchFloatingButton.setOnCheckedChangeListener(null)
+                binding.switchFloatingButton.isChecked = false
+                binding.switchFloatingButton.setOnCheckedChangeListener { _, isChecked ->
+                    if (isChecked && !ScreenCaptureService.isRunning) showCaptureOnboardingFlow()
+                    else if (!isChecked && ScreenCaptureService.isRunning)
+                        stopService(Intent(this, ScreenCaptureService::class.java))
+                }
+            }
+            .show()
+    }
+
+    // Full onboarding flow: accessibility first, then screen capture
+    // CORRECT: check accessibility → then request screen capture permission
+    // WRONG:   requesting screen capture without accessibility — capture button never shows
+    private fun showCaptureOnboardingFlow() {
+        if (!isAccessibilityEnabled()) {
+            showAccessibilityDialog()
+        } else {
+            showAutoModeDialog()
+        }
     }
 
     private fun updateUI() {
@@ -172,22 +320,51 @@ class MainActivity : AppCompatActivity() {
 
         if (captureActive) {
             binding.tvLiveBadge.text = "LIVE"
+            binding.tvLiveBadge.setTextColor(android.graphics.Color.parseColor("#00C9A7"))
+            val liveBg = android.graphics.drawable.GradientDrawable().apply {
+                setColor(android.graphics.Color.argb(31, 0, 201, 167))
+                cornerRadius = 40f
+                setStroke(2, android.graphics.Color.argb(76, 0, 201, 167))
+            }
+            binding.tvLiveBadge.background = liveBg
             startLiveBadgeAnimation()
         } else {
             binding.tvLiveBadge.text = "OFF"
+            binding.tvLiveBadge.setTextColor(android.graphics.Color.parseColor("#9CA3AF"))
+            val offBg = android.graphics.drawable.GradientDrawable().apply {
+                setColor(android.graphics.Color.argb(25, 156, 163, 175))
+                cornerRadius = 40f
+                setStroke(2, android.graphics.Color.argb(64, 156, 163, 175))
+            }
+            binding.tvLiveBadge.background = offBg
             stopLiveBadgeAnimation()
             binding.tvLiveBadge.alpha = 1f
         }
 
-        // Sync toggle without triggering listener
-        // CORRECT: null listener → set value → restore listener
-        // WRONG:   setting isChecked with listener active — triggers recursive loop
+        // Sync toggle — use SharedPreferences as source of truth
+        // CORRECT: prefs persist across onResume/onPause cycles
+        // WRONG:   using isRunning as sole source — service may not be up yet
+        val prefs = getSharedPreferences("giglens_ui", MODE_PRIVATE)
+        val userWantsCapture = prefs.getBoolean("floating_button_enabled", false)
         binding.switchFloatingButton.setOnCheckedChangeListener(null)
-        binding.switchFloatingButton.isChecked = captureActive
+        binding.switchFloatingButton.isChecked = captureActive || userWantsCapture
         binding.switchFloatingButton.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked && !ScreenCaptureService.isRunning) showAutoModeDialog()
-            else if (!isChecked && ScreenCaptureService.isRunning)
-                stopService(Intent(this, ScreenCaptureService::class.java))
+            prefs.edit().putBoolean("floating_button_enabled", isChecked).apply()
+            if (isChecked && !ScreenCaptureService.isRunning) {
+                showCaptureOnboardingFlow()
+            } else if (!isChecked) {
+                prefs.edit().putBoolean("floating_button_enabled", false).apply()
+                if (ScreenCaptureService.isRunning)
+                    stopService(Intent(this, ScreenCaptureService::class.java))
+                if (OfferOverlayService.isRunning)
+                    stopService(Intent(this, OfferOverlayService::class.java))
+                // Sync DB — SettingsActivity reads from here
+                lifecycleScope.launch {
+                    val appDao = GigLensApp.instance.database.appConfigDao()
+                    appDao.setValue(AppConfigKeys.WIDGET_ENABLED, "false")
+                    appDao.setValue(AppConfigKeys.AUTO_CAPTURE_MODE, "off")
+                }
+            }
         }
     }
 

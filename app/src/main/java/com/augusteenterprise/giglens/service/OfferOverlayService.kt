@@ -55,6 +55,11 @@ private enum class SheetState { IDLE, CAMERA, PROCESSING, PILL, MINI, FULL }
 
 class OfferOverlayService : Service() {
 
+    companion object {
+        var isRunning = false
+            private set
+    }
+
     private lateinit var windowManager: WindowManager
     private var rootView: LinearLayout? = null
     private var layoutParams: WindowManager.LayoutParams? = null
@@ -101,9 +106,21 @@ class OfferOverlayService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        isRunning = true
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         createNotificationChannel()
-        startForeground(1, buildNotification())
+        // CORRECT: only call startForeground() on Android 11 and below
+        // On Android 12+, startForeground() from background throws ForegroundServiceStartNotAllowedException
+        // The service is always started from MainActivity.onResume() (foreground) on Android 12+
+        // WRONG: calling startForeground() unconditionally — crashes on Pixel/Android 12+
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.S) {
+            startForeground(1, buildNotification())
+        } else {
+            // Android 12+ — post a low-priority notification without startForeground()
+            // Service runs as background service; WindowManager overlay still works
+            val nm = getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager
+            nm.notify(1, buildNotification())
+        }
         showWidget()
     }
 
@@ -182,6 +199,7 @@ class OfferOverlayService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        isRunning = false
         cancelRevertTimer()
         rootView?.let { try { windowManager.removeView(it) } catch (e: Exception) {} }
         isViewAdded = false

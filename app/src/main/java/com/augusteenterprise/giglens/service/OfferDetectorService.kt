@@ -70,7 +70,9 @@ class OfferDetectorService : AccessibilityService() {
             GigLensApp.instance.database.appConfigDao()
                 .getValue(AppConfigKeys.AUTO_CAPTURE_MODE) ?: "off"
         }
-        if (mode == "off" || mode == "button") return
+        // CORRECT: only return on "off" — "button" mode still needs SHOW_CAMERA
+        // WRONG:   returning on "button" — camera button never appears in button mode
+        if (mode == "off") return
 
         // Check package is a supported + enabled platform
         val packageName = event.packageName?.toString() ?: return

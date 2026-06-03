@@ -137,6 +137,7 @@ class SettingsActivity : AppCompatActivity() {
             val dataSharing = appDao.getValue(AppConfigKeys.DATA_SHARING) ?: "none"
             val widgetEnabled = appDao.getValue(AppConfigKeys.WIDGET_ENABLED) == "true"
             val captureMode = appDao.getValue(AppConfigKeys.AUTO_CAPTURE_MODE) ?: "off"
+            android.util.Log.d("SettingsActivity", "loadSettings: widget=$widgetEnabled mode=$captureMode")
             val enabledPlatforms = appDao.getValue(AppConfigKeys.ENABLED_PLATFORMS) ?: "doordash"
             
             runOnUiThread {
