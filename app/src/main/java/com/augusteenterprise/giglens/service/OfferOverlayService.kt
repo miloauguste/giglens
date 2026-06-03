@@ -197,6 +197,39 @@ class OfferOverlayService : Service() {
         tickRunnable = null
     }
 
+
+    // ── Screen flash feedback on camera tap ───────────────────────────────────
+    private fun flashScreen() {
+        if (!android.provider.Settings.canDrawOverlays(this)) return
+        val flashView = android.view.View(this).apply {
+            setBackgroundColor(android.graphics.Color.WHITE)
+            alpha = 0.85f
+        }
+        val flashParams = WindowManager.LayoutParams(
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+            PixelFormat.TRANSLUCENT
+        )
+        try {
+            windowManager.addView(flashView, flashParams)
+            android.animation.ObjectAnimator.ofFloat(flashView, "alpha", 0.85f, 0f).apply {
+                duration = 180L
+                addListener(object : android.animation.AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: android.animation.Animator) {
+                        try { windowManager.removeView(flashView) } catch (e: Exception) {}
+                    }
+                })
+                start()
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "flashScreen failed: ${e.message}")
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         isRunning = false
@@ -543,7 +576,8 @@ class OfferOverlayService : Service() {
             }
             MotionEvent.ACTION_UP -> {
                 if (!isDragging) {
-                    // Tap — trigger manual capture
+                    // Tap — flash screen then trigger capture
+                    flashScreen()
                     sheetState = SheetState.PROCESSING
                     updateWidget()
                     Log.i(TAG, "Camera button tapped — triggering capture")
