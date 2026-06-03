@@ -1,3 +1,12 @@
+## [Unreleased]
+### Fixed
+- Camera button now appears on DoorDash without visiting Settings
+- Root cause: OfferDetectorService was using sendBroadcast() to signal OfferOverlayService,
+  but OfferOverlayService handles signals via onStartCommand() not a BroadcastReceiver.
+  Fixed by switching to startService(Intent(...).apply { action = ACTION_SHOW_CAMERA }).
+- Added 2s cooldown on SHOW_CAMERA to prevent startService spam on every content change event.
+- DB seed defaults changed: AUTO_CAPTURE_MODE default "off" → "button", WIDGET_ENABLED "false" → "true"
+
 ## [0.1.56] - 2026-05-24
 ### Note
 - Stop-sign octagon for SKIP deferred — keeping red rounded pill for now
@@ -204,3 +213,22 @@
 - extractRestaurant(): time pattern rejection, digit ratio guard, minimum length 4 — fixes "D 44:55" and "G l" misreads
 - ScreenCaptureService: showRestartNotification() now fires when MediaProjection session expires
 - ScreenCaptureService: health watchdog detects 3 consecutive null frames and triggers restart notification proactively
+
+## [v0.1.79] - 2026-06-02
+
+### Added
+- MainActivity full analytics dashboard (today stats, earnings overview, Chart.js analytics, verdict breakdown, recent offers)
+- LIVE/OFF badge with smooth ObjectAnimator animation
+- Onboarding flow: accessibility service check → screen capture permission → pill + camera button
+- SharedPreferences-based toggle persistence across onResume cycles
+- OfferOverlayService.isRunning flag for safe overlay start gating
+
+### Fixed
+- OfferOverlayService: Android 12+ ForegroundServiceStartNotAllowedException — service now started from MainActivity foreground context
+- OfferDetectorService: "button" mode was incorrectly skipping SHOW_CAMERA — now only skips on "off"
+- Toggle reset loop: updateUI() no longer resets toggle to OFF during permission grant flow
+- AUTO_CAPTURE_MODE written to DB immediately on toggle ON — OfferDetectorService sees correct mode
+- LIVE badge background set programmatically (GradientDrawable) — was blank in XML
+
+### Known issues
+- Settings capture mode radio does not auto-select after enabling from MainActivity — requires manual save in Settings (UX redesign planned next session)

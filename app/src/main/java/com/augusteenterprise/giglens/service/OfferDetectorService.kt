@@ -22,9 +22,11 @@ import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 
 class OfferDetectorService : AccessibilityService() {
+    private var lastShowCameraMs = 0L
 
     companion object {
         private const val TAG = "OfferDetector"
+private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
         const val ACTION_OFFER_DETECTED = "com.augusteenterprise.giglens.OFFER_DETECTED"
 
         // Cooldown to avoid duplicate captures (ms)
@@ -65,14 +67,14 @@ class OfferDetectorService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
 
-        // Check auto capture mode is enabled
+        // CORRECT: gate on ScreenCaptureService.isRunning — driver enabled the toggle
+        // WRONG:   reading AUTO_CAPTURE_MODE from DB — DB may be "off" on fresh install
+        if (!ScreenCaptureService.isRunning) return
+        android.util.Log.d("OfferDetector", "captureRunning=true — proceeding")
         val mode = runBlocking {
             GigLensApp.instance.database.appConfigDao()
-                .getValue(AppConfigKeys.AUTO_CAPTURE_MODE) ?: "off"
+                .getValue(AppConfigKeys.AUTO_CAPTURE_MODE) ?: "button"
         }
-        // CORRECT: only return on "off" — "button" mode still needs SHOW_CAMERA
-        // WRONG:   returning on "button" — camera button never appears in button mode
-        if (mode == "off") return
 
         // Check package is a supported + enabled platform
         val packageName = event.packageName?.toString() ?: return
@@ -82,14 +84,29 @@ class OfferDetectorService : AccessibilityService() {
         }
         val platform = PlatformRegistry.byPackage(packageName) ?: return
         if (!platform.supported) return
-        if (platform.id !in enabledPlatforms.split(",").map { it.trim() }) return
+        // CORRECT: also allow if enabledPlatforms is empty or DB not yet seeded
+        // WRONG:   blocking all platforms if DB returns null/empty on fresh install
+        val platformList = enabledPlatforms.split(",").map { it.trim() }.filter { it.isNotBlank() }
+        if (platformList.isNotEmpty() && platform.id !in platformList) return
+        android.util.Log.d("OfferDetector", "platform=${platform.id} enabled — proceeding to offer check")
 
         // Only process content/window changes
         if (event.eventType != AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED
             && event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
         ) return
 
-        // Cooldown check
+              // Show camera button when DoorDash foreground — driver can tap manually
+        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED ||
+            event.eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
+            val now = System.currentTimeMillis()
+            if (now - lastShowCameraMs >= SHOW_CAMERA_COOLDOWN_MS) {
+                lastShowCameraMs = now
+                Log.d(TAG, "DoorDash foreground — sending SHOW_CAMERA")
+                startService(Intent(applicationContext, OfferOverlayService::class.java).apply { action = ACTION_SHOW_CAMERA })
+            }
+        }
+
+  // Cooldown check
         val now = System.currentTimeMillis()
         if (now - lastCaptureTime < CAPTURE_COOLDOWN_MS) return
 
@@ -177,6 +194,7 @@ class OfferDetectorService : AccessibilityService() {
      * WRONG:   always triggering capture regardless of mode setting
      */
     private fun signalCapture() {
+        Log.d(TAG, "signalCapture() called")
         // Always morph overlay widget to camera button
         val overlayIntent = Intent(this, OfferOverlayService::class.java).apply {
             action = ACTION_SHOW_CAMERA
