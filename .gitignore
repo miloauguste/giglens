@@ -29,3 +29,6 @@ Screen Capture Active
 
 # Archived session transcripts
 docs/transcripts/
+
+# Security scan reports
+docs/security-reports/
