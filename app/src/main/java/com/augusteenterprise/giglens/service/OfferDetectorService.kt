@@ -42,6 +42,11 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
     private var lastCaptureTime = 0L
     private var lastOfferFingerprint = ""  // detects new vs same offer screen
 
+    // CORRECT: cache DB config values at connect time — read once, not on every accessibility event
+    // WRONG: calling runBlocking inside onAccessibilityEvent() — blocks accessibility thread, ANR risk
+    private var cachedAutoCapureMode = "button"
+    private var cachedEnabledPlatforms = "doordash"
+
     override fun onServiceConnected() {
         super.onServiceConnected()
         isRunning = true
@@ -62,6 +67,14 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
         serviceInfo = info
 
         Log.i(TAG, "OfferDetectorService connected — serviceInfo set programmatically")
+
+        // Populate config cache on connect — avoids runBlocking on every accessibility event
+        CoroutineScope(Dispatchers.IO).launch {
+            val dao = GigLensApp.instance.database.appConfigDao()
+            cachedAutoCapureMode = dao.getValue(AppConfigKeys.AUTO_CAPTURE_MODE) ?: "button"
+            cachedEnabledPlatforms = dao.getValue(AppConfigKeys.ENABLED_PLATFORMS) ?: "doordash"
+            Log.d(TAG, "Config cache loaded: mode=$cachedAutoCapureMode platforms=$cachedEnabledPlatforms")
+        }
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
@@ -71,17 +84,13 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
         // WRONG:   reading AUTO_CAPTURE_MODE from DB — DB may be "off" on fresh install
         if (!ScreenCaptureService.isRunning) return
         android.util.Log.d("OfferDetector", "captureRunning=true — proceeding")
-        val mode = runBlocking {
-            GigLensApp.instance.database.appConfigDao()
-                .getValue(AppConfigKeys.AUTO_CAPTURE_MODE) ?: "button"
-        }
+        // CORRECT: use cached values — populated once at onServiceConnected
+        // WRONG: runBlocking here blocks accessibility thread on every event — ANR risk
+        val mode = cachedAutoCapureMode
 
         // Check package is a supported + enabled platform
         val packageName = event.packageName?.toString() ?: return
-        val enabledPlatforms = runBlocking {
-            GigLensApp.instance.database.appConfigDao()
-                .getValue(AppConfigKeys.ENABLED_PLATFORMS) ?: "doordash"
-        }
+        val enabledPlatforms = cachedEnabledPlatforms
         val platform = PlatformRegistry.byPackage(packageName) ?: return
         if (!platform.supported) return
         // CORRECT: also allow if enabledPlatforms is empty or DB not yet seeded
@@ -112,21 +121,23 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
 
         // Walk the accessibility tree looking for offer keywords
         val rootNode = rootInActiveWindow ?: return
-        if (looksLikeOfferScreen(rootNode)) {
-            // Build a fingerprint from offer text to detect NEW vs SAME offer
-            val fingerprint = buildOfferFingerprint(rootNode)
-            if (fingerprint == lastOfferFingerprint) {
-                // Same offer still on screen — don't re-trigger
-                rootNode.recycle()
-                return
+        // CORRECT: try/finally guarantees recycle() even if looksLikeOfferScreen() throws
+        // WRONG: relying on manual recycle() calls — any exception mid-walk leaks native node object
+        try {
+            if (looksLikeOfferScreen(rootNode)) {
+                val fingerprint = buildOfferFingerprint(rootNode)
+                if (fingerprint == lastOfferFingerprint) {
+                    // Same offer still on screen — don't re-trigger
+                    return
+                }
+                Log.i(TAG, "NEW offer screen detected — signaling capture")
+                lastOfferFingerprint = fingerprint
+                lastCaptureTime = now
+                signalCapture()
             }
-            Log.i(TAG, "NEW offer screen detected — signaling capture")
-            lastOfferFingerprint = fingerprint
-            lastCaptureTime = now
-            signalCapture()
+        } finally {
+            rootNode.recycle()
         }
-
-        rootNode.recycle()
     }
 
     /**
@@ -195,25 +206,20 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
      */
     private fun signalCapture() {
         Log.d(TAG, "signalCapture() called")
-        // Always morph overlay widget to camera button
-        val overlayIntent = Intent(this, OfferOverlayService::class.java).apply {
-            action = ACTION_SHOW_CAMERA
-        }
-        startService(overlayIntent)
-        Log.d(TAG, "Sent SHOW_CAMERA to overlay")
+        // CORRECT: ACTION_SHOW_CAMERA already sent in onAccessibilityEvent() before signalCapture()
+        // WRONG: sending SHOW_CAMERA again here — creates a second orphaned ConnectionRecord per event
+        // Removed duplicate startService(ACTION_SHOW_CAMERA) — no-op that was leaking records
 
         // Auto-capture only if mode allows it
-        val mode = runBlocking {
-            GigLensApp.instance.database.appConfigDao()
-                .getValue(AppConfigKeys.AUTO_CAPTURE_MODE) ?: "off"
-        }
-        if (mode == "accessibility" || mode == "both") {
-            Log.i(TAG, "Auto-capture mode=$mode — triggering capture")
+        // CORRECT: use cached mode — same value, no DB hit needed here
+        // WRONG: second runBlocking in signalCapture — redundant DB read on already-blocked thread
+        if (cachedAutoCapureMode == "accessibility" || cachedAutoCapureMode == "both") {
+            Log.i(TAG, "Auto-capture mode=$cachedAutoCapureMode — triggering capture")
             val captureIntent = Intent(ACTION_OFFER_DETECTED)
             captureIntent.setPackage(packageName)
             sendBroadcast(captureIntent)
         } else {
-            Log.d(TAG, "Mode=$mode — waiting for driver to tap camera button")
+            Log.d(TAG, "Mode=$cachedAutoCapureMode — waiting for driver to tap camera button")
         }
     }
 

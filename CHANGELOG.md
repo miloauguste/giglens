@@ -1,3 +1,12 @@
+## [Unreleased] - 2026-06-04
+### Fixed
+- OfferDetectorService: wrapped rootNode in try/finally — guarantees recycle() even if offer detection throws mid-walk
+- OfferDetectorService: replaced runBlocking DB reads in onAccessibilityEvent() and signalCapture() with cached values populated at onServiceConnected() — eliminates ANR risk on accessibility thread
+- OfferOverlayService: added stopSelf(startId) to ACTION_SHOW_CAMERA and ACTION_HIDE_CAMERA handlers — releases transient ConnectionRecords, fixes ~25 DEAD entry leak
+- OfferDetectorService: removed duplicate startService(ACTION_SHOW_CAMERA) inside signalCapture() — was creating second orphaned record per event
+- ScreenCaptureService: replaced watchdog acquireLatestImage() health check with lightweight virtualDisplay/mediaProjection null checks — eliminates unnecessary pixel buffer allocation every 30s
+- ScreenCaptureService: added textRecognizer.close() in onDestroy() — releases ML Kit native handles on service teardown
+
 ## [Unreleased]
 ### Fixed
 - Grey idle pill now appears immediately when toggle is ON (was only appearing after DoorDash opened)

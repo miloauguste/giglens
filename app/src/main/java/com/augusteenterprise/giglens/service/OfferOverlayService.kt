@@ -132,6 +132,9 @@ class OfferOverlayService : Service() {
                 sheetState = SheetState.CAMERA
                 if (isViewAdded) updateWidget() else { showWidget(); updateWidget() }
                 Log.d(TAG, "Widget morphed to CAMERA state")
+                // CORRECT: stopSelf(startId) releases this transient start — service stays running via onCreate()
+                // WRONG: omitting stopSelf — leaves a DEAD ConnectionRecord for every SHOW_CAMERA fired
+                stopSelf(startId)
             }
             ACTION_HIDE_CAMERA -> {
                 // Offer screen gone — morph back to pill or idle
@@ -140,6 +143,9 @@ class OfferOverlayService : Service() {
                     if (isViewAdded) updateWidget() else { showWidget(); updateWidget() }
                     Log.d(TAG, "Widget morphed back from CAMERA to $sheetState")
                 }
+                // CORRECT: stopSelf(startId) releases this transient start
+                // WRONG: omitting stopSelf — leaks record even when state change was skipped
+                stopSelf(startId)
             }
             else -> {
                 if (intent?.hasExtra(EXTRA_NET_VALUE) == true) {

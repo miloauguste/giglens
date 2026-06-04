@@ -85,10 +85,12 @@ class ScreenCaptureService : Service() {
     private val watchdogRunnable = object : Runnable {
         override fun run() {
             if (!isRunning) return
-            val image = imageReader?.acquireLatestImage()
-            if (image == null) {
+            // CORRECT: check virtualDisplay/mediaProjection state — no need to acquire a real frame
+            // WRONG: acquireLatestImage() just for a health check — wastes pixel buffer allocation every 30s
+            val sessionAlive = virtualDisplay != null && mediaProjection != null && imageReader != null
+            if (!sessionAlive) {
                 nullFrameCount++
-                Log.w(TAG, "Watchdog: null frame $nullFrameCount/3")
+                Log.w(TAG, "Watchdog: session check failed $nullFrameCount/3")
                 if (nullFrameCount >= 3) {
                     Log.e(TAG, "Watchdog: session appears dead — triggering restart notification")
                     showRestartNotification()
@@ -97,7 +99,6 @@ class ScreenCaptureService : Service() {
                 }
             } else {
                 nullFrameCount = 0
-                image.close()
             }
             watchdogHandler.postDelayed(this, 30_000L)
         }
@@ -440,6 +441,11 @@ class ScreenCaptureService : Service() {
         nullFrameCount = 0
         watchdogHandler.removeCallbacks(watchdogRunnable)
         serviceJob.cancel()
+        // CORRECT: close textRecognizer to release ML Kit native resources
+        // WRONG: omitting close() — TextRecognizer holds native handles that won't be GC'd
+        try { textRecognizer.close() } catch (e: Exception) {
+            Log.w(TAG, "textRecognizer.close() failed: ${e.message}")
+        }
         Log.i(TAG, "ScreenCaptureService destroyed")
         super.onDestroy()
     }
