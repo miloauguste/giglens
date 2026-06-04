@@ -126,3 +126,14 @@ before it gets built to avoid wasted implementation cycles
 ---
 
 *Next developer: read SESSION_PROTOCOL.md first, then return here.*
+
+## 2026-06-04 — Decisions from this session
+
+- **IPC mechanism:** startService() chosen over BroadcastReceiver for ACTION_SHOW_CAMERA because OfferOverlayService handles signals in onStartCommand(), not via registered receiver
+- **Onboarding sequence:** Overlay permission moved to step 0 (before accessibility/capture) to prevent crash on first run
+- **Flash timing:** 180ms fade chosen for camera feedback — fast enough to feel instant, slow enough to register visually
+- **Grey pill visibility:** Should always be visible when toggle ON — independent of ScreenCaptureService state
+
+---
+
+*Next developer: read SESSION_PROTOCOL.md first, then start with live shift testing to validate OCR accuracy and scoring logic.*

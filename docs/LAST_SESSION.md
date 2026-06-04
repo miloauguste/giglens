@@ -1,65 +1,97 @@
 # GigLens — Session Handover
 **Date:** 2026-06-04
-**Version at session end:** 0.1.87
-**Build state:** SKIPPED
+**Version at session end:** 0.1.88
+**Build state:** PASSING
 **Conducted by:** Claude (auto-generated via tools/gen_handover.py)
 
 ---
 
 # GigLens — Session Handover
-**Date:** 2025-01-22
-**Version at session end:** Latest commit on main branch
-**Build state:** PASSING
-**Conducted by:** Milo Auguste Jr. / AI Assistant
+**Date:** 2025-06-03  
+**Version at session end:** Latest commit on main branch (screen flash + overlay permission onboarding)  
+**Build state:** PASSING  
+**Conducted by:** Milo Auguste Jr. / Claude (Anthropic)
 
 ---
 
 ## What Was Completed This Session
 
-- ✅ Fixed isViewAdded duplicate WindowManager view bug in OfferOverlayService.kt
-- ✅ Changes committed and pushed to GitHub
+- ✅ **Fixed camera button not appearing without Settings visit**
+  - Root cause: `sendBroadcast()` → `onStartCommand()` IPC mismatch
+  - Solution: Changed `OfferDetectorService.kt` to use `startService(Intent(...).apply { action = ACTION_SHOW_CAMERA })` instead of `sendBroadcast()`
+  - Added 2s cooldown (`SHOW_CAMERA_COOLDOWN_MS`) to prevent spam on every `typeWindowContentChanged` event
+
+- ✅ **Fixed grey pill not showing on toggle ON**
+  - Root cause: `onResume()` gating on `ScreenCaptureService.isRunning` instead of overlay permission
+  - Overlay permission added as **step 0** of onboarding flow before accessibility/screen capture
+  - Added `pendingOverlayForOnboarding` flag to continue flow after permission grant
+
+- ✅ **Fixed BadTokenException crash**
+  - `OfferOverlayService.showWidget()` now wraps `windowManager.addView()` in try/catch
+  - Service calls `stopSelf()` on permission denied instead of crashing
+
+- ✅ **Added screen flash on camera tap**
+  - White flash overlay (0.85 → 0 alpha, 180ms fade) via `ObjectAnimator`
+  - Implemented in `flashScreen()` method in `OfferOverlayService.kt`
+  - Flash only fires when camera button visible (offer screen detected)
+
+- ✅ **All changes committed and pushed to GitHub**
 
 ## What Was Left Incomplete
 
-- None reported this session
+- None this session
 
 ## Known Broken (do not ignore)
 
-- None currently known
+- ⚠️ **Dead ConnectionRecord leak** (~25 DEAD entries in `dumpsys activity services`)
+  - Not blocking, but needs investigation
+  - Service repeatedly starting/binding leaving dead connections
+  - Add to next session cleanup tasks
 
 ## Next Session — Start Here
 
-**First task:** Verify fix deployed successfully, then continue Feature #8 auto-capture implementation
-**GitHub Issue:** Check GitHub for next priority issue or continue #8 (auto-capture)
+**First task:** Test full capture flow on live DoorDash shift — verify OCR accuracy and scoring feel  
+**GitHub Issue:** Create issue for ConnectionRecord leak investigation  
 **Context needed:**
-- isViewAdded bug fix should be validated on both devices before proceeding
-- OCR wire-up for auto-capture feature was previously marked as pending
+- Grey pill → camera button → flash → spinner → verdict pill flow all working in dev
+- OCR tuning and scoring weights adjustments likely needed after real-world testing
+- Watch for misreads on restaurant names, pay amounts, mileage
 
 ## Active Feature Status
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| isViewAdded duplicate fix | ✅ Complete | Fixed and pushed to GitHub |
-| Feature #8 auto-capture | 🟡 In progress | OCR wire-up pending |
-| OCR scoring weights | 🟡 In progress | No Settings UI yet |
+| Camera button without Settings | ✅ Complete | sendBroadcast → startService + 2s cooldown |
+| Grey pill on toggle ON | ✅ Complete | Overlay permission in onboarding flow |
+| Screen flash on capture | ✅ Complete | 180ms white flash fade |
+| ConnectionRecord leak | 🔴 Broken | ~25 DEAD entries, needs cleanup |
+| Feature #8 auto-capture | 🟡 In progress | OCR wire-up complete, needs live testing |
+| OCR scoring weights | 🟡 In progress | No Settings UI yet, default weights active |
+| NVD API key for OWASP | 🔴 Blocked | Needs new key at nvd.nist.gov |
 
 ## Devices & Build Environment
 
-- Build server: milo-dev at 10.0.0.16
+- Build server: milo-dev (i9, 48GB RAM, Ubuntu 24) at 10.0.0.16
 - S20 (10.0.0.189:5555): run `adb connect 10.0.0.189:5555` to verify
-- Pixel 10 XL (10.0.0.110:5555): run `adb connect 10.0.0.110:5555` to verify
+- Pixel 10 XL (10.0.0.110:46791): run `adb connect 10.0.0.110:46791` to verify *(port changes on reboot)*
 
-## Files Changed This Commit
+## Files Changed This Session
 
-- OfferOverlayService.kt (isViewAdded bug fix)
+- `OfferDetectorService.kt` (sendBroadcast → startService, 2s cooldown)
+- `OfferOverlayService.kt` (BadTokenException handling, flashScreen() method)
+- `MainActivity.kt` (overlay permission onboarding, pendingOverlayForOnboarding flag, canDrawOverlays() checks)
+- `CHANGELOG.md` (session entries)
 
 ## Decisions Made This Session
 
-- **isViewAdded bug resolution:** Fixed and deployed as top priority item from previous session
+- **IPC mechanism:** startService() chosen over BroadcastReceiver for ACTION_SHOW_CAMERA because OfferOverlayService handles signals in onStartCommand(), not via registered receiver
+- **Onboarding sequence:** Overlay permission moved to step 0 (before accessibility/capture) to prevent crash on first run
+- **Flash timing:** 180ms fade chosen for camera feedback — fast enough to feel instant, slow enough to register visually
+- **Grey pill visibility:** Should always be visible when toggle ON — independent of ScreenCaptureService state
 
 ---
 
-*Next developer: read SESSION_PROTOCOL.md first, then return here.*
+*Next developer: read SESSION_PROTOCOL.md first, then start with live shift testing to validate OCR accuracy and scoring logic.*
 
 ## Devices & Build Environment
 
@@ -69,7 +101,7 @@
 
 ## Files Changed This Session
 
-- tools/gen_handover.py
+- (no changes detected)
 
 ---
 *Auto-generated by tools/gen_handover.py — next developer read SESSION_PROTOCOL.md first.*
