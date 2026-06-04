@@ -1,5 +1,19 @@
 ## [Unreleased] - 2026-06-04
 ### Fixed
+- OfferDetectorService: removed blanket ACTION_SHOW_CAMERA on every window event — camera button no longer blinks on map redraws, navigation updates, or earnings screen
+- OfferDetectorService: SHOW_CAMERA now only fires on confirmed new offer screen detection
+- OfferDetectorService: HIDE_CAMERA sent when offer screen disappears — camera button clears cleanly
+
+## [Unreleased] - 2026-06-04
+### Fixed
+- OfferOverlayService: disabled auto-revert to IDLE — pill now persists for entire shift duration
+- OfferOverlayService: removed countdown timer from pill label — no longer shows Xs during shift
+- ScreenCaptureService: start OfferOverlayService immediately on capture launch — pill now visible from shift start without requiring MainActivity interaction
+### Changed
+- Pill behavior: result state (TAKE/BORDERLINE/SKIP) persists until next offer replaces it — never auto-clears mid-shift
+
+## [Unreleased] - 2026-06-04
+### Fixed
 - OfferDetectorService: wrapped rootNode in try/finally — guarantees recycle() even if offer detection throws mid-walk
 - OfferDetectorService: replaced runBlocking DB reads in onAccessibilityEvent() and signalCapture() with cached values populated at onServiceConnected() — eliminates ANR risk on accessibility thread
 - OfferOverlayService: added stopSelf(startId) to ACTION_SHOW_CAMERA and ACTION_HIDE_CAMERA handlers — releases transient ConnectionRecords, fixes ~25 DEAD entry leak

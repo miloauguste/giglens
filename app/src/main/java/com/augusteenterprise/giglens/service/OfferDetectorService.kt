@@ -105,15 +105,9 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
         ) return
 
               // Show camera button when DoorDash foreground — driver can tap manually
-        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED ||
-            event.eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
-            val now = System.currentTimeMillis()
-            if (now - lastShowCameraMs >= SHOW_CAMERA_COOLDOWN_MS) {
-                lastShowCameraMs = now
-                Log.d(TAG, "DoorDash foreground — sending SHOW_CAMERA")
-                startService(Intent(applicationContext, OfferOverlayService::class.java).apply { action = ACTION_SHOW_CAMERA })
-            }
-        }
+        // CORRECT: send SHOW_CAMERA only when offer screen detected — not on every window event
+        // WRONG: sending SHOW_CAMERA on every TYPE_WINDOW_CONTENT_CHANGED — camera blinks on
+        //        map redraws, navigation updates, earnings screen, any DoorDash UI change
 
   // Cooldown check
         val now = System.currentTimeMillis()
@@ -133,7 +127,28 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
                 Log.i(TAG, "NEW offer screen detected — signaling capture")
                 lastOfferFingerprint = fingerprint
                 lastCaptureTime = now
+                // CORRECT: send SHOW_CAMERA only on confirmed new offer screen
+                // WRONG: sending SHOW_CAMERA on every window event — camera blinks randomly
+                val now2 = System.currentTimeMillis()
+                if (now2 - lastShowCameraMs >= SHOW_CAMERA_COOLDOWN_MS) {
+                    lastShowCameraMs = now2
+                    Log.d(TAG, "Offer screen confirmed — sending SHOW_CAMERA")
+                    startService(Intent(applicationContext, OfferOverlayService::class.java).apply {
+                        action = ACTION_SHOW_CAMERA
+                    })
+                }
                 signalCapture()
+            } else {
+                // No offer screen detected — hide camera button if it was showing
+                // CORRECT: send HIDE_CAMERA when offer screen gone — camera button clears
+                // WRONG: leaving camera button visible after offer dismissed — confuses driver
+                if (lastOfferFingerprint.isNotEmpty()) {
+                    Log.d(TAG, "Offer screen gone — sending HIDE_CAMERA")
+                    startService(Intent(applicationContext, OfferOverlayService::class.java).apply {
+                        action = ACTION_HIDE_CAMERA
+                    })
+                    lastOfferFingerprint = ""
+                }
             }
         } finally {
             rootNode.recycle()
