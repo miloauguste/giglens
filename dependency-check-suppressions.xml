@@ -43,4 +43,20 @@
         <cve>CVE-2023-2976</cve>
     </suppress>
 
+    <!-- FALSE POSITIVE: CVE-2020-29582 Kotlin createTempDir/createTempFile insecure permissions
+         GigLens does not use createTempDir() or createTempFile(). Affects all Kotlin stdlib/reflect
+         versions but only exploitable if those APIs are called directly. -->
+    <suppress>
+        <notes>GigLens does not use Kotlin createTempDir/createTempFile APIs.</notes>
+        <packageUrl regex="true">^pkg:maven/org\.jetbrains\.kotlin/kotlin-(stdlib|reflect).*$</packageUrl>
+        <cve>CVE-2020-29582</cve>
+    </suppress>
+
+    <!-- FALSE POSITIVE: CVE-2020-8908 Guava Files.createTempDir() insecure permissions (Low, CVSS 3.3)
+         GigLens does not call Guava Files.createTempDir(). Transitive via play-services SDK. -->
+    <suppress>
+        <notes>GigLens does not use Guava Files.createTempDir(). Transitive via play-services.</notes>
+        <packageUrl regex="true">^pkg:maven/com\.google\.guava/guava.*$</packageUrl>
+        <cve>CVE-2020-8908</cve>
+    </suppress>
 </suppressions>

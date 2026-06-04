@@ -1,11 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
-    <!--
-        Add suppressions here for known false positives.
-        Format:
-        <suppress>
-            <notes>Reason for suppression</notes>
-            <cve>CVE-YYYY-NNNNN</cve>
-        </suppress>
-    -->
+
+    <!-- CVE-2020-29582: Kotlin createTempDir/createTempFile insecure permissions
+         Not applicable — GigLens does not use createTempDir() or createTempFile() -->
+    <suppress>
+        <notes>GigLens does not use Kotlin createTempDir/createTempFile APIs</notes>
+        <cve>CVE-2020-29582</cve>
+    </suppress>
+
+    <!-- CVE-2020-8908: Guava Files.createTempDir() insecure permissions (Low, CVSS 3.3)
+         Not applicable — GigLens does not use Guava Files.createTempDir().
+         Guava is a transitive dependency via play-services SDK, not direct usage. -->
+    <suppress>
+        <notes>GigLens does not use Guava Files.createTempDir(). Transitive via play-services.</notes>
+        <cve>CVE-2020-8908</cve>
+    </suppress>
+
 </suppressions>
