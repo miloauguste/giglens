@@ -118,3 +118,11 @@ before it gets built to avoid wasted implementation cycles
 **Alternatives rejected:** [what else and why not]
 **Approved by:** Milo
 ```
+
+## 2026-06-04 — Decisions from this session
+
+- **isViewAdded bug resolution:** Fixed and deployed as top priority item from previous session
+
+---
+
+*Next developer: read SESSION_PROTOCOL.md first, then return here.*
