@@ -188,9 +188,11 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
         var acceptFound = false
         var declineFound = false
         var dollarFound = false
+        val allTexts = mutableListOf<String>()
 
         fun walk(node: AccessibilityNodeInfo) {
             val text = node.text?.toString()?.lowercase() ?: ""
+            if (text.isNotBlank()) allTexts.add(text)
             if (text.contains("accept")) acceptFound = true
             if (text.contains("decline")) declineFound = true
             if (text.contains("$")) dollarFound = true
@@ -204,10 +206,12 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
 
         walk(root)
 
-        // Require at least Accept + Decline + a dollar amount
         val isOffer = acceptFound && declineFound && dollarFound
-        if (isOffer) {
-            Log.d(TAG, "Offer signals: accept=$acceptFound decline=$declineFound dollar=$dollarFound")
+        // CORRECT: always log detection result — needed to diagnose missed offers on real shifts
+        // WRONG: only logging when isOffer=true — silent failure when offer not detected
+        Log.d(TAG, "looksLikeOfferScreen: accept=$acceptFound decline=$declineFound dollar=$dollarFound → isOffer=$isOffer")
+        if (!isOffer && allTexts.isNotEmpty()) {
+            Log.d(TAG, "Screen texts sampled: ${allTexts.take(10).joinToString(" | ")}")
         }
         return isOffer
     }
