@@ -1,4 +1,23 @@
 ## [Unreleased] - 2026-06-06
+### Fixed
+- Removed test crash button from MainActivity — Crashlytics verified working
+- Added firebase_crashlytics_collection_enabled=true to manifest — ensures debug build logging
+### Verified
+- Crashlytics confirmed receiving data: test crash appeared in Firebase console within 5 minutes ✅
+
+## [Unreleased] - 2026-06-06
+### Added
+- Firebase Crashlytics integrated for production logging — no ADB needed after live shifts
+- OfferDetectorService: offer detection events logged to Crashlytics in release builds
+- ScreenCaptureService: service start, MediaProjection stop, offer detected logged to Crashlytics
+- Debug file write (screen_texts.log) gated on BuildConfig.DEBUG — never runs in release
+### Fixed
+- Removed firebase-analytics-ktx — was pulling in AD_ID, WAKE_LOCK, ad service permissions
+- Forced protobuf-javalite 3.25.5 — patches CVE-2022-3171 and CVE-2024-7254
+- Suppressed protobuf CVEs that are not applicable to GigLens (no untrusted protobuf parsing)
+- Suppressed kotlinx-coroutines-play-services false positive CVEs
+
+## [Unreleased] - 2026-06-06
 ### Added
 - Firebase Crashlytics integrated for production logging
 - OfferDetectorService: screen detection events logged to Crashlytics in release builds

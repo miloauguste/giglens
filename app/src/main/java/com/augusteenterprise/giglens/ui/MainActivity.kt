@@ -167,6 +167,7 @@ class MainActivity : AppCompatActivity() {
         binding.rowSettings.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
+
         binding.tvSeeAll.setOnClickListener {
             Toast.makeText(this, "Offer history coming soon", Toast.LENGTH_SHORT).show()
         }
