@@ -214,12 +214,27 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
         walk(root)
 
         val isOffer = acceptFound && declineFound && dollarFound
-        // CORRECT: always log detection result — needed to diagnose missed offers on real shifts
-        // WRONG: only logging when isOffer=true — silent failure when offer not detected
         Log.d(TAG, "looksLikeOfferScreen: accept=$acceptFound decline=$declineFound dollar=$dollarFound → isOffer=$isOffer")
-        if (!isOffer && allTexts.isNotEmpty()) {
-            Log.d(TAG, "Screen texts sampled: ${allTexts.take(10).joinToString(" | ")}")
+
+        // CORRECT: dump all screen texts to file for post-shift diagnosis
+        // WRONG: logging only — logcat buffer clears, no data after shift
+        if (allTexts.isNotEmpty()) {
+            try {
+                val dir = java.io.File(
+                    GigLensApp.instance.getExternalFilesDir(null), "debug"
+                )
+                dir.mkdirs()
+                val file = java.io.File(dir, "screen_texts.log")
+                val timestamp = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US)
+                    .format(java.util.Date())
+                val textsJoined = allTexts.joinToString(" | ")
+                val line = timestamp + " isOffer=" + isOffer + " | " + textsJoined + System.lineSeparator()
+                file.appendText(line)
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to write screen texts: ${e.message}")
+            }
         }
+
         return isOffer
     }
 
