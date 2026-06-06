@@ -20,6 +20,8 @@ import kotlinx.coroutines.runBlocking
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import com.google.firebase.crashlytics.FirebaseCrashlytics
+import com.augusteenterprise.giglens.BuildConfig
 
 class OfferDetectorService : AccessibilityService() {
     private var lastShowCameraMs = 0L
@@ -225,27 +227,32 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
                       (acceptFound && declineFound && dollarFound && miFound)
         Log.d(TAG, "looksLikeOfferScreen: accept=$acceptFound decline=$declineFound dollar=$dollarFound guaranteed=$guaranteedFound mi=$miFound → isOffer=$isOffer")
 
-        // CORRECT: dump all screen texts to file for post-shift diagnosis
-        // WRONG: logging only — logcat buffer clears, no data after shift
+        // CORRECT: log to Crashlytics in release, file in debug — survives logcat buffer clear
+        // WRONG: logcat only — buffer overwrites during long shifts
         if (allTexts.isNotEmpty()) {
-            try {
-                val dir = java.io.File(
-                    GigLensApp.instance.getExternalFilesDir(null), "debug"
-                )
-                dir.mkdirs()
-                val file = java.io.File(dir, "screen_texts.log")
-                // Cap at 2MB — rotate by clearing when exceeded
-                if (file.exists() && file.length() > 2 * 1024 * 1024) {
-                    file.delete()
-                    Log.d(TAG, "screen_texts.log rotated — exceeded 2MB")
+            val textsJoined = allTexts.take(15).joinToString(" | ")
+            val crashlyticsMsg = "looksLike: accept=$acceptFound decline=$declineFound " +
+                "guaranteed=$guaranteedFound mi=$miFound isOffer=$isOffer | $textsJoined"
+            FirebaseCrashlytics.getInstance().log(crashlyticsMsg)
+
+            if (BuildConfig.DEBUG) {
+                try {
+                    val dir = java.io.File(
+                        GigLensApp.instance.getExternalFilesDir(null), "debug"
+                    )
+                    dir.mkdirs()
+                    val file = java.io.File(dir, "screen_texts.log")
+                    if (file.exists() && file.length() > 2 * 1024 * 1024) {
+                        file.delete()
+                        Log.d(TAG, "screen_texts.log rotated — exceeded 2MB")
+                    }
+                    val timestamp = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US)
+                        .format(java.util.Date())
+                    val line = timestamp + " isOffer=" + isOffer + " | " + textsJoined + System.lineSeparator()
+                    file.appendText(line)
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to write screen texts: ${e.message}")
                 }
-                val timestamp = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US)
-                    .format(java.util.Date())
-                val textsJoined = allTexts.joinToString(" | ")
-                val line = timestamp + " isOffer=" + isOffer + " | " + textsJoined + System.lineSeparator()
-                file.appendText(line)
-            } catch (e: Exception) {
-                Log.w(TAG, "Failed to write screen texts: ${e.message}")
             }
         }
 

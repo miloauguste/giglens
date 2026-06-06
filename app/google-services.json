@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "279624168784",
+    "project_id": "giglens-57f0c",
+    "storage_bucket": "giglens-57f0c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:279624168784:android:e120fad1a394f4b8f22855",
+        "android_client_info": {
+          "package_name": "com.augusteenterprise.giglens"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA1v1xjqh7KNAcqwZdTKQLWp6akexuIyfc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

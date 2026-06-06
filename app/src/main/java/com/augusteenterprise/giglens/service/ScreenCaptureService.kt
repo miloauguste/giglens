@@ -24,6 +24,7 @@ import android.os.Environment
 import android.os.IBinder
 import android.util.DisplayMetrics
 import android.util.Log
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import android.view.WindowManager
 import androidx.core.app.NotificationCompat
 import com.augusteenterprise.giglens.GigLensApp
@@ -343,6 +344,7 @@ class ScreenCaptureService : Service() {
 
                 if (parsed.isOfferScreen) {
                     Log.i(TAG, "Valid offer: \$${parsed.payAmount} | ${parsed.distance} mi | ${parsed.restaurant}")
+                        FirebaseCrashlytics.getInstance().log("Offer detected: pay=${parsed.payAmount} dist=${parsed.distance} restaurant=${parsed.restaurant}")
 
                     serviceScope.launch {
                         val db = GigLensApp.instance.database

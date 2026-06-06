@@ -1,4 +1,12 @@
 ## [Unreleased] - 2026-06-06
+### Added
+- Firebase Crashlytics integrated for production logging
+- OfferDetectorService: screen detection events logged to Crashlytics in release builds
+- ScreenCaptureService: service start, MediaProjection stop, and offer detection logged to Crashlytics
+- Debug file write (screen_texts.log) now gated on BuildConfig.DEBUG — never runs in release builds
+- buildConfig = true enabled in build.gradle.kts
+
+## [Unreleased] - 2026-06-06
 ### Fixed
 - OfferDetectorService: added "guaranteed" and "mi" as offer detection signals
 - Root cause confirmed via screen_texts.log: DoorDash renders $ as individual characters on home screen — old logic matched too broadly

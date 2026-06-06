@@ -1,6 +1,6 @@
 # GigLens — Session Handover
-**Date:** 2026-06-04
-**Version at session end:** 0.1.94 → latest push 31cdb4a
+**Date:** 2026-06-06
+**Version at session end:** latest push 8824e8e
 **Build state:** PASSING
 **Conducted by:** Claude (Anthropic)
 
@@ -8,61 +8,60 @@
 
 ## What Was Completed This Session
 
-- ✅ **Bug 1: Camera requires manual intervention — fixed**
-  - OfferOverlayService now started immediately when ScreenCaptureService launches
-  - Pill visible from shift start without MainActivity interaction
+- ✅ **Root cause identified: mem-pressure-event killing ScreenCaptureService mid-shift**
+  - Android logs confirmed: system-wide memory squeeze during DoorDash + GigLens + navigation
+  - Not a code bug — environmental memory pressure
 
-- ✅ **Bug 2: Pill disappears mid-shift — fixed**
-  - Auto-revert to IDLE disabled — pill persists entire shift
-  - Countdown timer removed from pill label
+- ✅ **VirtualDisplay deferred architecture**
+  - VirtualDisplay now created per-capture, destroyed immediately after bitmap extracted
+  - Held ~2s per offer instead of entire 4-6hr shift — 99.8% memory reduction
+  - MediaProjection token held only between offers
 
-- ✅ **Bug 3: Camera blinks randomly — fixed**
-  - SHOW_CAMERA gated on confirmed offer screen detection
-  - HIDE_CAMERA sent when offer screen disappears
-  - No longer fires on map redraws, navigation, earnings screen
+- ✅ **Additional memory fixes**
+  - ImageReader buffer reduced from 2 frames to 1 (~8MB saved constant)
+  - Bitmap downsampled to 50% before OCR (75% memory reduction per capture)
 
-- ✅ **OWASP scan unblocked**
-  - CVE-2020-29582 and CVE-2020-8908 suppressed as false positives
-  - Both confirmed not applicable to GigLens codebase
+- ✅ **CAPTURE_DEAD recovery pill**
+  - OfferOverlayService now runs as proper foreground service on all Android versions
+  - Red ⚠️ Tap pill appears when ScreenCaptureService dies — stays visible instead of disappearing
+  - Tapping red pill launches MainActivity to re-request MediaProjection
 
-- ✅ **Desk test passed on Pixel 10 Pro XL**
-  - Grey pill appears on toggle ON ✅
-  - No camera blink on non-offer screens ✅
-  - Live offer detection pending real shift test
+- ✅ **OfferScorer v4**
+  - Gas cost + wear & tear only — no time/hourly cost
+  - 2-factor scoring: net value (70%) + true $/mile (30%)
+  - Verified manually: Taco Bell $7.20/3.7mi → BORDERLINE (46) ✅
 
 ## What Was Left Incomplete
 
-- ⏳ Live shift test — camera button on real offer not yet validated
-
-## Known Broken (do not ignore)
-
-- 🔴 **NVD API key** — configured, OWASP now running on push
+- ⏳ Camera button on live offer not yet confirmed — ScreenCaptureService kept dying before detection
+- ⏳ CAPTURE_DEAD pill tap → MainActivity flow not fully validated
+- ⏳ Settings UI for gas price, MPG, wear & tear not yet built
 
 ## Next Session — Start Here
 
-**First task:** Live DoorDash shift — validate camera button on real offer, OCR accuracy, scoring feel
-**Check after shift:**
-- Camera button appeared automatically on offer screen
-- Pill stayed visible entire shift
-- No random camera blinks
-- OCR accuracy on pay amount, distance, restaurant name
+**First task:** Live shift test with new VirtualDisplay architecture
+**Before shift:** clear log buffer: `adb logcat -c`
+**After shift:** pull logs immediately: `adb logcat -d | grep -E "ScreenCapture|OfferDetector|looksLike|isOffer" > /tmp/shift.log`
+**Watch for:**
+- Does ScreenCaptureService survive the full shift (check dumpsys after)
+- Does camera button appear on offer screen
+- If capture dies — does red ⚠️ pill appear
 
 ## Active Feature Status
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Camera on offer screen | ✅ Fixed | Gated on looksLikeOfferScreen() |
-| Pill persists shift | ✅ Fixed | Auto-revert disabled |
-| Random camera blink | ✅ Fixed | SHOW/HIDE_CAMERA gated on detection |
-| OWASP scan | ✅ Clean | CVE-2020-29582, CVE-2020-8908 suppressed |
-| Live shift OCR test | 🟡 Pending | Desk test passed, real offer not yet tested |
-| OCR scoring weights | 🟡 In progress | No Settings UI yet |
+| VirtualDisplay per-capture | ✅ Complete | 99.8% memory reduction |
+| CAPTURE_DEAD recovery pill | ✅ Complete | Foreground service, tap to restart |
+| OfferScorer v4 | ✅ Complete | Gas + wear/tear, verified |
+| Camera on live offer | 🟡 Pending | Blocked by ScreenCaptureService dying |
+| Settings UI gas/MPG/wear | 🟡 Pending | Next build task |
+| OCR scoring weights UI | 🟡 Pending | After settings UI |
 
 ## Devices & Build Environment
 
 - Build server: milo-dev (i9, 48GB RAM, Ubuntu 24) at 10.0.0.16
-- S20 (10.0.0.189:5555): run `adb connect 10.0.0.189:5555` to verify
 - Pixel 10 XL: port changes on reboot — check Wireless Debugging each session
 
 ---
-*Next developer: read SESSION_PROTOCOL.md first, then go straight to live shift test.*
+*Next developer: read SESSION_PROTOCOL.md first. Priority is live shift validation of new VirtualDisplay architecture.*

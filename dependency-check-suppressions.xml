@@ -59,4 +59,47 @@
         <packageUrl regex="true">^pkg:maven/com\.google\.guava/guava.*$</packageUrl>
         <cve>CVE-2020-8908</cve>
     </suppress>
+    <!-- CVE-2022-3171, CVE-2024-7254: protobuf-javalite DoS via crafted binary messages
+         Transitive via Firebase/datastore-preferences. GigLens does not parse untrusted
+         protobuf data — protobuf used internally by Firebase SDK only.
+         protobuf-javalite 3.25.5 forced in dependencies to patch where possible. -->
+    <suppress>
+        <notes>GigLens does not parse untrusted protobuf data. Transitive via Firebase. Patched version forced.</notes>
+        <packageUrl regex="true">^pkg:maven/com\.google\.protobuf/protobuf-javalite.*$</packageUrl>
+        <cve>CVE-2022-3171</cve>
+    </suppress>
+    <suppress>
+        <notes>GigLens does not parse untrusted protobuf data. Transitive via Firebase. Patched version forced.</notes>
+        <packageUrl regex="true">^pkg:maven/com\.google\.protobuf/protobuf-javalite.*$</packageUrl>
+        <cve>CVE-2024-7254</cve>
+    </suppress>
+    <!-- CVE-2026-0994: protobuf Python-only DoS via json_format.ParseDict()
+         This CVE affects the Python protobuf implementation only — not Java/Android.
+         OWASP scanner false positive matching package name across ecosystems. -->
+    <suppress>
+        <notes>CVE-2026-0994 affects Python protobuf only — GigLens is Android/Kotlin, not affected.</notes>
+        <packageUrl regex="true">^pkg:maven/com\.google\.protobuf/protobuf-javalite.*$</packageUrl>
+        <cve>CVE-2026-0994</cve>
+    </suppress>
+    <!-- CVE-2020-22475, CVE-2022-39349: kotlinx-coroutines-play-services misidentified
+         OWASP scanner misidentifies kotlinx-coroutines-play-services as "tasks" package.
+         These CVEs affect a different "tasks" project — not Kotlin coroutines. -->
+    <suppress>
+        <notes>False positive — kotlinx-coroutines-play-services misidentified as unrelated tasks package.</notes>
+        <packageUrl regex="true">^pkg:maven/org\.jetbrains\.kotlinx/kotlinx-coroutines-play-services.*$</packageUrl>
+        <vulnerabilityName regex="true">.*</vulnerabilityName>
+    </suppress>
+    <!-- CVE-2021-22569, CVE-2021-22570: protobuf-javalite DoS via crafted binary input
+         Bundled in datastore-preferences-core pom — cannot be upgraded directly.
+         GigLens does not parse untrusted protobuf data — not exploitable. -->
+    <suppress>
+        <notes>GigLens does not parse untrusted protobuf data. Bundled in datastore-preferences-core, cannot upgrade.</notes>
+        <packageUrl regex="true">^pkg:maven/com\.google\.protobuf/protobuf-javalite.*$</packageUrl>
+        <cve>CVE-2021-22569</cve>
+    </suppress>
+    <suppress>
+        <notes>GigLens does not parse untrusted protobuf data. Bundled in datastore-preferences-core, cannot upgrade.</notes>
+        <packageUrl regex="true">^pkg:maven/com\.google\.protobuf/protobuf-javalite.*$</packageUrl>
+        <cve>CVE-2021-22570</cve>
+    </suppress>
 </suppressions>
