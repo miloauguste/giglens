@@ -51,7 +51,7 @@ const val EXTRA_COST_PER_MILE  = "cost_per_mile"
 const val ACTION_SHOW_CAMERA   = "com.augusteenterprise.giglens.SHOW_CAMERA"
 const val ACTION_HIDE_CAMERA   = "com.augusteenterprise.giglens.HIDE_CAMERA"
 
-private enum class SheetState { IDLE, CAMERA, PROCESSING, PILL, MINI, FULL }
+private enum class SheetState { IDLE, CAMERA, PROCESSING, PILL, MINI, FULL, CAPTURE_DEAD }
 
 class OfferOverlayService : Service() {
 
@@ -84,8 +84,8 @@ class OfferOverlayService : Service() {
     private var restaurant   = ""
     private var pickupMiles  = 0.0
     private var totalMiles   = 0.0
-    private var vehicleCost  = 0.0
-    private var timeCost     = 0.0
+    private var gasCost      = 0.0
+    private var wearTearCost = 0.0
     private var totalCost    = 0.0
     private var minutesOnJob = 0.0
     private var score        = 0
@@ -109,22 +109,24 @@ class OfferOverlayService : Service() {
         isRunning = true
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         createNotificationChannel()
-        // CORRECT: only call startForeground() on Android 11 and below
-        // On Android 12+, startForeground() from background throws ForegroundServiceStartNotAllowedException
-        // The service is always started from MainActivity.onResume() (foreground) on Android 12+
-        // WRONG: calling startForeground() unconditionally — crashes on Pixel/Android 12+
-        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.S) {
-            startForeground(1, buildNotification())
-        } else {
-            // Android 12+ — post a low-priority notification without startForeground()
-            // Service runs as background service; WindowManager overlay still works
-            val nm = getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager
-            nm.notify(1, buildNotification())
-        }
+        // CORRECT: always call startForeground() — service is always started from MainActivity
+        //          (foreground context) so ForegroundServiceStartNotAllowedException never fires
+        // WRONG: running as background service on Android 12+ — Android kills it mid-shift
+        //        when memory is needed, taking the overlay pill with it
+        startForeground(1, buildNotification())
         showWidget()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // Check if ScreenCaptureService died — show CAPTURE_DEAD state if so
+        // CORRECT: pill stays visible with warning when capture dies mid-shift
+        // WRONG: pill disappears — driver has no idea capture stopped
+        if (!ScreenCaptureService.isRunning && sheetState != SheetState.CAPTURE_DEAD) {
+            sheetState = SheetState.CAPTURE_DEAD
+            if (isViewAdded) updateWidget() else { showWidget(); updateWidget() }
+            Log.w(TAG, "ScreenCaptureService is dead — showing CAPTURE_DEAD state")
+        }
+
         when (intent?.action) {
             ACTION_SHOW_CAMERA -> {
                 // New offer detected — cancel any pending revert, morph to camera
@@ -158,7 +160,7 @@ class OfferOverlayService : Service() {
                         showWidget()
                         updateWidget()
                     }
-                    startRevertTimer()  // 60s → revert to IDLE if no new offer
+                    // Timer disabled — pill stays in result state for entire shift
                 }
             }
         }
@@ -172,28 +174,10 @@ class OfferOverlayService : Service() {
         Log.d(TAG, "Revert timer started (${secondsRemaining}s)")
 
         // Tick every second to update the countdown on the pill
-        tickRunnable = object : Runnable {
-            override fun run() {
-                val isResultState = sheetState == SheetState.PILL ||
-                                    sheetState == SheetState.MINI ||
-                                    sheetState == SheetState.FULL
-                secondsRemaining--
-                if (secondsRemaining <= 0) {
-                    if (isResultState) {
-                        verdict = "UNKNOWN"
-                        sheetState = SheetState.IDLE
-                        secondsRemaining = 0
-                        updateWidget()
-                        Log.d(TAG, "Countdown elapsed — reverted to IDLE")
-                    }
-                } else {
-                    // Re-render in any result state to update countdown + blink
-                    if (isResultState) updateWidget()
-                    revertHandler.postDelayed(this, 1000L)
-                }
-            }
-        }
-        revertHandler.postDelayed(tickRunnable!!, 1000L)
+        // CORRECT: pill stays in result state for entire shift — no auto-revert to IDLE
+        // WRONG: reverting to IDLE after 60s — driver loses last offer verdict mid-shift
+        // Timer cancelled immediately — countdown display removed from pill label
+        Log.d(TAG, "Revert timer disabled — pill persists for shift duration")
     }
 
     private fun cancelRevertTimer() {
@@ -252,8 +236,8 @@ class OfferOverlayService : Service() {
         restaurant   = intent.getStringExtra(EXTRA_RESTAURANT)     ?: ""
         pickupMiles  = intent.getDoubleExtra(EXTRA_PICKUP_MILES,   0.0)
         totalMiles   = intent.getDoubleExtra(EXTRA_TOTAL_MILES,    0.0)
-        vehicleCost  = intent.getDoubleExtra(EXTRA_VEHICLE_COST,   0.0)
-        timeCost     = intent.getDoubleExtra(EXTRA_TIME_COST,      0.0)
+        gasCost      = intent.getDoubleExtra(EXTRA_VEHICLE_COST,   0.0)
+        wearTearCost = intent.getDoubleExtra(EXTRA_TIME_COST,      0.0)
         totalCost    = intent.getDoubleExtra(EXTRA_TOTAL_COST,     0.0)
         minutesOnJob = intent.getDoubleExtra(EXTRA_MINUTES_ON_JOB, 0.0)
         score        = intent.getIntExtra(EXTRA_SCORE,             0)
@@ -270,15 +254,10 @@ class OfferOverlayService : Service() {
     }
 
     private fun netLabel(): String {
+        // CORRECT: show net value only — no countdown during shift
+        // WRONG: showing countdown timer — distracting and meaningless if pill never reverts
         val sign = if (netValue >= 0) "+" else ""
-        val base = "$sign$${"%.2f".format(netValue)}"
-        // Show countdown across all result states (PILL, MINI, FULL)
-        val isResultState = sheetState == SheetState.PILL ||
-                            sheetState == SheetState.MINI ||
-                            sheetState == SheetState.FULL
-        return if (isResultState && secondsRemaining > 0) {
-            "$base · ${secondsRemaining}s"
-        } else base
+        return "$sign$${"%.2f".format(netValue)}"
     }
 
     private fun pillBg(color: Int, topLeft: Boolean = true): GradientDrawable {
@@ -322,16 +301,10 @@ class OfferOverlayService : Service() {
 
     // ── Build pill text with ONLY the timer segment blinking ──────────────────
     private fun netLabelSpannable(): SpannableString {
+        // CORRECT: plain net value only — countdown removed, pill persists entire shift
+        // WRONG: appending timer text — redundant now that auto-revert is disabled
         val sign = if (netValue >= 0) "+" else ""
-        val base = "$sign$${"%.2f".format(netValue)}"
-        val isResultState = sheetState == SheetState.PILL ||
-                            sheetState == SheetState.MINI ||
-                            sheetState == SheetState.FULL
-        if (!isResultState || secondsRemaining <= 0) {
-            return SpannableString(base)
-        }
-        val timerText = " · ${secondsRemaining}s"
-        return SpannableString(base + timerText)
+        return SpannableString("$sign$${"%.2f".format(netValue)}")
     }
 
     // ── Show initial widget (idle state) ──────────────────────────────────────
@@ -384,6 +357,38 @@ class OfferOverlayService : Service() {
         root.removeAllViews()
 
         when (sheetState) {
+            SheetState.CAPTURE_DEAD -> {
+                // CORRECT: show warning pill — driver knows capture stopped and needs to restart
+                // WRONG: disappearing entirely — driver thinks app is working when it isn't
+                val deadColor = Color.parseColor("#E24B4A")
+                val btn = TextView(this).apply {
+                    text = "⚠️ Tap"
+                    textSize = 13f
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    setTextColor(Color.WHITE)
+                    setPadding(24, 18, 24, 18)
+                    background = GradientDrawable().apply {
+                        setColor(deadColor)
+                        cornerRadius = 50f
+                    }
+                    setOnClickListener {
+                        // Relaunch MainActivity to re-request MediaProjection
+                        val intent = android.content.Intent(
+                            this@OfferOverlayService,
+                            com.augusteenterprise.giglens.ui.MainActivity::class.java
+                        ).apply {
+                            flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
+                                    android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+                            putExtra("restart_capture", true)
+                        }
+                        startActivity(intent)
+                        Log.i(TAG, "Driver tapped CAPTURE_DEAD pill — launching MainActivity for restart")
+                    }
+                    setOnTouchListener(makeTouchListener())
+                }
+                root.addView(btn)
+            }
+
             SheetState.IDLE -> {
                 root.addView(buildPill(color, false))
             }
@@ -450,7 +455,7 @@ class OfferOverlayService : Service() {
                     setPadding(0, 4, 0, 0)
                 }
                 val tvCosts = TextView(this).apply {
-                    text = "Vehicle \$${"%.2f".format(vehicleCost)} · Time \$${"%.2f".format(timeCost)}"
+                    text = "Gas \$${"%.2f".format(gasCost)} · W&T \$${"%.2f".format(wearTearCost)}"
                     setTextColor(Color.parseColor("#888888"))
                     textSize = 9f
                     setPadding(0, 2, 0, 0)
@@ -537,10 +542,9 @@ class OfferOverlayService : Service() {
                 drawer.addView(rowLayout("To pickup", "${"%.1f".format(pickupMiles)} mi"))
                 drawer.addView(rowLayout("Est. total", "${"%.1f".format(totalMiles)} mi"))
                 drawer.addView(divider())
-                drawer.addView(rowLayout("Vehicle (gas cost)", "$${"%.2f".format(vehicleCost)}"))
-                drawer.addView(rowLayout("Time (${"%.0f".format(minutesOnJob)}min)",
-                    "$${"%.2f".format(timeCost)}"))
-                drawer.addView(rowLayout("Total cost", "$${"%.2f".format(totalCost)}"))
+                drawer.addView(rowLayout("Gas cost", "$${"%.2f".format(gasCost)}"))
+                drawer.addView(rowLayout("Wear & tear", "$${"%.2f".format(wearTearCost)}"))
+                drawer.addView(rowLayout("Total cost", "$${"%.2f".format(gasCost + wearTearCost)}"))
                 drawer.addView(divider())
                 drawer.addView(rowLayout("Net value", netLabel(), color))
                 drawer.addView(rowLayout("Score", "$score / 100"))
@@ -626,15 +630,15 @@ class OfferOverlayService : Service() {
                 if (!isDragging) {
                     // Tap — cycle states
                     sheetState = when (sheetState) {
-                        SheetState.IDLE       -> SheetState.IDLE
-                        SheetState.CAMERA     -> SheetState.CAMERA     // handled by camera listener
-                        SheetState.PROCESSING -> SheetState.PROCESSING // wait for result
-                        SheetState.PILL       -> SheetState.MINI
-                        SheetState.MINI       -> SheetState.FULL
-                        SheetState.FULL       -> SheetState.PILL
+                        SheetState.IDLE         -> SheetState.IDLE
+                        SheetState.CAMERA       -> SheetState.CAMERA     // handled by camera listener
+                        SheetState.PROCESSING   -> SheetState.PROCESSING // wait for result
+                        SheetState.PILL         -> SheetState.MINI
+                        SheetState.MINI         -> SheetState.FULL
+                        SheetState.FULL         -> SheetState.PILL
+                        SheetState.CAPTURE_DEAD -> SheetState.CAPTURE_DEAD // tap handled by button listener
                     }
-                    // Driver is interacting — restart the 60s revert timer
-                    if (sheetState != SheetState.IDLE) startRevertTimer()
+                    // Pill persists — no revert timer on interaction
                     updateWidget()
                 }
                 true

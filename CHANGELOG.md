@@ -1,3 +1,10 @@
+## [Unreleased] - 2026-06-06
+### Fixed
+- OfferOverlayService: now calls startForeground() on all Android versions — prevents Android from killing overlay mid-shift
+- OfferOverlayService: added CAPTURE_DEAD state — red ⚠️ Tap pill stays visible when ScreenCaptureService dies instead of disappearing
+- OfferDetectorService: signals OfferOverlayService when ScreenCaptureService is dead — pill updates immediately
+- MainActivity: handles restart_capture intent flag — tapping CAPTURE_DEAD pill relaunches MediaProjection dialog automatically
+
 ## [Unreleased] - 2026-06-04
 ### Fixed
 - OfferDetectorService: removed blanket ACTION_SHOW_CAMERA on every window event — camera button no longer blinks on map redraws, navigation updates, or earnings screen

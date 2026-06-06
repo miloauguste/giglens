@@ -211,6 +211,17 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        // Handle restart_capture flag from CAPTURE_DEAD pill tap
+        // CORRECT: re-request MediaProjection when driver taps the warning pill
+        // WRONG: requiring driver to navigate manually — too many steps mid-shift
+        if (intent?.getBooleanExtra("restart_capture", false) == true) {
+            Log.d("MainActivity", "restart_capture flag set — re-requesting MediaProjection")
+            intent.removeExtra("restart_capture")
+            if (!ScreenCaptureService.isRunning) {
+                showAutoModeDialog()
+            }
+        }
+
         // CORRECT: if returning from accessibility settings and it's now enabled,
         //          continue onboarding to screen capture permission
         // WRONG:   resetting toggle to OFF — user enabled accessibility but nothing happens

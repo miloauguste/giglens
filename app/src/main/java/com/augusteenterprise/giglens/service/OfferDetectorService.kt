@@ -82,7 +82,14 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
 
         // CORRECT: gate on ScreenCaptureService.isRunning — driver enabled the toggle
         // WRONG:   reading AUTO_CAPTURE_MODE from DB — DB may be "off" on fresh install
-        if (!ScreenCaptureService.isRunning) return
+        if (!ScreenCaptureService.isRunning) {
+            // CORRECT: signal overlay to show CAPTURE_DEAD warning pill — driver sees it over DoorDash
+            // WRONG: silently returning — driver thinks app is working, misses offers all shift
+            val deadIntent = Intent(applicationContext, OfferOverlayService::class.java)
+            startService(deadIntent)
+            Log.w(TAG, "ScreenCaptureService dead — signaling overlay to show CAPTURE_DEAD state")
+            return
+        }
         android.util.Log.d("OfferDetector", "captureRunning=true — proceeding")
         // CORRECT: use cached values — populated once at onServiceConnected
         // WRONG: runBlocking here blocks accessibility thread on every event — ANR risk
