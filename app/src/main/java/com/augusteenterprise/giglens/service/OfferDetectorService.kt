@@ -195,6 +195,8 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
         var acceptFound = false
         var declineFound = false
         var dollarFound = false
+        var guaranteedFound = false
+        var miFound = false
         val allTexts = mutableListOf<String>()
 
         fun walk(node: AccessibilityNodeInfo) {
@@ -203,6 +205,10 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
             if (text.contains("accept")) acceptFound = true
             if (text.contains("decline")) declineFound = true
             if (text.contains("$")) dollarFound = true
+            // CORRECT: "guaranteed" is a strong DoorDash offer signal — only on offer screen
+            // WRONG: relying solely on $ — appears on home/earnings screen too
+            if (text.contains("guaranteed")) guaranteedFound = true
+            if (text == "mi" || text.endsWith(" mi") || text.contains(" mi ")) miFound = true
 
             for (i in 0 until node.childCount) {
                 val child = node.getChild(i) ?: continue
@@ -213,8 +219,11 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
 
         walk(root)
 
-        val isOffer = acceptFound && declineFound && dollarFound
-        Log.d(TAG, "looksLikeOfferScreen: accept=$acceptFound decline=$declineFound dollar=$dollarFound → isOffer=$isOffer")
+        // Primary signal: accept + decline + guaranteed = definitive offer screen
+        // Fallback: accept + decline + dollar (original logic)
+        val isOffer = (acceptFound && declineFound && guaranteedFound) ||
+                      (acceptFound && declineFound && dollarFound && miFound)
+        Log.d(TAG, "looksLikeOfferScreen: accept=$acceptFound decline=$declineFound dollar=$dollarFound guaranteed=$guaranteedFound mi=$miFound → isOffer=$isOffer")
 
         // CORRECT: dump all screen texts to file for post-shift diagnosis
         // WRONG: logging only — logcat buffer clears, no data after shift

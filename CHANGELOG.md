@@ -1,4 +1,13 @@
 ## [Unreleased] - 2026-06-06
+### Fixed
+- OfferDetectorService: added "guaranteed" and "mi" as offer detection signals
+- Root cause confirmed via screen_texts.log: DoorDash renders $ as individual characters on home screen — old logic matched too broadly
+- New logic: accept + decline + guaranteed = definitive offer screen (primary)
+- Fallback: accept + decline + dollar + mi (secondary)
+### Debug
+- looksLikeOfferScreen() now logs guaranteed and mi signals separately
+
+## [Unreleased] - 2026-06-06
 ### Changed
 - ScreenCaptureService: VirtualDisplay now created per-capture and destroyed immediately after — from 3600s held to ~2s per offer (99.8% reduction)
 - ScreenCaptureService: MediaProjection token held only — no screen mirror between offers
