@@ -1,4 +1,14 @@
 ## [Unreleased] - 2026-06-06
+### Changed
+- ScreenCaptureService: VirtualDisplay now created per-capture and destroyed immediately after — from 3600s held to ~2s per offer (99.8% reduction)
+- ScreenCaptureService: MediaProjection token held only — no screen mirror between offers
+- ScreenCaptureService: added releaseDisplayResources() and createDisplayResources() helpers
+- ScreenCaptureService: watchdog now checks mediaProjection only — VirtualDisplay intentionally null between captures
+- ScreenCaptureService: added 200ms delay after VirtualDisplay creation to ensure first frame renders
+### Fixed
+- Memory pressure mid-shift: VirtualDisplay held entire shift was consuming ~8MB constant — now freed between offers
+
+## [Unreleased] - 2026-06-06
 ### Fixed
 - ScreenCaptureService: reduced ImageReader buffer from 2 frames to 1 — saves ~8MB constant memory at 1440p
 - ScreenCaptureService: downsample capture bitmap to 50% before OCR — reduces memory by 75% with no accuracy loss

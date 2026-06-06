@@ -87,7 +87,9 @@ class ScreenCaptureService : Service() {
             if (!isRunning) return
             // CORRECT: check virtualDisplay/mediaProjection state — no need to acquire a real frame
             // WRONG: acquireLatestImage() just for a health check — wastes pixel buffer allocation every 30s
-            val sessionAlive = virtualDisplay != null && mediaProjection != null && imageReader != null
+            // CORRECT: check mediaProjection only — VirtualDisplay is intentionally null between captures
+            // WRONG: checking virtualDisplay != null — it's always null between offers now
+            val sessionAlive = mediaProjection != null
             if (!sessionAlive) {
                 nullFrameCount++
                 Log.w(TAG, "Watchdog: session check failed $nullFrameCount/3")
@@ -194,11 +196,58 @@ class ScreenCaptureService : Service() {
     }
 
     /**
+     * Releases VirtualDisplay and ImageReader — called after each capture and on service stop.
+     * CORRECT: release immediately after capture — frees ~8MB screen buffer between offers
+     * WRONG: holding VirtualDisplay open entire shift — constant memory pressure
+     */
+    private fun releaseDisplayResources() {
+        virtualDisplay?.release()
+        virtualDisplay = null
+        imageReader?.close()
+        imageReader = null
+        Log.d(TAG, "VirtualDisplay + ImageReader released")
+    }
+
+    /**
+     * Creates VirtualDisplay and ImageReader on demand for a single capture.
+     * Called when offer is detected, destroyed immediately after capture.
+     */
+    private fun createDisplayResources(): Boolean {
+        if (mediaProjection == null) {
+            Log.e(TAG, "createDisplayResources: mediaProjection is null — cannot capture")
+            return false
+        }
+        imageReader = ImageReader.newInstance(
+            screenWidth, screenHeight,
+            PixelFormat.RGBA_8888, 1
+        )
+        virtualDisplay = mediaProjection?.createVirtualDisplay(
+            "GigLens",
+            screenWidth, screenHeight, screenDensity,
+            DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+            imageReader!!.surface, null, null
+        )
+        Log.d(TAG, "VirtualDisplay + ImageReader created for capture")
+        return virtualDisplay != null
+    }
+
+    /**
      * Captures the current screen, saves the screenshot, and runs OCR.
      */
     private fun captureScreen() {
+        // CORRECT: create VirtualDisplay just-in-time, release immediately after capture
+        // WRONG: assuming VirtualDisplay is already open — it's deferred until offer detected
+        if (!createDisplayResources()) {
+            Log.e(TAG, "captureScreen: failed to create display resources — skipping")
+            return
+        }
+
+        // Small delay to let VirtualDisplay render first frame
+        android.os.SystemClock.sleep(200)
+
         val image = imageReader?.acquireLatestImage() ?: run {
             Log.w(TAG, "No image available from ImageReader")
+            releaseDisplayResources()
             return
         }
 
@@ -231,6 +280,10 @@ class ScreenCaptureService : Service() {
                 true
             )
             croppedBitmap.recycle()
+
+            // CORRECT: release VirtualDisplay immediately after bitmap extracted — frees screen mirror
+            // WRONG: holding VirtualDisplay open while OCR runs — unnecessary memory held during DB/network ops
+            releaseDisplayResources()
 
             serviceScope.launch {
                 val savedPath = saveScreenshot(ocrBitmap)
@@ -436,14 +489,7 @@ class ScreenCaptureService : Service() {
         // WRONG:   always calling mediaProjection?.stop() — causes double-stop crash
         isRunning = false
         try { unregisterReceiver(captureReceiver) } catch (_: Exception) {}
-        if (virtualDisplay != null) {
-            virtualDisplay?.release()
-            virtualDisplay = null
-        }
-        if (imageReader != null) {
-            imageReader?.close()
-            imageReader = null
-        }
+        releaseDisplayResources()
         if (mediaProjection != null) {
             mediaProjection?.stop()
             mediaProjection = null
