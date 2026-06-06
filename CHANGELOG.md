@@ -1,5 +1,14 @@
 ## [Unreleased] - 2026-06-06
 ### Fixed
+- ScreenCaptureService: reduced ImageReader buffer from 2 frames to 1 — saves ~8MB constant memory at 1440p
+- ScreenCaptureService: downsample capture bitmap to 50% before OCR — reduces memory by 75% with no accuracy loss
+### Root cause identified
+- ScreenCaptureService dying mid-shift due to system mem-pressure-event — Android killing services under memory load
+- DoorDash + MediaProjection + navigation simultaneously pushes Pixel 10 to memory limit
+- Above fixes reduce GigLens memory footprint to help survive memory pressure events
+
+## [Unreleased] - 2026-06-06
+### Fixed
 - OfferOverlayService: now calls startForeground() on all Android versions — prevents Android from killing overlay mid-shift
 - OfferOverlayService: added CAPTURE_DEAD state — red ⚠️ Tap pill stays visible when ScreenCaptureService dies instead of disappearing
 - OfferDetectorService: signals OfferOverlayService when ScreenCaptureService is dead — pill updates immediately

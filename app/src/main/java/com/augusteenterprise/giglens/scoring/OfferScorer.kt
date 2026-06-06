@@ -15,13 +15,14 @@ data class ScoreResult(
     val verdict: Verdict,
     // ── Gross metrics ──────────────────────────────────────────────────────────
     val payPerMile: Double,           // pay / delivery miles only
-    val truePayPerMile: Double?,      // pay / total miles (pickup + delivery)
-    val pickupDistance: Double?,
-    val totalDistance: Double?,
+    val truePayPerMile: Double,       // pay / total miles
+    val totalDistance: Double,
     // ── Net value (the real money after costs) ─────────────────────────────────
-    val vehicleCost: Double,          // total_miles × cost_per_mile
-    val timeCost: Double,             // (minutesOnJob / 60) × hourly_rate
-    val totalCost: Double,            // vehicleCost + timeCost
+    val vehicleCost: Double,          // gasCost + wearTearCost combined
+    val gasCost: Double,              // (total_miles / mpg) × gas_price
+    val wearTearCost: Double,         // total_miles × wear_tear_per_mile
+    val timeCost: Double,             // always 0.0 in v4 — kept for API compat
+    val totalCost: Double,            // vehicleCost (gas + wear/tear)
     val minutesOnJob: Double,         // estimated minutes for the full trip
     val netValue: Double,             // offer_pay - totalCost
     val costPerMileUsed: Double,      // what rate was applied ($0.90 default)
@@ -38,74 +39,66 @@ class OfferScorer(private val configDao: ScorerConfigDao) {
     suspend fun score(
         payAmount: Double?,
         deliveryDistance: Double?,
-        pickupDistance: Double? = null,
         personalAvgScore: Double? = null
     ): ScoreResult? {
         if (payAmount == null || deliveryDistance == null) return null
         if (payAmount <= 0 || deliveryDistance <= 0) return null
 
-        // ── Load config ───────────────────────────────────────────────────────
+        // ── Load config (v4 — gas + wear/tear only, no hourly rate) ─────────────
+        // CORRECT: vehicle cost = gas + wear/tear only — no time cost for gig drivers
+        // WRONG: including hourly rate — drivers are out regardless, time cost is sunk
         val costPerMile        = cfg(ScorerConfigKeys.COST_PER_MILE,             0.90)
-        val hourlyRate         = cfg(ScorerConfigKeys.HOURLY_RATE,                15.00)
         val mpg                = cfg(ScorerConfigKeys.MPG,                        30.0)
         val gasPrice           = cfg(ScorerConfigKeys.GAS_PRICE,                  3.20)
+        val wearTearPerMile    = cfg(ScorerConfigKeys.WEAR_TEAR_PER_MILE,         0.13)
 
-        val weightNetValue     = cfg(ScorerConfigKeys.WEIGHT_PICKUP_PENALTY,     0.50) // reused key
-        val weightPickup       = cfg(ScorerConfigKeys.WEIGHT_DELIVERY_LEG,       0.30) // reused key
-        val weightTruePerMile  = cfg(ScorerConfigKeys.WEIGHT_TRUE_PAY_PER_MILE,  0.20)
+        // v4 simplified weights: net value 70%, true $/mile 30%
+        val weightNetValue     = cfg(ScorerConfigKeys.WEIGHT_NET_VALUE,           0.70)
+        val weightTruePerMile  = cfg(ScorerConfigKeys.WEIGHT_TRUE_PER_MILE_V4,   0.30)
 
-        val pickupMin          = cfg(ScorerConfigKeys.PICKUP_DISTANCE_MIN,       0.0)
-        val pickupMax          = cfg(ScorerConfigKeys.PICKUP_DISTANCE_MAX,       8.0)
         val truePerMileMin     = cfg(ScorerConfigKeys.TRUE_PAY_PER_MILE_MIN,     0.50)
         val truePerMileMax     = cfg(ScorerConfigKeys.TRUE_PAY_PER_MILE_MAX,     3.00)
-        val totalPayMin        = cfg(ScorerConfigKeys.TOTAL_PAY_MIN,             2.00)
-        val totalPayMax        = cfg(ScorerConfigKeys.TOTAL_PAY_MAX,             20.00)
-
         val floorPayPerMile    = cfg(ScorerConfigKeys.FLOOR_PAY_PER_MILE,        1.50)
         val floorTotalPay      = cfg(ScorerConfigKeys.FLOOR_TOTAL_PAY,           6.00)
         val thresholdTake      = cfg(ScorerConfigKeys.THRESHOLD_TAKE,            65.0)
         val thresholdBorder    = cfg(ScorerConfigKeys.THRESHOLD_BORDERLINE,      40.0)
 
         // ── Compute distances ─────────────────────────────────────────────────
-        val totalDistance = if (pickupDistance != null) {
-            pickupDistance + deliveryDistance
-        } else deliveryDistance  // fall back to delivery only
+        // CORRECT: DoorDash distance = full trip (driver → pickup → dropoff) — use directly
+        // WRONG: adding estimated pickup leg — DoorDash already includes it
+        val totalDistance = deliveryDistance
 
-        // ── Net value calculation ─────────────────────────────────────────────
-        // CORRECT: gas_cost = (total_miles / mpg) × gas_price — actual driver fuel cost
-        // WRONG:   total_miles × flat cost_per_mile — overestimates cost for fleet rentals
-        val vehicleCost = if (mpg > 0) {
+        // ── Net value calculation (v4 — gas + wear/tear only) ────────────────
+        // CORRECT: gas_cost = (total_miles / mpg) × gas_price — actual fuel cost
+        // CORRECT: wear_tear = total_miles × wear_tear_per_mile — mechanical depreciation
+        // WRONG:   including time/hourly cost — gig drivers are out regardless
+        val gasCost = if (mpg > 0) {
             (totalDistance / mpg) * gasPrice
         } else {
             totalDistance * costPerMile  // fallback to flat rate if MPG not set
         }
-        // Estimate minutes: drive to pickup + 2min prep + delivery drive (45mph avg)
-        val driveToPickupMin  = ((pickupDistance ?: 0.0) / 45.0) * 60.0
-        val prepTimeMin       = 2.0
-        val deliveryDriveMin  = (deliveryDistance / 45.0) * 60.0
-        val minutesOnJob      = driveToPickupMin + prepTimeMin + deliveryDriveMin
-        val timeCost          = (minutesOnJob / 60.0) * hourlyRate
-        val totalCost         = vehicleCost + timeCost
-        val netValue          = payAmount - totalCost
+        val wearTearCost      = totalDistance * wearTearPerMile
+        val vehicleCost       = gasCost + wearTearCost
+        // Estimate minutes for display purposes only — not used in cost calc
+        val minutesOnJob = (totalDistance / 45.0) * 60.0 + 2.0  // drive time + 2min prep
+        val timeCost          = 0.0  // removed from v4 — not a real out-of-pocket cost
+        val totalCost         = vehicleCost
+        val netValue          = payAmount - vehicleCost
         val payPerMile     = payAmount / deliveryDistance
         val truePayPerMile = payAmount / totalDistance
 
-        // Net value normalized: $0 net = 0, $15+ net = 100
+        // ── v4 simplified scoring: net value (70%) + true $/mile (30%) ─────────
+        // CORRECT: two signals only — net dollars + efficiency
+        // WRONG: pickup penalty as separate signal — already captured in net value via gas cost
         val netValueMin = 0.0
         val netValueMax = 15.0
         val normNetValue = normalize(netValue, netValueMin, netValueMax)
-
-        // Pickup penalty: shorter = better (invert)
-        val normPickup = if (pickupDistance != null) {
-            1.0 - normalize(pickupDistance, pickupMin, pickupMax)
-        } else 0.75  // neutral assumption if GPS unavailable
 
         // True $/mile after full trip
         val normTruePerMile = normalize(truePayPerMile, truePerMileMin, truePerMileMax)
 
         // ── Weighted composite ────────────────────────────────────────────────
         val raw = (normNetValue    * weightNetValue)    +
-                  (normPickup      * weightPickup)      +
                   (normTruePerMile * weightTruePerMile)
         val score = (raw * 100).toInt().coerceIn(0, 100)
 
@@ -131,9 +124,10 @@ class OfferScorer(private val configDao: ScorerConfigDao) {
             verdict        = verdict,
             payPerMile     = payPerMile,
             truePayPerMile = truePayPerMile,
-            pickupDistance = pickupDistance,
             totalDistance  = totalDistance,
             vehicleCost    = vehicleCost,
+            gasCost        = gasCost,
+            wearTearCost   = wearTearCost,
             timeCost       = timeCost,
             totalCost      = totalCost,
             minutesOnJob   = minutesOnJob,

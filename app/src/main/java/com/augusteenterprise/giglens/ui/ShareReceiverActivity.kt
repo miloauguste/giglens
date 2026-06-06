@@ -102,9 +102,8 @@ class ShareReceiverActivity : AppCompatActivity() {
 
                             val personalAvg = captureDao.getAverageScore()
                             val result = scorer.score(
-                                payAmount = parsed.payAmount,
+                                payAmount        = parsed.payAmount,
                                 deliveryDistance = parsed.distance,
-                                pickupDistance = pickupDistance,
                                 personalAvgScore = personalAvg
                             )
 
@@ -123,9 +122,9 @@ class ShareReceiverActivity : AppCompatActivity() {
                                     verdict = result.verdict.name,
                                     payPerMile = result.payPerMile,
                                     vsPersonalAvg = result.vsPersonalAvg,
-                                    driverLat = location?.latitude,
-                                    driverLon = location?.longitude,
-                                    pickupDistance = result.pickupDistance,
+                                    driverLat = null,
+                                    driverLon = null,
+    
                                     totalDistance = result.totalDistance,
                                     truePayPerMile = result.truePayPerMile,
                                     vehicleCost = result.vehicleCost,

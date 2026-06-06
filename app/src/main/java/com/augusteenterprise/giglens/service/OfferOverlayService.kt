@@ -65,6 +65,7 @@ class OfferOverlayService : Service() {
     private var layoutParams: WindowManager.LayoutParams? = null
     private var sheetState = SheetState.IDLE
     private var isViewAdded = false
+    private var captureWasEverRunning = false  // tracks if capture ran at least once this session
 
     // Position
     private var posX = 30
@@ -118,10 +119,12 @@ class OfferOverlayService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // Check if ScreenCaptureService died — show CAPTURE_DEAD state if so
-        // CORRECT: pill stays visible with warning when capture dies mid-shift
-        // WRONG: pill disappears — driver has no idea capture stopped
-        if (!ScreenCaptureService.isRunning && sheetState != SheetState.CAPTURE_DEAD) {
+        // Check if ScreenCaptureService died mid-shift — show CAPTURE_DEAD state
+        // CORRECT: only show warning if capture was previously running — not on first launch
+        // WRONG: showing CAPTURE_DEAD on startup before driver enables capture
+        if (!ScreenCaptureService.isRunning &&
+            captureWasEverRunning &&
+            sheetState != SheetState.CAPTURE_DEAD) {
             sheetState = SheetState.CAPTURE_DEAD
             if (isViewAdded) updateWidget() else { showWidget(); updateWidget() }
             Log.w(TAG, "ScreenCaptureService is dead — showing CAPTURE_DEAD state")
@@ -130,6 +133,7 @@ class OfferOverlayService : Service() {
         when (intent?.action) {
             ACTION_SHOW_CAMERA -> {
                 // New offer detected — cancel any pending revert, morph to camera
+                captureWasEverRunning = true
                 cancelRevertTimer()
                 sheetState = SheetState.CAMERA
                 if (isViewAdded) updateWidget() else { showWidget(); updateWidget() }
@@ -151,6 +155,7 @@ class OfferOverlayService : Service() {
             }
             else -> {
                 if (intent?.hasExtra(EXTRA_NET_VALUE) == true) {
+                    captureWasEverRunning = true
                     loadExtras(intent)
                     sheetState = SheetState.PILL
                     if (isViewAdded) {
@@ -371,20 +376,51 @@ class OfferOverlayService : Service() {
                         setColor(deadColor)
                         cornerRadius = 50f
                     }
-                    setOnClickListener {
-                        // Relaunch MainActivity to re-request MediaProjection
-                        val intent = android.content.Intent(
-                            this@OfferOverlayService,
-                            com.augusteenterprise.giglens.ui.MainActivity::class.java
-                        ).apply {
-                            flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
-                                    android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
-                            putExtra("restart_capture", true)
+                    // CORRECT: use touch listener only — handles both drag and tap in one place
+                    // WRONG: setOnClickListener + setOnTouchListener — touch consumes event, click never fires
+                    setOnTouchListener { _, event ->
+                        val params = layoutParams as? WindowManager.LayoutParams ?: return@setOnTouchListener false
+                        when (event.action) {
+                            android.view.MotionEvent.ACTION_DOWN -> {
+                                initialX = params.x
+                                initialY = params.y
+                                initialTouchX = event.rawX
+                                initialTouchY = event.rawY
+                                isDragging = false
+                                true
+                            }
+                            android.view.MotionEvent.ACTION_MOVE -> {
+                                val dx = (event.rawX - initialTouchX).toInt()
+                                val dy = (event.rawY - initialTouchY).toInt()
+                                if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
+                                    isDragging = true
+                                    params.x = initialX + dx
+                                    params.y = initialY + dy
+                                    posX = params.x
+                                    posY = params.y
+                                    rootView?.let { windowManager.updateViewLayout(it, params) }
+                                }
+                                true
+                            }
+                            android.view.MotionEvent.ACTION_UP -> {
+                                if (!isDragging) {
+                                    // Tap — relaunch MainActivity to re-request MediaProjection
+                                    val intent = android.content.Intent(
+                                        this@OfferOverlayService,
+                                        com.augusteenterprise.giglens.ui.MainActivity::class.java
+                                    ).apply {
+                                        flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
+                                                android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+                                        putExtra("restart_capture", true)
+                                    }
+                                    startActivity(intent)
+                                    Log.i(TAG, "Driver tapped CAPTURE_DEAD pill — launching MainActivity for restart")
+                                }
+                                true
+                            }
+                            else -> false
                         }
-                        startActivity(intent)
-                        Log.i(TAG, "Driver tapped CAPTURE_DEAD pill — launching MainActivity for restart")
                     }
-                    setOnTouchListener(makeTouchListener())
                 }
                 root.addView(btn)
             }

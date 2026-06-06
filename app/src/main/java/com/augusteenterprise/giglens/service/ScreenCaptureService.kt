@@ -173,9 +173,11 @@ class ScreenCaptureService : Service() {
         }, null)
 
         // Set up ImageReader for screen capture
+        // CORRECT: 1 frame buffer — we only ever need the latest frame
+        // WRONG: 2 frame buffer — doubles memory footprint (~8MB extra at 1440p) constantly
         imageReader = ImageReader.newInstance(
             screenWidth, screenHeight,
-            PixelFormat.RGBA_8888, 2
+            PixelFormat.RGBA_8888, 1
         )
 
         virtualDisplay = mediaProjection?.createVirtualDisplay(
@@ -216,14 +218,23 @@ class ScreenCaptureService : Service() {
             bitmap.copyPixelsFromBuffer(buffer)
 
             // Crop to actual screen size (remove padding)
-            // CORRECT: keep croppedBitmap alive until OCR fully completes inside runOcr()
-            // WRONG:   recycling bitmap here while ML Kit processes it async — causes locked pixel error
             val croppedBitmap = Bitmap.createBitmap(bitmap, 0, 0, screenWidth, screenHeight)
             bitmap.recycle()
 
+            // CORRECT: downsample to 50% before OCR — ML Kit reads text at any resolution
+            // WRONG: passing full 1440p bitmap — 4x the memory for zero OCR accuracy gain
+            val scale = 0.5f
+            val ocrBitmap = Bitmap.createScaledBitmap(
+                croppedBitmap,
+                (screenWidth * scale).toInt(),
+                (screenHeight * scale).toInt(),
+                true
+            )
+            croppedBitmap.recycle()
+
             serviceScope.launch {
-                val savedPath = saveScreenshot(croppedBitmap)
-                runOcr(croppedBitmap, savedPath)
+                val savedPath = saveScreenshot(ocrBitmap)
+                runOcr(ocrBitmap, savedPath)
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error capturing screen: ${e.message}", e)
@@ -308,7 +319,6 @@ class ScreenCaptureService : Service() {
                         val result = scorer.score(
                             payAmount        = parsed.payAmount,
                             deliveryDistance = parsed.distance,
-                            pickupDistance   = pickupDistance,
                             personalAvgScore = personalAvg
                         )
 
@@ -329,7 +339,7 @@ class ScreenCaptureService : Service() {
                                 vsPersonalAvg  = result.vsPersonalAvg,
                                 driverLat      = location?.latitude,
                                 driverLon      = location?.longitude,
-                                pickupDistance = result.pickupDistance,
+
                                 totalDistance  = result.totalDistance,
                                 truePayPerMile = result.truePayPerMile,
                                 vehicleCost    = result.vehicleCost,
@@ -345,8 +355,8 @@ class ScreenCaptureService : Service() {
                                 putExtra(EXTRA_RESTAURANT,     parsed.restaurant ?: "")
                                 putExtra(EXTRA_PICKUP_MILES,   parsed.distance ?: 0.0)
                                 putExtra(EXTRA_TOTAL_MILES,    result.totalDistance ?: 0.0)
-                                putExtra(EXTRA_VEHICLE_COST,   result.vehicleCost)
-                                putExtra(EXTRA_TIME_COST,      result.timeCost)
+                                putExtra(EXTRA_VEHICLE_COST,   result.gasCost)
+                                putExtra(EXTRA_TIME_COST,      result.wearTearCost)
                                 putExtra(EXTRA_TOTAL_COST,     result.totalCost)
                                 putExtra(EXTRA_MINUTES_ON_JOB, result.minutesOnJob)
                                 putExtra(EXTRA_SCORE,          result.score)

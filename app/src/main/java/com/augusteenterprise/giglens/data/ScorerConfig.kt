@@ -47,6 +47,11 @@ object ScorerConfigKeys {
     // Gas-based vehicle cost (replaces flat cost_per_mile)
     const val MPG                     = "mpg"
     const val GAS_PRICE               = "gas_price_per_gallon"
+    // Wear and tear cost per mile (range: $0.11 - $0.18)
+    const val WEAR_TEAR_PER_MILE      = "wear_tear_per_mile"
+    // Simplified v4 weights (net value + true $/mile only)
+    const val WEIGHT_NET_VALUE        = "weight_net_value"
+    const val WEIGHT_TRUE_PER_MILE_V4 = "weight_true_per_mile_v4"
 }
 
 fun defaultScorerConfig(): List<ScorerConfig> = listOf(
@@ -78,6 +83,11 @@ fun defaultScorerConfig(): List<ScorerConfig> = listOf(
     ScorerConfig(ScorerConfigKeys.COST_PER_MILE,            0.90, "Vehicle cost per mile driven (IRS standard $0.90) — fallback only"),
     ScorerConfig(ScorerConfigKeys.MPG,                      30.0, "Vehicle fuel economy in MPG — look up at fueleconomy.gov"),
     ScorerConfig(ScorerConfigKeys.GAS_PRICE,                3.20, "Current gas price per gallon in your area"),
-    ScorerConfig(ScorerConfigKeys.HOURLY_RATE,              15.00, "Driver hourly rate for time cost calculation"),
-    ScorerConfig(ScorerConfigKeys.RESULT_DISPLAY_SECONDS,   60.0,  "Seconds to show result pill before reverting to idle")
+    ScorerConfig(ScorerConfigKeys.HOURLY_RATE,              15.00, "Driver hourly rate for time cost calculation (legacy — not used in v4 scoring)"),
+    ScorerConfig(ScorerConfigKeys.RESULT_DISPLAY_SECONDS,   60.0,  "Seconds to show result pill before reverting to idle"),
+    // v4 vehicle cost
+    ScorerConfig(ScorerConfigKeys.WEAR_TEAR_PER_MILE,       0.13,  "Wear and tear cost per mile driven ($0.11-$0.18 range)"),
+    // v4 simplified weights
+    ScorerConfig(ScorerConfigKeys.WEIGHT_NET_VALUE,         0.70,  "Weight: net value after costs (70%)"),
+    ScorerConfig(ScorerConfigKeys.WEIGHT_TRUE_PER_MILE_V4,  0.30,  "Weight: true $/mile after full trip (30%)")
 )
