@@ -234,6 +234,11 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
                 )
                 dir.mkdirs()
                 val file = java.io.File(dir, "screen_texts.log")
+                // Cap at 2MB — rotate by clearing when exceeded
+                if (file.exists() && file.length() > 2 * 1024 * 1024) {
+                    file.delete()
+                    Log.d(TAG, "screen_texts.log rotated — exceeded 2MB")
+                }
                 val timestamp = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US)
                     .format(java.util.Date())
                 val textsJoined = allTexts.joinToString(" | ")
