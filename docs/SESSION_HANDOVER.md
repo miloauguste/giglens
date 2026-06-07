@@ -92,6 +92,15 @@ Then check: https://console.firebase.google.com/project/giglens-57f0c/crashlytic
 | Offer history screen | 🟡 Pending | Data in DB, RecyclerView needed |
 | Settings UI gas/MPG/wear | 🟡 Pending | Build after camera confirmed |
 
+**Fourth task:** Add "Send Crash Report" button to SettingsActivity
+```kotlin
+// SettingsActivity.kt — add button to UI and wire to:
+FirebaseCrashlytics.getInstance().sendUnsentReports()
+// Show Toast: "Crash report sent — thank you"
+```
+- Button should only be visible if toggle is enabled in Settings
+- No new permissions needed
+
 ## Decisions Made This Session
 
 - **Source of truth for widget toggle:** `AppConfigKeys.WIDGET_ENABLED` in DB — all code reads from DB
