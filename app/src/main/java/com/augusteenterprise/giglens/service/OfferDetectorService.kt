@@ -120,7 +120,8 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
 
   // Cooldown check
         val now = System.currentTimeMillis()
-        if (now - lastCaptureTime < CAPTURE_COOLDOWN_MS) return
+        // CORRECT: cooldown gates signalCapture() only — not SHOW_CAMERA or fingerprint check
+        // WRONG: early return on cooldown before fingerprint check — SHOW_CAMERA never fires on real offers
 
         // Walk the accessibility tree looking for offer keywords
         val rootNode = rootInActiveWindow ?: return
@@ -135,7 +136,6 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
                 }
                 Log.i(TAG, "NEW offer screen detected — signaling capture")
                 lastOfferFingerprint = fingerprint
-                lastCaptureTime = now
                 // CORRECT: send SHOW_CAMERA only on confirmed new offer screen
                 // WRONG: sending SHOW_CAMERA on every window event — camera blinks randomly
                 val now2 = System.currentTimeMillis()
@@ -146,6 +146,9 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
                         action = ACTION_SHOW_CAMERA
                     })
                 }
+                // Cooldown gates signalCapture() only — not SHOW_CAMERA
+                if (now - lastCaptureTime < CAPTURE_COOLDOWN_MS) return
+                lastCaptureTime = now
                 signalCapture()
             } else {
                 // No offer screen detected — hide camera button if it was showing

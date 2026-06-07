@@ -195,24 +195,23 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
-        // CORRECT: start overlay service while app is in foreground — avoids Android 12+ bg restriction
-        // WRONG:   starting from ScreenCaptureService (background) — throws ForegroundServiceStartNotAllowedException
-        // CORRECT: start overlay as soon as overlay permission is granted — pill should
-        //          always be visible when toggle is ON, independent of screen capture state
-        // WRONG:   gating on ScreenCaptureService.isRunning — pill never shows until DoorDash opens
-        val prefs = getSharedPreferences("giglens_ui", MODE_PRIVATE)
-        val toggleEnabled = prefs.getBoolean("floating_button_enabled", false)
+        // CORRECT: read WIDGET_ENABLED from DB — single source of truth shared with SettingsActivity
+        // WRONG: reading from SharedPreferences("giglens_ui") — SettingsActivity writes to DB, not prefs
         val canDraw = android.provider.Settings.canDrawOverlays(this)
-        Log.d("MainActivity", "onResume: isRunning=${OfferOverlayService.isRunning} toggleEnabled=$toggleEnabled canDraw=$canDraw")
-        if (!OfferOverlayService.isRunning && toggleEnabled && canDraw) {
-            Log.d("MainActivity", "onResume: starting OfferOverlayService")
-            val overlayIntent = Intent(this, OfferOverlayService::class.java)
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-                startService(overlayIntent)
-            } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                startForegroundService(overlayIntent)
-            } else {
-                startService(overlayIntent)
+        lifecycleScope.launch {
+            val toggleEnabled = GigLensApp.instance.database.appConfigDao()
+                .getValue(AppConfigKeys.WIDGET_ENABLED) == "true"
+            Log.d("MainActivity", "onResume: isRunning=${OfferOverlayService.isRunning} toggleEnabled=$toggleEnabled canDraw=$canDraw")
+            if (!OfferOverlayService.isRunning && toggleEnabled && canDraw) {
+                Log.d("MainActivity", "onResume: starting OfferOverlayService")
+                val overlayIntent = Intent(this@MainActivity, OfferOverlayService::class.java)
+                // CORRECT: always startForegroundService on Android O+ — service calls startForeground() in onCreate()
+                // WRONG: startService on Android 12+ — OS kills it before onStartCommand fires on Android 16
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    startForegroundService(overlayIntent)
+                } else {
+                    startService(overlayIntent)
+                }
             }
         }
 

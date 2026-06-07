@@ -119,27 +119,37 @@ class OfferOverlayService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // Check if ScreenCaptureService died mid-shift — show CAPTURE_DEAD state
-        // CORRECT: only show warning if capture was previously running — not on first launch
-        // WRONG: showing CAPTURE_DEAD on startup before driver enables capture
-        if (!ScreenCaptureService.isRunning &&
-            captureWasEverRunning &&
-            sheetState != SheetState.CAPTURE_DEAD) {
-            sheetState = SheetState.CAPTURE_DEAD
-            if (isViewAdded) updateWidget() else { showWidget(); updateWidget() }
-            Log.w(TAG, "ScreenCaptureService is dead — showing CAPTURE_DEAD state")
+        // CORRECT: verify overlay window is still attached on every onStartCommand — re-add silently if lost
+        // WRONG: assuming isViewAdded means window is valid — process restart loses window without clearing flag
+        // CORRECT: check WIDGET_ENABLED before re-adding — don't show pill if toggle is off
+        // WRONG: calling showWidget() unconditionally — pill appears even when driver disabled it
+        val widgetEnabled = runBlocking {
+            GigLensApp.instance.database.appConfigDao()
+                .getValue(com.augusteenterprise.giglens.data.AppConfigKeys.WIDGET_ENABLED) == "true"
         }
-
+        if (widgetEnabled) {
+            if (isViewAdded && rootView != null && layoutParams != null) {
+                try {
+                    windowManager.updateViewLayout(rootView!!, layoutParams!!)
+                } catch (e: IllegalArgumentException) {
+                    Log.w(TAG, "Overlay window lost — re-adding silently: ${e.message}")
+                    isViewAdded = false
+                    showWidget()
+                }
+            } else if (!isViewAdded) {
+                showWidget()
+            }
+        }
         when (intent?.action) {
             ACTION_SHOW_CAMERA -> {
                 // New offer detected — cancel any pending revert, morph to camera
+                // CORRECT: process ACTION_SHOW_CAMERA first — before any CAPTURE_DEAD check
+                // WRONG: checking ScreenCaptureService.isRunning before this block — hijacks state to CAPTURE_DEAD
                 captureWasEverRunning = true
                 cancelRevertTimer()
                 sheetState = SheetState.CAMERA
                 if (isViewAdded) updateWidget() else { showWidget(); updateWidget() }
                 Log.d(TAG, "Widget morphed to CAMERA state")
-                // CORRECT: stopSelf(startId) releases this transient start — service stays running via onCreate()
-                // WRONG: omitting stopSelf — leaves a DEAD ConnectionRecord for every SHOW_CAMERA fired
                 stopSelf(startId)
             }
             ACTION_HIDE_CAMERA -> {
@@ -149,12 +159,18 @@ class OfferOverlayService : Service() {
                     if (isViewAdded) updateWidget() else { showWidget(); updateWidget() }
                     Log.d(TAG, "Widget morphed back from CAMERA to $sheetState")
                 }
-                // CORRECT: stopSelf(startId) releases this transient start
-                // WRONG: omitting stopSelf — leaks record even when state change was skipped
                 stopSelf(startId)
             }
             else -> {
-                if (intent?.hasExtra(EXTRA_NET_VALUE) == true) {
+                // CORRECT: only check CAPTURE_DEAD when no actionable intent — not before ACTION_SHOW_CAMERA
+                // WRONG: checking before when{} block — CAPTURE_DEAD hijacks state before ACTION_SHOW_CAMERA fires
+                if (!ScreenCaptureService.isRunning &&
+                    captureWasEverRunning &&
+                    sheetState != SheetState.CAPTURE_DEAD) {
+                    sheetState = SheetState.CAPTURE_DEAD
+                    if (isViewAdded) updateWidget() else { showWidget(); updateWidget() }
+                    Log.w(TAG, "ScreenCaptureService is dead — showing CAPTURE_DEAD state")
+                } else if (intent?.hasExtra(EXTRA_NET_VALUE) == true) {
                     captureWasEverRunning = true
                     loadExtras(intent)
                     sheetState = SheetState.PILL
@@ -165,7 +181,6 @@ class OfferOverlayService : Service() {
                         showWidget()
                         updateWidget()
                     }
-                    // Timer disabled — pill stays in result state for entire shift
                 }
             }
         }

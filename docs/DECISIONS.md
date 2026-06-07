@@ -137,3 +137,9 @@ before it gets built to avoid wasted implementation cycles
 ---
 
 *Next developer: read SESSION_PROTOCOL.md first, then start with live shift testing to validate OCR accuracy and scoring logic.*
+
+## 2026-06-07 — Decisions from this session
+
+- **Source of truth for widget toggle:** `AppConfigKeys.WIDGET_ENABLED` in DB, not `SharedPreferences` — all code now reads from DB
+- **Window recovery approach:** Detect and re-add lost window in `onStartCommand()` instead of service restart — better battery, no flicker
+- **Auto-shutdown design:** 60-second countdown when DoorDash closes, auto-disable toggle + stop services — deferred to next session
