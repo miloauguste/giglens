@@ -1,72 +1,113 @@
 # GigLens — Session Handover
 **Date:** 2026-06-07
-**Version at session end:** v0.1.106 — commit 82d0512
+**Version at session end:** 0.1.115
 **Build state:** PASSING
-**Conducted by:** Claude (Anthropic)
+**Conducted by:** Claude (Anthropic) — manual override
 
 ---
 
 ## What Was Completed This Session
 
-- ✅ **Firebase Crashlytics fully operational** — logs verified in console
-- ✅ **Offer detection improved** — guaranteed + mi signals, DoorDash $ fragmentation diagnosed
-- ✅ **Memory architecture overhauled** — VirtualDisplay per-capture, 99.8% memory reduction
-- ✅ **CAPTURE_DEAD recovery pill** — red ⚠️ pill + foreground service anchor
-- ✅ **OfferScorer v4** — gas + wear/tear only, 2-factor scoring verified
-- ✅ **screen_texts.log** — accessibility tree dump for post-shift diagnosis
-- ✅ **ConnectionRecord leak fixed** — verified 0 DEAD entries
-- ✅ **OWASP + Semgrep clean** — all CVEs suppressed with justification
+- ✅ **Camera pill now fires on live DoorDash offers — end-to-end pipeline working**
+  - Root cause: `CAPTURE_COOLDOWN_MS` early return blocked fingerprint check before `SHOW_CAMERA` fired
+  - Fix: moved cooldown gate to after `SHOW_CAMERA` send, only throttles `signalCapture()`
+  - Logs confirmed: `NEW offer screen detected`, `Offer screen confirmed — sending SHOW_CAMERA`, `Widget morphed to CAMERA state`
+
+- ✅ **OfferOverlayService overlay window recovery on process restart**
+  - Root cause: `START_STICKY` reused service instance without calling `onCreate()`, overlay window lost after process death
+  - Fix: window validity check in `onStartCommand()` — re-adds silently if lost
+  - Gated on `WIDGET_ENABLED` DB check — pill only re-appears if toggle is on
+
+- ✅ **Settings toggle now saves correctly and syncs with MainActivity**
+  - Root cause: `SettingsActivity` wrote to DB, `MainActivity.onResume()` read from `SharedPreferences`
+  - Fix: `MainActivity.onResume()` now reads `WIDGET_ENABLED` from DB via `lifecycleScope.launch`
+  - Single source of truth — no Save button required, saves instantly on flip
+
+- ✅ **`startForegroundService()` fix for Android 16**
+  - Root cause: `MainActivity.onResume()` called `startService()` on Android 12+ — OS killed service before `onStartCommand` fired
+  - Fix: unified to always use `startForegroundService()` on Android O+ (SDK 26+)
+
+- ✅ **Permissions verified and working**
+  - `SYSTEM_ALERT_WINDOW: allow`, `PROJECT_MEDIA: allow`, `captureRunning=true` steady
 
 ## What Was Left Incomplete
 
-- ⏳ Live shift Firebase log validation — Crashlytics session not yet loaded after latest shift
-- ⏳ Camera button on live offer not yet confirmed via Firebase logs
-- ⏳ Settings UI for gas price, MPG, wear & tear not yet built
+- ⏳ **Camera pill visual state not yet confirmed on screen** — logs show `morphed to CAMERA state` but driver did not see 📷 during test
+- ⏳ **Auto-shutdown when DoorDash closes** — designed but not implemented
+- ⏳ **Settings UI for gas price, MPG, wear & tear** — blocked until camera confirmed working
 
-## Known Issues
+## Known Broken (do not ignore)
 
-- 🟡 Firebase Crashlytics session not loading after shift — may need app reopen to trigger upload
-- 🟡 ScreenCaptureService still dying mid-shift on some sessions (mem-pressure-event)
+- 🔴 **Camera pill state change not rendering on screen**
+  - `updateWidget rendering state=CAMERA` logs correctly
+  - `windowManager.updateViewLayout()` runs without exception
+  - Visual state not changing — likely GL/hardware layer invalidation issue
+  - Fix to try: `rootView.invalidate()` after `updateViewLayout()`
+
+- 🔴 **Firebase Crashlytics session not loading after shift**
+  - Crashlytics console shows no sessions after shift ends
+  - Likely cause: Crashlytics requires app force-close to flush upload buffer
+  - Non-fatal events and breadcrumbs are logged in code but not appearing in console
+  - Fix to try: call `FirebaseAnalytics.logEvent()` on offer detection to confirm
+    Analytics pipeline is alive independently of Crashlytics
+  - Alternative: add explicit `FirebaseCrashlytics.getInstance().sendUnsentReports()`
+    call when shift ends (hook into auto-shutdown when DoorDash closes)
 
 ## Next Session — Start Here
 
-**First task:** Pull screen_texts.log and check for isOffer=true entries
-adb -s 10.0.0.110:<port> pull /sdcard/Android/data/com.augusteenterprise.giglens/files/debug/screen_texts.log /tmp/screen_texts.log
-grep "isOffer=true" /tmp/screen_texts.log | head -20
-**Second task:** Check Firebase console for shift logs
-https://console.firebase.google.com/project/giglens-57f0c/crashlytics
+**First task:** Fix camera pill visual rendering
+```bash
+# In OfferOverlayService.kt — end of updateWidget(), after windowManager.updateViewLayout()
+rootView!!.invalidate()
+rootView!!.requestLayout()
+```
 
-**If camera still not firing:** Check if ScreenCaptureService survived the shift:
-adb -s 10.0.0.110:<port> shell dumpsys activity services com.augusteenterprise.giglens | grep -E "ScreenCapture|startForegroundCount"
-**If isOffer=true found in logs:** Camera detection is working — investigate why SHOW_CAMERA not rendering
-**If isOffer=true not found:** DoorDash offer screen keywords still not matching — review log entries around offer time
+**Second task:** Fix Firebase Crashlytics not uploading after shift
+```kotlin
+// Add to OfferDetectorService.kt when isOffer=true fires:
+FirebaseCrashlytics.getInstance().log("isOffer=true detected")
+FirebaseCrashlytics.getInstance().sendUnsentReports()
+```
+Then check: https://console.firebase.google.com/project/giglens-57f0c/crashlytics
+
+**Third task:** Implement auto-shutdown when DoorDash closes
+- 60-second `Handler.postDelayed()` countdown when DoorDash package leaves foreground
+- Cancel countdown if DoorDash returns within 60s
+- On expiry: stop `ScreenCaptureService`, stop `OfferOverlayService`, write `WIDGET_ENABLED=false` to DB
+- Show countdown on pill: "⏱ 60s" ticking down so driver knows shutdown is pending
+- Hook `sendUnsentReports()` into shutdown sequence to flush Crashlytics before services stop
 
 ## Active Feature Status
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Firebase Crashlytics | ✅ Complete | Logs verified in console |
-| Offer detection signals | ✅ Improved | guaranteed + mi added |
-| Memory architecture | ✅ Complete | VirtualDisplay per-capture |
-| CAPTURE_DEAD pill | ✅ Complete | Foreground service anchor |
-| OfferScorer v4 | ✅ Complete | Gas + wear/tear verified |
-| Camera on live offer | 🟡 Pending | Needs Firebase log confirmation |
+| Offer detection pipeline | ✅ Complete | `isOffer=true` firing reliably |
+| `SHOW_CAMERA` intent signal | ✅ Complete | Sent and received confirmed in logs |
+| `OfferOverlayService.onStartCommand()` | ✅ Complete | `morphed to CAMERA state` confirmed |
+| Window recovery on restart | ✅ Complete | Lost window re-added silently |
+| Settings toggle persistence | ✅ Complete | DB sync working |
+| Camera pill visual rendering | 🔴 Broken | State changes in code, not on screen |
+| Firebase Crashlytics upload | 🔴 Broken | Sessions not appearing after shift |
+| Auto-shutdown on DoorDash close | 🟡 Pending | Design complete, not yet built |
+| Offer history screen | 🟡 Pending | Data in DB, RecyclerView needed |
 | Settings UI gas/MPG/wear | 🟡 Pending | Build after camera confirmed |
-| Offer history screen | 🟡 Pending | Data available in DB |
+
+## Decisions Made This Session
+
+- **Source of truth for widget toggle:** `AppConfigKeys.WIDGET_ENABLED` in DB — all code reads from DB
+- **Window recovery:** detect and re-add lost window in `onStartCommand()` — no service restart, no flicker
+- **Auto-shutdown design:** 60-second countdown when DoorDash closes, flush Crashlytics on shutdown
 
 ## Devices & Build Environment
 
 - Build server: milo-dev (i9, 48GB RAM, Ubuntu 24) at 10.0.0.16
-- Pixel 10 XL: port changes on reboot — check Wireless Debugging each session
+- Pixel 10 XL: port 43013 this session (changes on reboot — check Wireless Debugging)
 - Firebase: https://console.firebase.google.com/project/giglens-57f0c/crashlytics
 
-## Key Files
+## Files Changed This Session
 
-- `service/OfferDetectorService.kt` — accessibility detection, screen_texts.log writer
-- `service/ScreenCaptureService.kt` — VirtualDisplay per-capture, Crashlytics logging
-- `service/OfferOverlayService.kt` — pill UI, CAPTURE_DEAD state
-- `scoring/OfferScorer.kt` — v4 gas+wear/tear formula
-- `docs/PICKUP_DROPOFF_DISTANCE_RESEARCH.md` — future geocoding plan
+- `OfferDetectorService.kt` — moved `CAPTURE_COOLDOWN_MS` check after `SHOW_CAMERA` send
+- `OfferOverlayService.kt` — window recovery in `onStartCommand()`, gated on `WIDGET_ENABLED`
+- `MainActivity.kt` — `onResume()` reads `WIDGET_ENABLED` from DB, `startForegroundService()` fix
 
 ---
-*Next developer: read SESSION_PROTOCOL.md first. Pull screen_texts.log immediately — it shows exactly what DoorDash accessibility tree looked like during the shift.*
