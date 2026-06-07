@@ -25,8 +25,8 @@ android {
         applicationId = "com.augusteenterprise.giglens"
         minSdk = 26
         targetSdk = 35
-        versionCode = 109
-        versionName = "0.1.107"
+        versionCode = 111
+        versionName = "0.1.109"
     }
 
     signingConfigs {
@@ -90,10 +90,9 @@ dependencies {
 
     // Firebase BoM — manages all Firebase library versions
     implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
-    // Crashlytics only — no analytics, no ad tracking permissions
-    // CORRECT: crashlytics-ktx alone is sufficient for logging — analytics not needed
-    // WRONG: including firebase-analytics-ktx — pulls in AD_ID, WAKE_LOCK, ad service permissions
+    // Crashlytics + Analytics (required for Crashlytics logs feature)
     implementation("com.google.firebase:firebase-crashlytics-ktx")
+    implementation("com.google.firebase:firebase-analytics-ktx")
     // Force patched protobuf version — fixes CVE-2022-3171, CVE-2024-7254 from Firebase transitive deps
     implementation("com.google.protobuf:protobuf-javalite:3.25.5")
 }

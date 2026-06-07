@@ -5,6 +5,7 @@ package com.augusteenterprise.giglens.ui
 // Main activity: analytics dashboard with controls, earnings, chart, verdict breakdown
 
 import android.util.Log
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import android.animation.ObjectAnimator
 import android.app.Activity
 import android.content.Intent
@@ -168,6 +169,8 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
 
+
+
         binding.tvSeeAll.setOnClickListener {
             Toast.makeText(this, "Offer history coming soon", Toast.LENGTH_SHORT).show()
         }
@@ -191,6 +194,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+
         // CORRECT: start overlay service while app is in foreground — avoids Android 12+ bg restriction
         // WRONG:   starting from ScreenCaptureService (background) — throws ForegroundServiceStartNotAllowedException
         // CORRECT: start overlay as soon as overlay permission is granted — pill should

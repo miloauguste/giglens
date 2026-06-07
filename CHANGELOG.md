@@ -1,4 +1,14 @@
 ## [Unreleased] - 2026-06-06
+### Added
+- Firebase Crashlytics logs verified working — Logs & Breadcrumbs tab confirmed in console
+- Google Analytics enabled for project — required for Crashlytics log feature
+- Ad tracking disabled in manifest (google_analytics_adid_collection_enabled=false)
+- google-services.json updated with Analytics configuration
+### Fixed
+- Removed test crash code from MainActivity
+- tvFooter made clickable in layout XML
+
+## [Unreleased] - 2026-06-06
 ### Fixed
 - Removed test crash button from MainActivity — Crashlytics verified working
 - Added firebase_crashlytics_collection_enabled=true to manifest — ensures debug build logging
