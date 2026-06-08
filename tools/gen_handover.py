@@ -11,16 +11,19 @@ LAST_SESSION    = f"{REPO_ROOT}/docs/LAST_SESSION.md"
 VERSION_FILE    = f"{REPO_ROOT}/version.txt"
 DECISIONS_FILE  = f"{REPO_ROOT}/docs/DECISIONS.md"
 ROADMAP_FILE    = f"{REPO_ROOT}/docs/FEATURE_ROADMAP.md"
-MODEL           = "claude-sonnet-4-5"
+MODEL           = "llama3.1:8b"
 MAX_TOKENS      = 4000
+OLLAMA_URL      = "http://localhost:11434/api/generate"
 
 def read_file_safe(path, fallback="(not available)"):
     return open(path).read().strip() if os.path.exists(path) else fallback
 
 def get_changed_files():
-    r1 = subprocess.run(["git","-C",REPO_ROOT,"diff","--name-only","HEAD"], capture_output=True, text=True)
-    r2 = subprocess.run(["git","-C",REPO_ROOT,"diff","--cached","--name-only"], capture_output=True, text=True)
-    files = set(r1.stdout.strip().splitlines() + r2.stdout.strip().splitlines())
+    # Show files changed in last commit + any uncommitted changes
+    r1 = subprocess.run(["git","-C",REPO_ROOT,"diff","--name-only","HEAD~1","HEAD"], capture_output=True, text=True)
+    r2 = subprocess.run(["git","-C",REPO_ROOT,"diff","--name-only","HEAD"], capture_output=True, text=True)
+    r3 = subprocess.run(["git","-C",REPO_ROOT,"diff","--cached","--name-only"], capture_output=True, text=True)
+    files = set(r1.stdout.strip().splitlines() + r2.stdout.strip().splitlines() + r3.stdout.strip().splitlines())
     return "\n".join(f"- {f}" for f in sorted(files)) if files else "- (no changes detected)"
 
 def get_build_state():
@@ -81,39 +84,63 @@ GitHub: github.com/miloauguste/giglens
 ---"""
 
 def call_api(transcript, system_prompt):
-    import anthropic
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
-        print("[handover] ERROR: ANTHROPIC_API_KEY not set in environment.")
-        print("           Add to ~/.bashrc:  export ANTHROPIC_API_KEY=sk-ant-...")
-        sys.exit(1)
-    client = anthropic.Anthropic(api_key=api_key)
-    print(f"[handover] Calling {MODEL}...")
-    msg = client.messages.create(
-        model=MODEL, max_tokens=MAX_TOKENS,
-        system=system_prompt,
-        messages=[{"role":"user","content":
-            f"Generate the LAST_SESSION.md handover from this transcript.\n\n"
-            f"--- TRANSCRIPT START ---\n{transcript}\n--- TRANSCRIPT END ---"}]
+    import requests
+    print(f"[handover] Calling Ollama {MODEL} at {OLLAMA_URL}...")
+    full_prompt = (
+        f"{system_prompt}\n\n"
+        f"Generate the LAST_SESSION.md handover from this transcript.\n\n"
+        f"--- TRANSCRIPT START ---\n{transcript}\n--- TRANSCRIPT END ---"
     )
-    return msg.content[0].text
+    try:
+        response = requests.post(OLLAMA_URL, json={
+            "model": MODEL,
+            "prompt": full_prompt,
+            "stream": False,
+            "options": {
+                "num_predict": MAX_TOKENS,
+                "temperature": 0.2
+            }
+        }, timeout=300)
+        response.raise_for_status()
+        result = response.json()
+        return result.get("response", "").strip()
+    except requests.exceptions.ConnectionError:
+        print(f"[handover] ERROR: Cannot connect to Ollama at {OLLAMA_URL}")
+        print("           Make sure Ollama is running: ollama serve")
+        sys.exit(1)
+    except requests.exceptions.Timeout:
+        print("[handover] ERROR: Ollama timed out after 300s")
+        sys.exit(1)
+    except Exception as e:
+        print(f"[handover] ERROR: {e}")
+        sys.exit(1)
 
 def write_last_session(narrative, version, build_state, changed_files, date):
+    # Strip any header the model may have generated — we write our own
+    clean = narrative
+    for prefix in ["# GigLens", "**Date:**", "**Version", "**Build", "**Conducted"]:
+        if clean.startswith(prefix):
+            lines = clean.splitlines()
+            # Skip lines until we hit the first ## section
+            for i, line in enumerate(lines):
+                if line.startswith("## "):
+                    clean = "\n".join(lines[i:])
+                    break
+            break
     content = f"""# GigLens — Session Handover
 **Date:** {date}
 **Version at session end:** {version}
 **Build state:** {build_state}
-**Conducted by:** Claude (auto-generated via tools/gen_handover.py)
+**Conducted by:** Claude (auto-generated via tools/gen_handover.py — llama3.1:8b)
 
 ---
 
-{narrative}
+{clean}
 
 ## Devices & Build Environment
 
 - Build server: milo-dev (i9, 48GB RAM, Ubuntu 24) at 10.0.0.16
-- S20 (10.0.0.189:5555): run `adb connect 10.0.0.189:5555` to verify
-- Pixel 10 XL (10.0.0.110:5555): run `adb connect 10.0.0.110:5555` to verify
+- Pixel 10 XL (10.0.0.110:PORT): check Wireless Debugging each session — port changes on reboot
 
 ## Files Changed This Session
 
