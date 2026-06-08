@@ -101,6 +101,32 @@ FirebaseCrashlytics.getInstance().sendUnsentReports()
 - Button should only be visible if toggle is enabled in Settings
 - No new permissions needed
 
+## Tabled for Next Session — Automated Android Testing
+
+**Concept:** Add unit and UI tests to catch regressions automatically
+- **Robolectric** (highest value, no device needed):
+  - `OfferScorer` v4 math — pay/mile/wear calculations
+  - `buildOfferFingerprint()` — dedup logic
+  - DB operations — toggle save/load, upsert behavior
+- **Espresso** (device required):
+  - Toggle on/off → pill appears/disappears
+  - Settings save → DB sync verified
+- **Start with:** Robolectric unit tests for `OfferScorer` and `AppConfigDao`
+- **File to create:** `app/src/test/java/com/augusteenterprise/giglens/OfferScorerTest.kt`
+
+## Tabled for Next Session — Automated Android Testing
+
+**Concept:** Add unit and UI tests to catch regressions automatically
+- **Robolectric** (highest value, no device needed):
+  - `OfferScorer` v4 math — pay/mile/wear calculations
+  - `buildOfferFingerprint()` — dedup logic
+  - DB operations — toggle save/load, upsert behavior
+- **Espresso** (device required):
+  - Toggle on/off → pill appears/disappears
+  - Settings save → DB sync verified
+- **Start with:** Robolectric unit tests for `OfferScorer` and `AppConfigDao`
+- **File to create:** `app/src/test/java/com/augusteenterprise/giglens/OfferScorerTest.kt`
+
 ## Tabled for Next Session — Partial Screen Sharing (Android 14+)
 
 **Concept:** Switch MediaProjection from full-screen capture to app-specific capture (DoorDash only)
