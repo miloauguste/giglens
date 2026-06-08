@@ -12,7 +12,7 @@ VERSION_FILE    = f"{REPO_ROOT}/version.txt"
 DECISIONS_FILE  = f"{REPO_ROOT}/docs/DECISIONS.md"
 ROADMAP_FILE    = f"{REPO_ROOT}/docs/FEATURE_ROADMAP.md"
 MODEL           = "claude-sonnet-4-5"
-MAX_TOKENS      = 2000
+MAX_TOKENS      = 4000
 
 def read_file_safe(path, fallback="(not available)"):
     return open(path).read().strip() if os.path.exists(path) else fallback
