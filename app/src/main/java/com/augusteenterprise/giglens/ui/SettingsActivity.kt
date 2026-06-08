@@ -12,7 +12,6 @@ import android.content.ComponentName
 import android.provider.Settings
 import com.augusteenterprise.giglens.GigLensApp
 import com.augusteenterprise.giglens.data.PlatformRegistry
-import com.augusteenterprise.giglens.service.CaptureButtonService
 import com.augusteenterprise.giglens.databinding.ActivitySettingsBinding
 import com.augusteenterprise.giglens.data.AppConfigKeys
 import com.augusteenterprise.giglens.data.ScorerConfigKeys
@@ -42,9 +41,6 @@ class SettingsActivity : AppCompatActivity() {
                 startForegroundService(serviceIntent)
             } else {
                 startService(serviceIntent)
-            }
-            if (!CaptureButtonService.isRunning) {
-                startService(android.content.Intent(this, CaptureButtonService::class.java))
             }
             android.widget.Toast.makeText(this, "Screen capture enabled", android.widget.Toast.LENGTH_SHORT).show()
         } else {
@@ -222,16 +218,10 @@ class SettingsActivity : AppCompatActivity() {
                                 as android.media.projection.MediaProjectionManager
                             mediaProjectionLauncher.launch(projectionManager.createScreenCaptureIntent())
                         } else {
-                            if (!CaptureButtonService.isRunning) {
-                                startService(Intent(this@SettingsActivity, CaptureButtonService::class.java))
-                            }
                             Toast.makeText(this@SettingsActivity, "Settings saved", Toast.LENGTH_SHORT).show()
                         }
                     }
                     else -> {
-                        if (CaptureButtonService.isRunning) {
-                            stopService(Intent(this@SettingsActivity, CaptureButtonService::class.java))
-                        }
                         if (com.augusteenterprise.giglens.service.ScreenCaptureService.isRunning) {
                             stopService(Intent(this@SettingsActivity, com.augusteenterprise.giglens.service.ScreenCaptureService::class.java))
                         }
