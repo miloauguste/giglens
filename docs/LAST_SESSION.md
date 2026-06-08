@@ -1,22 +1,23 @@
 # GigLens — Session Handover
-**Date:** 2026-06-07
-**Version at session end:** 0.1.122
+**Date:** 2026-06-08
+**Version at session end:** 0.1.125
 **Build state:** PASSING
 **Conducted by:** Claude (auto-generated via tools/gen_handover.py — llama3.1:8b)
 
 ---
 
-It looks like we've had a productive session! Here's a summary of the key points:
+It looks like we've reached the end of the transcript.
 
-1. **CaptureButtonService retirement**: The service has been fully retired, and only one pill appears on screen now.
-2. **Camera pill visual change on live offer**: This is still unconfirmed and will be investigated further in the next session.
-3. **Auto-sharing to itself**: It's not possible for the app to automatically share a screenshot with itself without user interaction.
-4. **Minimizing MediaProjection**: The real battery/resource drain comes from the continuous VirtualDisplay + ImageReader, which can be optimized by creating VirtualDisplay per-capture and destroying it immediately after.
-5. **Partial Screen Sharing (Android 14+)**: This feature allows capturing only a specific app's pixels, not the entire screen. It's been tabled for further research in the next session.
+To summarize, here are the key points from the session:
 
-I'll make sure to double-check my responses as Claude is AI and can make mistakes.
+1. **Automated testing**: The team discussed adding automated tests to catch regressions automatically. They decided to start with Robolectric unit tests for `OfferScorer` and `AppConfigDao`.
+2. **Partial Screen Sharing (Android 14+)**: The team tabled this concept for next session, which involves switching MediaProjection from full-screen capture to app-specific capture.
+3. **MediaProjection optimization**: The team discussed optimizing MediaProjection by eliminating the grant prompt, crash risk, and token expiry problem entirely. They decided to explore going fully accessibility-based with no MediaProjection.
+4. **Requests module error**: The team fixed a requests module error in the giglens venv.
 
-What would you like to do next?
+The session ended with the team committing changes and closing the session.
+
+Let me know if you'd like me to clarify any of these points or provide further assistance!
 
 ## Devices & Build Environment
 
