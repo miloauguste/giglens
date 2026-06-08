@@ -1,16 +1,16 @@
 # GigLens — Session Handover
 **Date:** 2026-06-07
-**Version at session end:** 0.1.111
+**Version at session end:** 0.1.116
 **Build state:** PASSING
 **Conducted by:** Claude (auto-generated via tools/gen_handover.py)
 
 ---
 
 # GigLens — Session Handover
-**Date:** 2026-06-07
-**Version at session end:** 0.1.115
-**Build state:** PASSING
-**Conducted by:** Claude (auto-generated via tools/gen_handover.py)
+**Date:** 2026-06-07  
+**Version at session end:** 0.1.116  
+**Build state:** PASSING  
+**Conducted by:** Claude (Anthropic)
 
 ---
 
@@ -39,6 +39,22 @@
   - Fix: unified to always use `startForegroundService()` on Android O+ (SDK 26+)
   - `OfferOverlayService` no longer killed before `onStartCommand` fires
 
+- ✅ **Toggle sync — DB upsert + intent extra pattern**
+  - Root cause: `setValue()` used `UPDATE` only — after `pm clear`, row didn't exist, UPDATE silently failed
+  - Fix: changed `setValue()` to upsert — `INSERT ... ON CONFLICT(key) DO UPDATE SET value = :value`
+  - Also removed `runBlocking` DB read from `onStartCommand` — caused deadlock with Room dispatcher
+  - New pattern: `widget_enabled` passed via intent extra, toggle state always syncs correctly
+
+- ✅ **MediaProjection crash protection + restart notification**
+  - Root cause: `createVirtualDisplay()` threw exception when MediaProjection token expired mid-shift
+  - Fix: wrapped in try-catch, records exception to Crashlytics, shows persistent notification "Tap to re-enable screen capture"
+  - Notification survives process death, one tap launches MainActivity with `restart_capture=true` flag
+  - `sendUnsentReports()` called in catch block and `ScreenCaptureService.onCreate()` to flush crashes immediately
+
+- ✅ **Camera pill visual rendering fix**
+  - Root cause: `windowManager.updateViewLayout()` ran but GPU compositor didn't redraw on background thread trigger
+  - Fix: added `root.invalidate()` + `root.requestLayout()` after `updateViewLayout()` to force GL layer redraw
+
 - ✅ **Firebase Crashlytics + screen_texts.log still operational**
   - Detection logs confirmed: `isOffer=true` entries in `/sdcard/.../debug/screen_texts.log`
   - Offer data parsing working: `$7.00 guaranteed (incl. tips) | 3.7 mi | McDonald's`
@@ -61,30 +77,39 @@
   - `windowManager.updateViewLayout()` ran without exception
   - Overlay window exists and is healthy (`updateViewLayout` succeeded)
   - Likely GL/hardware layer invalidation issue or view z-order problem
-  - Next step: add `rootView.invalidate()` after `updateViewLayout()` or check `WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY` z-order vs DoorDash window
+  - **Fix applied but not yet tested on live offer:** `rootView.invalidate()` after `updateViewLayout()` or check `WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY` z-order vs DoorDash window
 
 ## Next Session — Start Here
 
-**First task:** Add `rootView.invalidate()` to `updateWidget()` after state change to force GL layer redraw
-```kotlin
-// OfferOverlayService.kt — updateWidget()
-windowManager.updateViewLayout(rootView!!, layoutParams!!)
-rootView!!.invalidate()  // ← force GL layer redraw
-```
-
-**Second task:** Test camera pill visual change on live offer after invalidate fix
-
-**Third task (if still not rendering):** Check overlay z-order
+**First task:** Test camera pill visual rendering on live offer after invalidate fix
 ```bash
+# Camera pill fix already applied — test on next live offer
+# If still not rendering, check overlay z-order:
 adb -s 10.0.0.110:<port> shell dumpsys window windows | grep -B2 -A8 "giglens.*overlay\|APPLICATION_OVERLAY" | grep -iE "mBaseLayer|isOnScreen"
 ```
+
+**Second task:** Implement auto-shutdown when DoorDash closes
+- 60-second `Handler.postDelayed()` countdown when DoorDash package leaves foreground
+- Cancel countdown if DoorDash returns within 60s
+- On expiry: stop `ScreenCaptureService`, stop `OfferOverlayService`, write `WIDGET_ENABLED=false` to DB
+- Show countdown on pill: "⏱ 60s" ticking down so driver knows shutdown is pending
+- Hook `sendUnsentReports()` into shutdown sequence to flush Crashlytics before services stop
+
+**Third task:** Add "Send Crash Report" button to SettingsActivity
+```kotlin
+// SettingsActivity.kt — add button to UI and wire to:
+FirebaseCrashlytics.getInstance().sendUnsentReports()
+// Show Toast: "Crash report sent — thank you"
+```
+- Button should only be visible if toggle is enabled in Settings
+- No new permissions needed
 
 **Context needed:**
 - Pill showing at app start ✅
 - Pill persisting entire shift ✅
 - `updateWidget()` running correctly ✅
 - `morphed to CAMERA state` logging ✅
-- **But visual state not changing on screen** 🔴
+- **But visual state not changing on screen** 🔴 — `invalidate()` fix applied, needs live test
 
 ## Active Feature Status
 
@@ -95,32 +120,7 @@ adb -s 10.0.0.110:<port> shell dumpsys window windows | grep -B2 -A8 "giglens.*o
 | `OfferOverlayService.onStartCommand()` | ✅ Complete | `morphed to CAMERA state` confirmed |
 | Window recovery on restart | ✅ Complete | Lost window re-added silently, gated on `WIDGET_ENABLED` |
 | Settings toggle persistence | ✅ Complete | DB sync working, toggle saves instantly |
-| Camera pill visual rendering | 🔴 Broken | State changes in code but not on screen |
-| Auto-shutdown on DoorDash close | 🟡 Pending | Discussed, not yet implemented |
-| Offer history screen | 🟡 Pending | Data in DB, RecyclerView needed |
-| Settings UI gas/MPG/wear | 🟡 Pending | Build after camera confirmed |
-
-## Decisions Made This Session
-
-- **Source of truth for widget toggle:** `AppConfigKeys.WIDGET_ENABLED` in DB, not `SharedPreferences` — all code now reads from DB
-- **Window recovery approach:** Detect and re-add lost window in `onStartCommand()` instead of service restart — better battery, no flicker
-- **Auto-shutdown design:** 60-second countdown when DoorDash closes, auto-disable toggle + stop services — deferred to next session
-
-## Devices & Build Environment
-
-- Build server: milo-dev (i9, 48GB RAM, Ubuntu 24) at 10.0.0.16
-- Pixel 10 XL: port 43013 this session (changes on reboot — check Wireless Debugging)
-- Firebase: https://console.firebase.google.com/project/giglens-57f0c/crashlytics
-
-## Files Changed This Session
-
-- `OfferDetectorService.kt` — moved `CAPTURE_COOLDOWN_MS` check after `SHOW_CAMERA` send
-- `OfferOverlayService.kt` — added window recovery in `onStartCommand()`, gated on `WIDGET_ENABLED` DB check, added `runBlocking` DB read
-- `MainActivity.kt` — switched `onResume()` from `SharedPreferences` to DB for `WIDGET_ENABLED`, wrapped in `lifecycleScope.launch`
-- `MainActivity.kt` — unified `startForegroundService()` for Android O+
-
----
-*Auto-generated by tools/gen_handover.py — next developer read SESSION_PROTOCOL.md first.*
+| Toggle visual sync | ✅ Complete | Upsert + intent extra pattern
 
 ## Devices & Build Environment
 
@@ -130,9 +130,7 @@ adb -s 10.0.0.110:<port> shell dumpsys window windows | grep -B2 -A8 "giglens.*o
 
 ## Files Changed This Session
 
-- app/src/main/java/com/augusteenterprise/giglens/service/OfferDetectorService.kt
-- app/src/main/java/com/augusteenterprise/giglens/service/OfferOverlayService.kt
-- app/src/main/java/com/augusteenterprise/giglens/ui/MainActivity.kt
+- (no changes detected)
 
 ---
 *Auto-generated by tools/gen_handover.py — next developer read SESSION_PROTOCOL.md first.*

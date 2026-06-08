@@ -25,8 +25,8 @@ android {
         applicationId = "com.augusteenterprise.giglens"
         minSdk = 26
         targetSdk = 35
-        versionCode = 118
-        versionName = "0.1.116"
+        versionCode = 119
+        versionName = "0.1.117"
     }
 
     signingConfigs {
