@@ -21,6 +21,7 @@ import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import com.google.firebase.crashlytics.FirebaseCrashlytics
+import com.augusteenterprise.giglens.ocr.ParsedOffer
 import com.augusteenterprise.giglens.BuildConfig
 
 class OfferDetectorService : AccessibilityService() {
@@ -30,6 +31,13 @@ class OfferDetectorService : AccessibilityService() {
         private const val TAG = "OfferDetector"
 private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
         const val ACTION_OFFER_DETECTED = "com.augusteenterprise.giglens.OFFER_DETECTED"
+        const val ACTION_OFFER_EXTRACTED = "com.augusteenterprise.giglens.OFFER_EXTRACTED"
+        const val EXTRA_PAY = "extra_pay"
+        const val EXTRA_DISTANCE = "extra_distance"
+        const val EXTRA_RESTAURANT = "extra_restaurant"
+        const val EXTRA_DELIVER_BY = "extra_deliver_by"
+        const val EXTRA_COUNTDOWN = "extra_countdown"
+        const val EXTRA_SOURCE = "extra_source"
 
         // Cooldown to avoid duplicate captures (ms)
         private const val CAPTURE_COOLDOWN_MS = 3000L
@@ -82,17 +90,11 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
 
-        // CORRECT: gate on ScreenCaptureService.isRunning — driver enabled the toggle
-        // WRONG:   reading AUTO_CAPTURE_MODE from DB — DB may be "off" on fresh install
-        if (!ScreenCaptureService.isRunning) {
-            // CORRECT: signal overlay to show CAPTURE_DEAD warning pill — driver sees it over DoorDash
-            // WRONG: silently returning — driver thinks app is working, misses offers all shift
-            val deadIntent = Intent(applicationContext, OfferOverlayService::class.java)
-            startService(deadIntent)
-            Log.w(TAG, "ScreenCaptureService dead — signaling overlay to show CAPTURE_DEAD state")
-            return
-        }
-        android.util.Log.d("OfferDetector", "captureRunning=true — proceeding")
+        // CORRECT: accessibility extraction runs regardless of ScreenCaptureService state
+        // WRONG: hard gate on ScreenCaptureService.isRunning -- blocks all offer detection
+        //        when MediaProjection token expires, entire shift is lost with no scoring
+        val captureRunning = ScreenCaptureService.isRunning
+        Log.d(TAG, "captureRunning=$captureRunning -- accessibility extraction proceeds regardless")
         // CORRECT: use cached values — populated once at onServiceConnected
         // WRONG: runBlocking here blocks accessibility thread on every event — ANR risk
         val mode = cachedAutoCapureMode
@@ -271,23 +273,123 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
      */
     private fun signalCapture() {
         Log.d(TAG, "signalCapture() called")
-        // CORRECT: ACTION_SHOW_CAMERA already sent in onAccessibilityEvent() before signalCapture()
-        // WRONG: sending SHOW_CAMERA again here — creates a second orphaned ConnectionRecord per event
-        // Removed duplicate startService(ACTION_SHOW_CAMERA) — no-op that was leaking records
-
-        // Auto-capture only if mode allows it
-        // CORRECT: use cached mode — same value, no DB hit needed here
-        // WRONG: second runBlocking in signalCapture — redundant DB read on already-blocked thread
+        // CORRECT: try accessibility extraction first -- faster and more accurate
+        // WRONG: always falling through to MediaProjection -- slower and error-prone
+        val root = rootInActiveWindow
+        if (root != null) {
+            try {
+                val extracted = extractOfferFromNodes(root)
+                if (extracted != null) {
+                    Log.i(TAG, "Accessibility extraction SUCCESS -- pay=${extracted.payAmount} distance=${extracted.distance}")
+                    FirebaseCrashlytics.getInstance().log("EXTRACT:accessibility pay=${extracted.payAmount} dist=${extracted.distance}")
+                    val broadcastIntent = Intent(ACTION_OFFER_EXTRACTED).apply {
+                        setPackage(packageName)
+                        putExtra(EXTRA_PAY, extracted.payAmount ?: 0.0)
+                        putExtra(EXTRA_DISTANCE, extracted.distance ?: 0.0)
+                        putExtra(EXTRA_RESTAURANT, extracted.restaurant ?: "")
+                        putExtra(EXTRA_DELIVER_BY, extracted.rawText)
+                        putExtra(EXTRA_SOURCE, "accessibility")
+                    }
+                    sendBroadcast(broadcastIntent)
+                    return
+                } else {
+                    Log.w(TAG, "Accessibility extraction null -- falling back to OCR")
+                    FirebaseCrashlytics.getInstance().log("EXTRACT:fallback_to_ocr")
+                }
+            } finally {
+                root.recycle()
+            }
+        } else {
+            Log.w(TAG, "rootInActiveWindow null -- falling back to OCR")
+        }
+        // Fallback: OCR via MediaProjection -- only if capture service is alive
+        // CORRECT: skip OCR broadcast if ScreenCaptureService dead -- avoids CAPTURE_DEAD spiral
+        // WRONG:   broadcasting ACTION_OFFER_DETECTED when capture dead -- triggers CAPTURE_DEAD overlay
+        if (!ScreenCaptureService.isRunning) {
+            Log.w(TAG, "OCR fallback skipped -- ScreenCaptureService dead, accessibility-only mode")
+            return
+        }
         if (cachedAutoCapureMode == "accessibility" || cachedAutoCapureMode == "both") {
-            Log.i(TAG, "Auto-capture mode=$cachedAutoCapureMode — triggering capture")
+            Log.i(TAG, "Auto-capture mode=$cachedAutoCapureMode -- triggering OCR capture fallback")
             val captureIntent = Intent(ACTION_OFFER_DETECTED)
             captureIntent.setPackage(packageName)
             sendBroadcast(captureIntent)
         } else {
-            Log.d(TAG, "Mode=$cachedAutoCapureMode — waiting for driver to tap camera button")
+            Log.d(TAG, "Mode=$cachedAutoCapureMode -- waiting for driver tap")
         }
     }
 
+    /**
+     * Extracts offer data directly from accessibility node tree.
+     * Confirmed DoorDash node structure (screen_texts.log 2026-06-08):
+     *   decline | uuid | $3.55  guaranteed (incl. tips) | 6.0 mi | deliver by 10:55 pm | pickup | mcdonald's | accept | 19
+     * Returns null if pay or distance missing -- caller falls back to OCR.
+     * CORRECT: return null when fields missing -- triggers OCR fallback
+     * WRONG:   returning ParsedOffer with nulls -- scorer silently uses 0.0
+     */
+    private fun extractOfferFromNodes(root: AccessibilityNodeInfo): ParsedOffer? {
+        val payRegex = Regex("""\$(\d{1,3}\.\d{2})""")
+        val distanceRegex = Regex("""^(\d+\.?\d*)\s*mi$""", RegexOption.IGNORE_CASE)
+        val deliverByRegex = Regex("""deliver\s+by\s+(\d{1,2}:\d{2}\s*[ap]m)""", RegexOption.IGNORE_CASE)
+        val texts = mutableListOf<String>()
+        fun walk(node: AccessibilityNodeInfo) {
+            val t = node.text?.toString()?.trim() ?: ""
+            if (t.isNotBlank()) texts.add(t)
+            for (i in 0 until node.childCount) {
+                val child = node.getChild(i) ?: continue
+                walk(child)
+                child.recycle()
+            }
+        }
+        walk(root)
+        var pay: Double? = null
+        var distance: Double? = null
+        var restaurant: String? = null
+        var deliverBy: String? = null
+        var countdownSeconds: Int? = null
+        for ((i, text) in texts.withIndex()) {
+            val lower = text.lowercase()
+            // Pay: anchor to "guaranteed" node -- avoids $0.50 promo node
+            // CORRECT: check "guaranteed" in lower before running payRegex
+            // WRONG:   first $ found -- picks up promo amount instead of offer pay
+            if (pay == null && "guaranteed" in lower) {
+                payRegex.find(text)?.let { pay = it.groupValues[1].toDoubleOrNull() }
+            }
+            // Distance: exact match "X.X mi" node only
+            // CORRECT: matchEntire -- avoids address lines containing mi
+            // WRONG:   containsMatchIn -- matches "1.2 mi from you" in address text
+            if (distance == null) {
+                distanceRegex.matchEntire(text)?.let { distance = it.groupValues[1].toDoubleOrNull() }
+            }
+            // Deliver by time
+            if (deliverBy == null) {
+                deliverByRegex.find(text)?.let { deliverBy = it.groupValues[1].trim() }
+            }
+            // Restaurant: node immediately after exact "pickup" node
+            // CORRECT: lower == "pickup" exact match
+            // WRONG:   contains("pickup") -- matches "customer pickup instructions"
+            if (restaurant == null && lower == "pickup" && i + 1 < texts.size) {
+                val candidate = texts[i + 1].trim()
+                if (candidate.length >= 2
+                    && !deliverByRegex.containsMatchIn(candidate)
+                    && !distanceRegex.containsMatchIn(candidate)
+                    && candidate.lowercase() !in setOf("customer dropoff", "accept", "decline")
+                ) { restaurant = candidate }
+            }
+            // Countdown: numeric-only node e.g. "19", "8"
+            // CORRECT: matches Regex digit-only -- avoids UUID digit substrings
+            // WRONG:   toIntOrNull() on any node -- UUIDs contain parseable digit runs
+            if (countdownSeconds == null && text.trim().matches(Regex("""^\d{1,3}$"""))) {
+                countdownSeconds = text.trim().toIntOrNull()
+            }
+        }
+        if (pay == null || distance == null) {
+            Log.w(TAG, "extractOfferFromNodes: pay=$pay distance=$distance -- null, OCR fallback")
+            return null
+        }
+        Log.i(TAG, "extractOfferFromNodes: pay=$pay dist=$distance restaurant=$restaurant deliverBy=$deliverBy countdown=$countdownSeconds")
+        return ParsedOffer(payAmount = pay, distance = distance, restaurant = restaurant, isOfferScreen = true, rawText = deliverBy ?: "")
+    }
     /**
      * Signals the overlay widget to morph back to pill when offer screen is gone.
      */

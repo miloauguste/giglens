@@ -146,24 +146,30 @@ class OfferOverlayService : Service() {
         }
         when (intent?.action) {
             ACTION_SHOW_CAMERA -> {
-                // New offer detected — cancel any pending revert, morph to camera
-                // CORRECT: process ACTION_SHOW_CAMERA first — before any CAPTURE_DEAD check
-                // WRONG: checking ScreenCaptureService.isRunning before this block — hijacks state to CAPTURE_DEAD
+                // CORRECT: guard duplicate -- if already CAMERA, ignore repeat signal
+                // WRONG: unconditional updateWidget() on every SHOW_CAMERA -- re-init corrupts view mid-morph
                 captureWasEverRunning = true
                 cancelRevertTimer()
-                sheetState = SheetState.CAMERA
-                if (isViewAdded) updateWidget() else { showWidget(); updateWidget() }
-                Log.d(TAG, "Widget morphed to CAMERA state")
-                stopSelf(startId)
+                if (sheetState != SheetState.CAMERA) {
+                    sheetState = SheetState.CAMERA
+                    if (isViewAdded) updateWidget() else { showWidget(); updateWidget() }
+                    Log.d(TAG, "Widget morphed to CAMERA state")
+                } else {
+                    Log.d(TAG, "SHOW_CAMERA ignored -- already in CAMERA state")
+                }
+                // CORRECT: do NOT stopSelf() -- overlay must stay alive entire shift
+                // WRONG: stopSelf(startId) after SHOW_CAMERA -- kills service, orphans window,
+                //        next SHOW_CAMERA restarts fresh with isViewAdded=false, pill disappears
             }
             ACTION_HIDE_CAMERA -> {
-                // Offer screen gone — morph back to pill or idle
+                // Offer screen gone -- morph back to pill or idle
+                // CORRECT: do NOT stopSelf() -- overlay must stay alive entire shift
+                // WRONG: stopSelf(startId) -- kills service between offers, pill disappears
                 if (sheetState == SheetState.CAMERA || sheetState == SheetState.PROCESSING) {
                     sheetState = if (verdict == "UNKNOWN") SheetState.IDLE else SheetState.PILL
                     if (isViewAdded) updateWidget() else { showWidget(); updateWidget() }
                     Log.d(TAG, "Widget morphed back from CAMERA to $sheetState")
                 }
-                stopSelf(startId)
             }
             else -> {
                 // CORRECT: only check CAPTURE_DEAD when no actionable intent — not before ACTION_SHOW_CAMERA
