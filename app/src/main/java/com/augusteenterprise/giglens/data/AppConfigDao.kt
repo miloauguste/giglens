@@ -19,7 +19,7 @@ interface AppConfigDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAll(configs: List<AppConfig>)
 
-    @Query("UPDATE app_config SET value = :value WHERE `key` = :key")
+    @Query("INSERT INTO app_config (key, value, description) VALUES (:key, :value, '') ON CONFLICT(key) DO UPDATE SET value = :value")
     suspend fun setValue(key: String, value: String)
 
     @Query("SELECT COUNT(*) FROM app_config")

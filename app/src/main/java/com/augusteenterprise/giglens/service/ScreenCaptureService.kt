@@ -124,6 +124,9 @@ class ScreenCaptureService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        // CORRECT: flush pending crash reports on restart — START_STICKY restarts services not MainActivity
+        // WRONG: relying on next MainActivity launch — never happens if only services restart
+        com.google.firebase.crashlytics.FirebaseCrashlytics.getInstance().sendUnsentReports()
 
         // Get screen metrics
         val wm = getSystemService(WINDOW_SERVICE) as WindowManager
@@ -218,18 +221,39 @@ class ScreenCaptureService : Service() {
             Log.e(TAG, "createDisplayResources: mediaProjection is null — cannot capture")
             return false
         }
-        imageReader = ImageReader.newInstance(
-            screenWidth, screenHeight,
-            PixelFormat.RGBA_8888, 1
-        )
-        virtualDisplay = mediaProjection?.createVirtualDisplay(
-            "GigLens",
-            screenWidth, screenHeight, screenDensity,
-            DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-            imageReader!!.surface, null, null
-        )
-        Log.d(TAG, "VirtualDisplay + ImageReader created for capture")
-        return virtualDisplay != null
+        return try {
+            imageReader = ImageReader.newInstance(
+                screenWidth, screenHeight,
+                PixelFormat.RGBA_8888, 1
+            )
+            virtualDisplay = mediaProjection?.createVirtualDisplay(
+                "GigLens",
+                screenWidth, screenHeight, screenDensity,
+                DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+                imageReader!!.surface, null, null
+            )
+            Log.d(TAG, "VirtualDisplay + ImageReader created for capture")
+            virtualDisplay != null
+        } catch (e: Exception) {
+            // CORRECT: catch expired/revoked MediaProjection token — log and signal CAPTURE_DEAD
+            // WRONG: letting exception propagate — crashes entire app process mid-shift
+            Log.e(TAG, "createDisplayResources failed — MediaProjection token likely expired: ${e.message}")
+            // CORRECT: record exception + flush immediately — broadcast receiver crashes kill process too fast
+            // WRONG: relying on next app launch to flush — START_STICKY restarts services, not MainActivity
+            com.google.firebase.crashlytics.FirebaseCrashlytics.getInstance().recordException(e)
+            com.google.firebase.crashlytics.FirebaseCrashlytics.getInstance().sendUnsentReports()
+            mediaProjection = null
+            isRunning = false
+            // CORRECT: show persistent notification — survives full process death, one tap restarts capture
+            // WRONG: CAPTURE_DEAD pill only — dies with process, driver has nothing to tap
+            showRestartNotification()
+            val deadIntent = android.content.Intent(
+                applicationContext,
+                com.augusteenterprise.giglens.service.OfferOverlayService::class.java
+            )
+            startService(deadIntent)
+            false
+        }
     }
 
     /**
@@ -456,6 +480,9 @@ class ScreenCaptureService : Service() {
     private fun showRestartNotification() {
         val intent = android.content.Intent(this, com.augusteenterprise.giglens.ui.MainActivity::class.java).apply {
             flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+            // CORRECT: pass restart_capture flag — MainActivity auto-triggers MediaProjection re-grant
+            // WRONG: launching MainActivity without flag — driver has to manually find the capture button
+            putExtra("restart_capture", true)
         }
         val pendingIntent = android.app.PendingIntent.getActivity(
             this, 0, intent,

@@ -115,7 +115,8 @@ class OfferOverlayService : Service() {
         // WRONG: running as background service on Android 12+ — Android kills it mid-shift
         //        when memory is needed, taking the overlay pill with it
         startForeground(1, buildNotification())
-        showWidget()
+        // CORRECT: showWidget() called from onStartCommand via widget_enabled intent extra
+        // WRONG: calling showWidget() in onCreate — no intent available, runBlocking deadlocks Room
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -123,10 +124,10 @@ class OfferOverlayService : Service() {
         // WRONG: assuming isViewAdded means window is valid — process restart loses window without clearing flag
         // CORRECT: check WIDGET_ENABLED before re-adding — don't show pill if toggle is off
         // WRONG: calling showWidget() unconditionally — pill appears even when driver disabled it
-        val widgetEnabled = runBlocking {
-            GigLensApp.instance.database.appConfigDao()
-                .getValue(com.augusteenterprise.giglens.data.AppConfigKeys.WIDGET_ENABLED) == "true"
-        }
+        // CORRECT: read widgetEnabled from intent extra — set by caller after DB write confirms
+        // WRONG: runBlocking DB read on main thread — deadlocks with Room dispatcher, reads stale value
+        val widgetEnabled = intent?.getBooleanExtra("widget_enabled", true) ?: true
+        Log.d(TAG, "onStartCommand: widgetEnabled=$widgetEnabled isViewAdded=$isViewAdded action=${intent?.action}")
         if (widgetEnabled) {
             if (isViewAdded && rootView != null && layoutParams != null) {
                 try {
@@ -137,8 +138,11 @@ class OfferOverlayService : Service() {
                     showWidget()
                 }
             } else if (!isViewAdded) {
+                Log.d(TAG, "onStartCommand: isViewAdded=false — calling showWidget()")
                 showWidget()
             }
+        } else {
+            Log.w(TAG, "onStartCommand: widgetEnabled=false — skipping showWidget()")
         }
         when (intent?.action) {
             ACTION_SHOW_CAMERA -> {
@@ -608,6 +612,8 @@ class OfferOverlayService : Service() {
         }
 
         windowManager.updateViewLayout(root, params)
+        root.invalidate()
+        root.requestLayout()
     }
 
     // ── Camera touch listener — drag + tap to trigger capture ──────────────────
