@@ -101,6 +101,17 @@ FirebaseCrashlytics.getInstance().sendUnsentReports()
 - Button should only be visible if toggle is enabled in Settings
 - No new permissions needed
 
+## Tabled for Next Session — Partial Screen Sharing (Android 14+)
+
+**Concept:** Switch MediaProjection from full-screen capture to app-specific capture (DoorDash only)
+- Android 14+ supports `MediaProjectionManager` with per-app window selection
+- Driver grants "share DoorDash only" — GigLens never sees other apps
+- Token tied to DoorDash window — may be more stable, less likely to expire mid-shift
+- Eliminates privacy concern — no banking apps, messages, etc. visible to GigLens
+- Fallback: full screen share for Android 13 (S20)
+- **Research first:** confirm Android 14 partial capture API is compatible with current `createScreenCaptureIntent()` flow
+- **File to modify:** `ScreenCaptureService.kt` — `startCapture()` and `createDisplayResources()`
+
 ## Decisions Made This Session
 
 - **Source of truth for widget toggle:** `AppConfigKeys.WIDGET_ENABLED` in DB — all code reads from DB
