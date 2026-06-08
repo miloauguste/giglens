@@ -118,15 +118,15 @@ def call_api(transcript, system_prompt):
 def write_last_session(narrative, version, build_state, changed_files, date):
     # Strip any header the model may have generated — we write our own
     clean = narrative
-    for prefix in ["# GigLens", "**Date:**", "**Version", "**Build", "**Conducted"]:
-        if clean.startswith(prefix):
-            lines = clean.splitlines()
-            # Skip lines until we hit the first ## section
-            for i, line in enumerate(lines):
-                if line.startswith("## "):
-                    clean = "\n".join(lines[i:])
-                    break
+    lines = clean.splitlines()
+    # Find first ## section and strip everything before it
+    for i, line in enumerate(lines):
+        if line.startswith("## "):
+            clean = "\n".join(lines[i:])
             break
+    # Strip duplicate footer sections — keep only content up to first Devices section
+    if "## Devices & Build Environment" in clean:
+        clean = clean[:clean.index("## Devices & Build Environment")].rstrip()
     content = f"""# GigLens — Session Handover
 **Date:** {date}
 **Version at session end:** {version}
