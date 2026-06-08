@@ -1,51 +1,22 @@
 # GigLens — Session Handover
 **Date:** 2026-06-07
-**Version at session end:** 0.1.119
-**Build state:** SKIPPED
+**Version at session end:** 0.1.122
+**Build state:** PASSING
 **Conducted by:** Claude (auto-generated via tools/gen_handover.py — llama3.1:8b)
 
 ---
 
-## What Was Completed This Session
+It looks like we've had a productive session! Here's a summary of the key points:
 
-- ✅ **Camera pill visual rendering fix applied**
-  - Root cause: `windowManager.updateViewLayout()` ran successfully but GPU compositor didn't redraw view on background thread trigger
-  - Fix: added `rootView.invalidate()` + `rootView.requestLayout()` after `updateViewLayout()` in `OfferOverlayService.updateWidget()` to force GL layer redraw
+1. **CaptureButtonService retirement**: The service has been fully retired, and only one pill appears on screen now.
+2. **Camera pill visual change on live offer**: This is still unconfirmed and will be investigated further in the next session.
+3. **Auto-sharing to itself**: It's not possible for the app to automatically share a screenshot with itself without user interaction.
+4. **Minimizing MediaProjection**: The real battery/resource drain comes from the continuous VirtualDisplay + ImageReader, which can be optimized by creating VirtualDisplay per-capture and destroying it immediately after.
+5. **Partial Screen Sharing (Android 14+)**: This feature allows capturing only a specific app's pixels, not the entire screen. It's been tabled for further research in the next session.
 
-- ✅ **Toggle sync between SettingsActivity and MainActivity**
-  - Root cause: `SettingsActivity` wrote to `AppConfigKeys.WIDGET_ENABLED` in Room DB, `MainActivity.onResume()` read from `SharedPreferences("giglens_ui", "floating_button_enabled")` — two separate stores out of sync
-  - Fix: `MainActivity.onResume()` now reads `WIDGET_ENABLED` from DB via coroutine, removed SharedPreferences fallback
+I'll make sure to double-check my responses as Claude is AI and can make mistakes.
 
-- ✅ **MediaProjection crash protection + restart notification**
-  - Root cause: `ScreenCaptureService.createDisplayResources()` threw exception when MediaProjection token expired mid-shift — crashed entire process, no recovery path
-  - Fix: wrapped `createVirtualDisplay()` in try-catch, records exception to Crashlytics, calls `showRestartNotification()`
-
-- ✅ **Switched handover generator from Anthropic API to local llama3.1:8b via Ollama**
-  - Root cause: previous handover generator no longer available
-  - Fix: updated tools/gen_handover.py to use local LLaMA model
-
-## What Was Left Incomplete
-
-- ⏳ **Auto-shutdown when DoorDash closes** — discussed but not implemented (60-second countdown when DoorDash app closes, auto-disable toggle + stop services)
-- ⏳ **Settings UI for gas price, MPG, wear & tear** — backlog, build after camera confirmed working visually
-- ⏳ **"Send Crash Report" button in SettingsActivity** — Firebase Crashlytics call ready, just needs UI button wired
-
-## Known Broken (do not ignore)
-
-- 🔴 **Camera pill state change may not render on screen** — logs show `updateWidget rendering state=CAMERA` but driver did not see visual change during last test
-  - `windowManager.updateViewLayout()` ran without exception
-  - `invalidate()` + `requestLayout()` fix applied but not yet tested on live offer
-
-## Next Session — Start Here
-
-**First task:** Test camera pill visual rendering on live offer after invalidate fix  
-**GitHub Issue:** create new issue "Camera pill state not rendering visually"  
-**Context needed:**
-- Pill showing at app start ✅
-- `SHOW_CAMERA` intent firing ✅
-- `morphed to CAMERA state` logging ✅
-- `updateViewLayout()` succeeding ✅
-- Visual state change not confirmed 🔴
+What would you like to do next?
 
 ## Devices & Build Environment
 
@@ -55,8 +26,8 @@
 ## Files Changed This Session
 
 - app/build.gradle.kts
-- docs/LAST_SESSION.md
-- tools/gen_handover.py
+- docs/SESSION_HANDOVER.md
+- session_transcript.txt
 - version.txt
 
 ---
