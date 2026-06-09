@@ -221,6 +221,14 @@ class SettingsActivity : AppCompatActivity() {
                             Toast.makeText(this@SettingsActivity, "Settings saved", Toast.LENGTH_SHORT).show()
                         }
                     }
+                    "accessibility" -> {
+                        // CORRECT: no MediaProjection needed — skip screen share dialog entirely
+                        // TODO: remove this entire when block when ScreenCaptureService is removed
+                        if (com.augusteenterprise.giglens.service.ScreenCaptureService.isRunning) {
+                            stopService(Intent(this@SettingsActivity, com.augusteenterprise.giglens.service.ScreenCaptureService::class.java))
+                        }
+                        Toast.makeText(this@SettingsActivity, "Settings saved", Toast.LENGTH_SHORT).show()
+                    }
                     else -> {
                         if (com.augusteenterprise.giglens.service.ScreenCaptureService.isRunning) {
                             stopService(Intent(this@SettingsActivity, com.augusteenterprise.giglens.service.ScreenCaptureService::class.java))

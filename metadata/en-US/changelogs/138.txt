@@ -1,0 +1,1 @@
+Fix countdown disappears on expand; fix pill appearing on non-offer DoorDash screens
