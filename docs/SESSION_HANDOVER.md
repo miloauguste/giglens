@@ -112,3 +112,35 @@ know how long they have to act and pill should reset after offer window closes.
 - app/src/main/java/com/augusteenterprise/giglens/service/OfferOverlayService.kt
 - app/src/main/java/com/augusteenterprise/giglens/service/AccessibilityOfferReceiver.kt (NEW)
 - app/src/main/AndroidManifest.xml
+
+---
+
+## Features Left to Implement
+
+### High Priority (affects daily driving)
+1. Robolectric unit tests -- OfferScorer and AppConfigDao (tabled this session)
+2. Partial Screen Sharing (Android 14+) -- app-specific capture instead of full screen (tabled this session)
+3. Remove MediaProjection entirely -- ScreenCaptureService is dead weight now that accessibility path is stable. Needs one full confirmed shift first.
+4. Road laptop USB ADB -- cable/mode issue, incomplete this session
+
+### Medium Priority (improves driver experience)
+5. Countdown sync to DoorDash timer -- currently starts at 30s on camera tap. Could sync to actual DoorDash offer countdown already extracted by accessibility (e.g. countdown=47)
+6. Auto-capture mode clarification -- cachedAutoCapureMode supports "accessibility" and "both" but scorer fires before driver taps. Camera tap may no longer be needed in accessibility-only mode.
+7. Skip PROCESSING state -- scorer already ran via AccessibilityOfferReceiver before driver taps. Pill could go straight from CAMERA to result, bypassing PROCESSING entirely.
+8. Multi-offer handling -- verify second rapid offer correctly resets 30s timer
+
+### Settings / Configuration
+9. RESULT_DISPLAY_SECONDS UI -- key exists in DB but needs to be exposed in SettingsActivity so driver can adjust the 30s timer
+10. Enabled platforms toggle -- cachedEnabledPlatforms supports multiple platforms but only DoorDash implemented
+11. Auto-capture mode setting -- button / accessibility / both should be driver-configurable in Settings UI
+
+### Data & Analytics
+12. All offers history view -- driver cannot review past offers in UI
+13. Daily/weekly earnings summary -- DailyNetValue table exists but no UI
+14. Offer acceptance rate tracking -- no way to know which verdicts driver actually accepted
+
+### Long-term Backlog
+15. Driver License Scanner -- manual + IMAP triggers, pending_license_scans table
+16. Document scanner -- llava:13b for insurance cards
+17. Uber Eats / Grubhub support -- PlatformRegistry wired but no accessibility detection for other platforms
+18. GigLens Play Store public release -- currently Internal Testing only
