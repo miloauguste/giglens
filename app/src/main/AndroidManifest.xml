@@ -88,6 +88,15 @@
             </intent-filter>
         </receiver>
 
+        <!-- Accessibility offer receiver — scores offers extracted from accessibility tree -->
+        <receiver
+            android:name=".service.AccessibilityOfferReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.augusteenterprise.giglens.OFFER_EXTRACTED" />
+            </intent-filter>
+        </receiver>
+
         <!-- DEBUG ONLY: ADB trigger receiver for testing widget states -->
         <receiver
             android:name=".service.DebugTriggerReceiver"

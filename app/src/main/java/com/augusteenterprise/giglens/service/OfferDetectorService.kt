@@ -51,6 +51,7 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
 
     private var lastCaptureTime = 0L
     private var lastOfferFingerprint = ""  // detects new vs same offer screen
+    private val accessibilityOfferReceiver = com.augusteenterprise.giglens.service.AccessibilityOfferReceiver()
 
     // CORRECT: cache DB config values at connect time — read once, not on every accessibility event
     // WRONG: calling runBlocking inside onAccessibilityEvent() — blocks accessibility thread, ANR risk
@@ -77,6 +78,16 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
         serviceInfo = info
 
         Log.i(TAG, "OfferDetectorService connected — serviceInfo set programmatically")
+
+        // Register AccessibilityOfferReceiver for ACTION_OFFER_EXTRACTED
+        // CORRECT: register here -- onServiceConnected() is the right lifecycle point
+        // WRONG:   static manifest-only registration -- goAsync() needs a live receiver instance
+        val extractedFilter = android.content.IntentFilter(ACTION_OFFER_EXTRACTED)
+        androidx.core.content.ContextCompat.registerReceiver(
+            this, accessibilityOfferReceiver, extractedFilter,
+            androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED
+        )
+        Log.i(TAG, "AccessibilityOfferReceiver registered")
 
         // Populate config cache on connect — avoids runBlocking on every accessibility event
         CoroutineScope(Dispatchers.IO).launch {
@@ -407,6 +418,7 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
 
     override fun onDestroy() {
         isRunning = false
+        try { unregisterReceiver(accessibilityOfferReceiver) } catch (_: Exception) {}
         Log.i(TAG, "OfferDetectorService destroyed")
         super.onDestroy()
     }
