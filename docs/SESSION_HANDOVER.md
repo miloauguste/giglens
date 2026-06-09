@@ -144,3 +144,23 @@ know how long they have to act and pill should reset after offer window closes.
 16. Document scanner -- llava:13b for insurance cards
 17. Uber Eats / Grubhub support -- PlatformRegistry wired but no accessibility detection for other platforms
 18. GigLens Play Store public release -- currently Internal Testing only
+
+---
+
+## UX Goal: One-Touch Start
+
+**Desired behavior:**
+- Driver opens GigLens
+- Flips toggle ON
+- Pill appears, app is ready
+- No screenshare popup, no grant dialog, no extra taps
+
+**Current broken behavior:**
+- Toggle flip triggers MediaProjection grant dialog (extra tap)
+- Driver must approve screenshare before app is functional
+- On Android 16 this requires Play Store Internal Testing trust level
+
+**Target architecture after MediaProjection removal:**
+- Toggle ON → startService(OfferDetectorService) + startService(OfferOverlayService)
+- Both services start silently, pill appears immediately
+- Zero permission dialogs at runtime (Accessibility permission granted once in Settings)
