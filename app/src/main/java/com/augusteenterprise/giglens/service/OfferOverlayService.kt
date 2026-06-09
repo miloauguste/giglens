@@ -179,9 +179,10 @@ class OfferOverlayService : Service() {
                     captureWasEverRunning = true
                     loadExtras(intent)
                     sheetState = SheetState.PILL
+                    startRevertTimer()
                     if (isViewAdded) {
                         updateWidget()
-                        Log.d(TAG, "Reusing existing pill for new offer")
+                        Log.d(TAG, "Result pill shown -- revert timer started (${secondsRemaining}s)")
                     } else {
                         showWidget()
                         updateWidget()
@@ -195,16 +196,27 @@ class OfferOverlayService : Service() {
     // ── Configurable auto-revert timer with countdown tick ────────────────────
     private fun startRevertTimer() {
         cancelRevertTimer()
-        secondsRemaining = revertDelaySeconds()
+        // CORRECT: read from DB via revertDelaySeconds() -- configurable in Settings
+        // WRONG: hardcoding 30 -- operator cannot adjust without a rebuild
+        secondsRemaining = revertDelaySeconds().coerceAtMost(30)
         Log.d(TAG, "Revert timer started (${secondsRemaining}s)")
-
-        // Tick every second to update the countdown on the pill
-        // CORRECT: pill stays in result state for entire shift — no auto-revert to IDLE
-        // WRONG: reverting to IDLE after 60s — driver loses last offer verdict mid-shift
-        // Timer cancelled immediately — countdown display removed from pill label
-        Log.d(TAG, "Revert timer disabled — pill persists for shift duration")
+        // Tick every second -- update countdown on pill, revert to IDLE at 0
+        tickRunnable = object : Runnable {
+            override fun run() {
+                secondsRemaining--
+                if (secondsRemaining <= 0) {
+                    sheetState = SheetState.IDLE
+                    verdict = "UNKNOWN"
+                    if (isViewAdded) updateWidget()
+                    Log.d(TAG, "Revert timer expired -- pill reverted to IDLE")
+                    return
+                }
+                if (isViewAdded) updateWidget()
+                revertHandler.postDelayed(this, 1000L)
+            }
+        }
+        revertHandler.postDelayed(tickRunnable!!, 1000L)
     }
-
     private fun cancelRevertTimer() {
         revertRunnable?.let { revertHandler.removeCallbacks(it) }
         tickRunnable?.let { revertHandler.removeCallbacks(it) }
@@ -326,13 +338,17 @@ class OfferOverlayService : Service() {
 
     // ── Build pill text with ONLY the timer segment blinking ──────────────────
     private fun netLabelSpannable(): SpannableString {
-        // CORRECT: plain net value only — countdown removed, pill persists entire shift
-        // WRONG: appending timer text — redundant now that auto-revert is disabled
+        // CORRECT: show net value + countdown -- driver knows verdict AND time remaining
+        // WRONG: plain net value only -- no urgency signal for driver
         val sign = if (netValue >= 0) "+" else ""
-        return SpannableString("$sign$${"%.2f".format(netValue)}")
+        val net = "$sign$${"%.2f".format(netValue)}"
+        return if (secondsRemaining > 0 && sheetState == SheetState.PILL) {
+            SpannableString("$net ${secondsRemaining}s")
+        } else {
+            SpannableString(net)
+        }
     }
 
-    // ── Show initial widget (idle state) ──────────────────────────────────────
     private fun showWidget() {
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
