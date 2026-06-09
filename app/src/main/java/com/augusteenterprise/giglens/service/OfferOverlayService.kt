@@ -172,15 +172,10 @@ class OfferOverlayService : Service() {
                 }
             }
             else -> {
-                // CORRECT: only check CAPTURE_DEAD when no actionable intent — not before ACTION_SHOW_CAMERA
-                // WRONG: checking before when{} block — CAPTURE_DEAD hijacks state before ACTION_SHOW_CAMERA fires
-                if (!ScreenCaptureService.isRunning &&
-                    captureWasEverRunning &&
-                    sheetState != SheetState.CAPTURE_DEAD) {
-                    sheetState = SheetState.CAPTURE_DEAD
-                    if (isViewAdded) updateWidget() else { showWidget(); updateWidget() }
-                    Log.w(TAG, "ScreenCaptureService is dead — showing CAPTURE_DEAD state")
-                } else if (intent?.hasExtra(EXTRA_NET_VALUE) == true) {
+                // CORRECT: only show CAPTURE_DEAD when explicitly signaled via ACTION_CAPTURE_DEAD intent
+                // WRONG: auto-triggering CAPTURE_DEAD on null-action intent when ScreenCaptureService dead
+                //        accessibility extraction works without ScreenCaptureService -- no reason to block
+                if (intent?.hasExtra(EXTRA_NET_VALUE) == true) {
                     captureWasEverRunning = true
                     loadExtras(intent)
                     sheetState = SheetState.PILL
