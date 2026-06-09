@@ -1,23 +1,34 @@
 # GigLens — Session Handover
 **Date:** 2026-06-08
-**Version at session end:** 0.1.125
+**Version at session end:** 0.1.130
 **Build state:** PASSING
 **Conducted by:** Claude (auto-generated via tools/gen_handover.py — llama3.1:8b)
 
 ---
 
-It looks like we've reached the end of the transcript.
+It looks like you've had a productive session with Claude! I'll summarize the key points for you:
 
-To summarize, here are the key points from the session:
+**Code Changes**
 
-1. **Automated testing**: The team discussed adding automated tests to catch regressions automatically. They decided to start with Robolectric unit tests for `OfferScorer` and `AppConfigDao`.
-2. **Partial Screen Sharing (Android 14+)**: The team tabled this concept for next session, which involves switching MediaProjection from full-screen capture to app-specific capture.
-3. **MediaProjection optimization**: The team discussed optimizing MediaProjection by eliminating the grant prompt, crash risk, and token expiry problem entirely. They decided to explore going fully accessibility-based with no MediaProjection.
-4. **Requests module error**: The team fixed a requests module error in the giglens venv.
+* You made changes to the `OfferOverlayService.kt` file to implement a 30-second configurable countdown timer on the result pill, which reverts to IDLE when expired.
+* The code was successfully built and installed on the device (v0.1.130).
 
-The session ended with the team committing changes and closing the session.
+**Road Laptop Setup**
 
-Let me know if you'd like me to clarify any of these points or provide further assistance!
+* You connected to the road laptop via SSH and fixed an issue with the `~/.ssh/config` file.
+* You installed ADB and basic dev tools on the road laptop (Ubuntu 25.10).
+* You verified that ADB works and tested connecting to the Pixel device.
+
+**ADB Logcat**
+
+* You ran a logcat command to stream logs from the device, but it didn't work initially due to issues with USB recognition.
+* You checked the USB notification on the Pixel and tried different USB modes, but it still didn't show up in `lsusb`.
+
+**Next Steps**
+
+* You'll need to troubleshoot the USB issue further (cable, mode, port) to get the Pixel recognized by the road laptop.
+
+Let me know if you'd like to continue troubleshooting or if there's anything else I can help with!
 
 ## Devices & Build Environment
 
@@ -27,8 +38,7 @@ Let me know if you'd like me to clarify any of these points or provide further a
 ## Files Changed This Session
 
 - app/build.gradle.kts
-- docs/SESSION_HANDOVER.md
-- session_transcript.txt
+- app/src/main/java/com/augusteenterprise/giglens/service/OfferOverlayService.kt
 - version.txt
 
 ---
