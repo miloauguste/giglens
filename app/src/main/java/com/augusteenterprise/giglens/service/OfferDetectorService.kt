@@ -73,7 +73,7 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
             notificationTimeout = 500
             flags = android.accessibilityservice.AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS or
                     android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS
-            // packageNames = arrayOf("com.doordash.driverapp") // TEMP: removed for Android 16 testing
+            packageNames = arrayOf("com.doordash.driverapp") // CORRECT: filter to DoorDash only — pill must not appear on other apps
         }
         serviceInfo = info
 
@@ -104,6 +104,20 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
         // CORRECT: accessibility extraction runs regardless of ScreenCaptureService state
         // WRONG: hard gate on ScreenCaptureService.isRunning -- blocks all offer detection
         //        when MediaProjection token expires, entire shift is lost with no scoring
+        // CORRECT: gate entire event on DoorDash package -- pill must never appear on other apps
+        // WRONG: relying solely on packageNames filter -- Android 16 may still deliver stale events
+        val eventPackage = event.packageName?.toString() ?: return
+        if (eventPackage != DOORDASH_PACKAGE) {
+            // Non-DoorDash event -- hide pill if it was showing
+            if (lastOfferFingerprint.isNotEmpty()) {
+                Log.d(TAG, "Non-DoorDash package=$eventPackage -- sending HIDE_CAMERA")
+                startService(android.content.Intent(applicationContext, OfferOverlayService::class.java).apply {
+                    action = ACTION_HIDE_CAMERA
+                })
+                lastOfferFingerprint = ""
+            }
+            return
+        }
         val captureRunning = ScreenCaptureService.isRunning
         Log.d(TAG, "captureRunning=$captureRunning -- accessibility extraction proceeds regardless")
         // CORRECT: use cached values — populated once at onServiceConnected

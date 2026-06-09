@@ -342,7 +342,7 @@ class OfferOverlayService : Service() {
         // WRONG: plain net value only -- no urgency signal for driver
         val sign = if (netValue >= 0) "+" else ""
         val net = "$sign$${"%.2f".format(netValue)}"
-        return if (secondsRemaining > 0 && sheetState == SheetState.PILL) {
+        return if (secondsRemaining > 0) {
             SpannableString("$net ${secondsRemaining}s")
         } else {
             SpannableString(net)
