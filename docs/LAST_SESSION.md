@@ -1,6 +1,6 @@
 # GigLens — Session Handover
-**Date:** 2026-06-09
-**Version at session end:** 0.1.140
+**Date:** 2026-06-15
+**Version at session end:** 0.1.145
 **Build state:** PASSING
 **Conducted by:** Claude (Anthropic) — manual session
 
@@ -8,87 +8,124 @@
 
 ## What Was Completed This Session
 
-### 1. Real-world shift validation
-- Scoring worked correctly on live DoorDash offers
-- Camera button morphed correctly when live offer appeared
-- Orders were captured and charted (charting needs improvement)
-- Countdown timer worked but needs improvement
-- Identified pill appearing on non-offer DoorDash screens (fixed this session)
-
-### 2. Fastlane command-line deploy pipeline (NEW)
-- Installed Ruby 3.4.9 via rbenv on milo-dev
-- Installed Fastlane 2.236.0
-- Created Google Cloud service account: giglens-deploy@gen-lang-client-0130402808.iam.gserviceaccount.com
-- Enabled Google Play Android Developer API on project gen-lang-client-0130402808
-- Granted service account Release Manager access in Play Console
-- JSON key stored at: ~/giglens/google-play-api-key.json
-- Created ~/giglens/deploy.sh — one command builds AAB + uploads to Internal Testing
-- Deploy command: ./deploy.sh "changelog message"
-
-### 3. Bug fix — countdown disappears on expand (v139)
-- File: OfferOverlayService.kt
-- Root cause: netLabelSpannable() gated countdown on `sheetState == SheetState.PILL`
-- When pill expanded to MINI or FULL, condition failed and countdown dropped
-- Fix: removed `sheetState == SheetState.PILL` guard — countdown now shows in all expanded states
-
-### 4. Bug fix — pill appearing on non-offer DoorDash screens (v139)
+### 1. Bug fix — duplicate analytics entries
 - File: OfferDetectorService.kt
-- Root cause: packageNames filter was commented out in onServiceConnected()
-- All DoorDash screen events flowed through, not just offer screens
-- Fix 1: re-enabled `packageNames = arrayOf("com.doordash.driverapp")` filter
-- Fix 2: added explicit package check at top of onAccessibilityEvent() — non-DoorDash
-  events now send HIDE_CAMERA and return immediately
-- Result: pill only appears when looksLikeOfferScreen() returns true on DoorDash
+- Root cause: extractOfferFromNodes() fired on every accessibility event while offer screen visible
+- Fix: added offer fingerprint dedup guard (pay:distance hash, 30s window)
+- New fields: lastOfferFingerprint, lastOfferBroadcastMs
+- Constant: OFFER_DEDUP_WINDOW_MS = 30_000L
 
-### 5. versionName sync fix (v139)
-- versionCode and versionName were out of sync (code=138, name=0.1.136)
-- Root cause: pre-commit hook sed pattern for versionName had failed silently
-- Manually resynced to versionCode=138 / versionName=0.1.138
-- Confirmed hook now bumps both correctly on each commit
+### 2. Bug fix — MediaProjection dialog still appearing
+- File: MainActivity.kt
+- Root cause: showAutoModeDialog() always called requestScreenCapturePermission() regardless of mode
+- Fix: showAutoModeDialog() now reads saved mode from DB — accessibility/tap modes call startAccessibilityOnlyServices()
+- New function: startAccessibilityOnlyServices()
 
-### 6. Bug fix — screen share dialog timer on accessibility mode (v140)
-- File: SettingsActivity.kt
-- Root cause: saveSettings() launched createScreenCaptureIntent() for ALL modes
-  including "accessibility" — triggered Android screen recording countdown dialog
-- Fix: added explicit "accessibility" branch in when(savedMode) that skips
-  MediaProjection entirely and just shows "Settings saved" toast
-- TODO marker left in code for when ScreenCaptureService is fully removed
+### 3. Feature — tap-to-capture mode in Settings
+- Files: SettingsActivity.kt, OfferDetectorService.kt
+- Added "tap" as distinct saved mode (replaces "button")
+- loadSettings() maps both "tap" and "button" to rbCaptureButton for backwards compat
+- saveSettings() now saves "tap" for rbCaptureButton selection
+- cachedAutoCapureMode default changed from "button" to "tap"
+
+### 4. Bug fix — accessibility state not reflected in Settings after granting
+- File: MainActivity.kt
+- Root cause: pendingAccessibilityEnable block called showAutoModeDialog() which didn't update UI
+- Fix: block now calls startAccessibilityOnlyServices() directly after accessibility granted
+
+### 5. Bug fix — LIVE badge not showing in accessibility mode
+- File: MainActivity.kt
+- Root cause: updateUI() only checked ScreenCaptureService.isRunning — always false in accessibility mode
+- Fix: captureActive now checks OfferOverlayService.isRunning OR ScreenCaptureService.isRunning
+- Fix: startAccessibilityOnlyServices() calls updateUI() after 500ms delay
+
+### 6. Map debug logging added
+- File: OfferDetectorService.kt
+- Added content description and view ID collection inside walk()
+- Logs to Crashlytics and map_debug.log for post-shift analysis
+- Goal: determine if DoorDash accessibility tree exposes delivery town/location data
+
+### 7. Debug APK signing fixed
+- File: app/build.gradle.kts
+- Added debug build type with release keystore signing
+- Eliminates signature conflict between sideloaded debug APK and Play Store release
+
+### 8. deploy.sh improvements
+- Auto version bump before every build
+- Post-deploy instructions with validation checklist
+- Sideload step included (skipped gracefully when Pixel not reachable)
+
+### 9. Scoring logic — reviewed, redesign scoped (not yet implemented)
+- Confirmed: wear/tear stays in cost calculation
+- Decision: remove hardcoded ceilings and floors
+- Decision: green/yellow/red verdict based on net profit dollar amount (driver configurable)
+- Decision: pill shows net profit + color; score shown only on expand (Option C)
+- Decision: 0-100 score kept as internal quality metric
+- Phase 2 planned: Facebook sentiment batch job → restaurant reputation DB → feeds score
 
 ---
 
 ## What Was Left Incomplete
 
+- Scoring redesign (Phase 1) — scoped, not implemented — ~3 hours dedicated session
+- MediaProjection full removal — still pending dedicated 2-3 hour session
 - Order archive view (day/week/month) — not started
-- Chart query scope fix — chart shows 10 orders but only 3 completed this shift;
-  old DB records from previous sessions not being displayed correctly
-- Play Store update not confirmed on Pixel — propagation still pending at session end
-- Fastlane Ruby warning not resolved — fastlane at /usr/local/bin still uses system
-  Ruby 3.2.3; rbenv 3.4.9 not wired into deploy.sh path yet
+- Chart query scope fix — still shows all sessions not just current
 
 ---
 
 ## Known Broken (do not ignore)
 
-- Chart shows ALL captured orders (including previous sessions) not just completed ones
-  → 10 shown vs 3 actually completed this shift
-- Pill screen targeting fix (v139) not yet validated on real device — deploy still
-  propagating to Play Store at session end
-- Fastlane Ruby warning: "Support for Ruby 3.2.3 is going away" on every deploy
-  → harmless for now but needs Gemfile fix before fastlane drops 3.2 support
+- Play Store install forces reinstall (not update) — app is unreviewed/unpublished
+  → Data wipe on install until Google review is completed
+- Chart shows ALL captured orders across sessions not just completed ones
+- Sideload only works when Pixel is on same network as milo-dev
+- Fastlane version nag — run `gem install fastlane` to silence
 
 ---
 
 ## Next Session — Start Here
 
-1. Confirm v140 installed on Pixel — validate pill no longer appears on non-offer screens
-2. Confirm screen share dialog no longer appears when accessibility mode selected
-3. Pull order/chart DB files and fix archive query:
-   - Find chart query file: grep -rn "chart\|Chart\|history\|History" ~/giglens/app/src
-   - Fix scope to show completed orders only vs all captured
-   - Build day/week/month archive view
-4. Fix Fastlane Ruby path:
-   - Add Gemfile to ~/giglens/ pointing to Ruby 3.4.9
-   - Or: update deploy.sh to use rbenv shim path
+1. Install v145 on Pixel via Play Store internal testing opt-in link
+2. Validate v145 fixes:
+   - Settings shows accessibility as enabled after granting (no manual toggle needed)
+   - LIVE badge turns green immediately after toggle ON
+   - No MediaProjection dialog appears
+   - Analytics shows no duplicates after a shift
+3. Pull map debug log after next shift:
+   adb -s 10.0.0.110:<PORT> pull /sdcard/Android/data/com.augusteenterprise.giglens/files/debug/map_debug.log ~/giglens/docs/map_debug.log
+4. Start Phase 1 scoring redesign (3 hour session — do not start unless you have 3 hours)
+
+---
+
+## Phase 1 Scoring Redesign — Full Scope (Next Dedicated Session)
+
+### Design decisions confirmed:
+- No hardcoded ceiling on net value or $/mile — open-ended scaling
+- No hardcoded floor — driver sets minimums in Settings
+- Verdict: GREEN/YELLOW/RED based on net profit dollar amount
+- Pill display: net profit (e.g. $6.42) + color — instant glance
+- Expanded sheet (MINI/FULL): score, cost breakdown, $/mile, minutes on job
+- 0-100 score kept as internal quality metric (net value 70% + $/mile 30%)
+- Default thresholds pre-populated so app works out of the box
+
+### Files to change (5 files, ~3 hours):
+1. ScorerConfigKeys.kt — add GREEN_PROFIT_THRESHOLD, YELLOW_PROFIT_THRESHOLD, floor keys
+2. OfferScorer.kt — remove netValueMax/truePerMileMax hardcoding, GREEN/YELLOW/RED verdict
+3. SettingsActivity.kt + activity_settings.xml — add threshold input fields with defaults
+4. OfferOverlayService.kt — pill color from verdict, show net profit amount not score
+
+### Default values to use:
+- Green threshold: net profit ≥ $8.00
+- Yellow threshold: net profit ≥ $4.00
+- Red: below yellow threshold
+- Floor pay/mile: $1.50 (driver configurable, used for score only not verdict)
+- Floor total pay: $6.00 (driver configurable, used for score only not verdict)
+
+### Phase 2 (future paid feature):
+- Nightly batch on milo-dev: FB driver group scraper → Ollama sentiment → restaurant reputation SQLite DB
+- At offer time: restaurant name lookup → cached sentiment score → folds into 0-100 composite
+- Monetization: Phase 2 features behind paywall as app matures
 
 ---
 
@@ -97,33 +134,37 @@
 | Feature | Status | Notes |
 |---------|--------|-------|
 | Offer detection (looksLikeOfferScreen) | ✅ Working | Validated on real shift |
-| Accessibility extraction (extractOfferFromNodes) | ✅ Working | pay, distance, restaurant, countdown all extracted |
-| Camera button morph | ✅ Working | Appears on live offer, validated on shift |
-| Countdown timer on pill | ✅ Working | Fixed this session — now visible in MINI/FULL states |
-| Pill screen targeting | ✅ Fixed, unvalidated | v139 — awaiting device install |
-| Screen share dialog suppression | ✅ Fixed | v140 — accessibility mode skips dialog |
-| Order charting | ⚠️ Partial | Captures recorded but chart scope incorrect |
-| Order archive (day/week/month) | 🔲 Not started | Next priority |
-| ScreenCaptureService removal | 🔲 Planned | Dedicated session — 2-3 hour job |
-| Fastlane Ruby fix | ⚠️ Minor | Warning only, not blocking |
-| Play Store deploy pipeline | ✅ Working | deploy.sh one-command build+ship |
+| Accessibility extraction (extractOfferFromNodes) | ✅ Working | pay, distance, restaurant, countdown extracted |
+| Offer dedup guard | ✅ Fixed | 30s fingerprint window — v145 |
+| Camera button morph | ✅ Working | Validated on shift |
+| Countdown timer on pill | ✅ Working | Fixed prior session |
+| Pill screen targeting | ✅ Fixed | v139 |
+| MediaProjection dialog suppression | ✅ Fixed | No dialog for accessibility/tap modes |
+| Tap-to-capture mode | ✅ Added | Saved as "tap" in Settings |
+| LIVE badge in accessibility mode | ✅ Fixed | v145 |
+| Accessibility state in Settings | ✅ Fixed | v145 |
+| Map debug logging | ✅ Added | Pulls content descs + view IDs post-shift |
+| Debug APK signing | ✅ Fixed | Uses release keystore |
+| Scoring redesign (Phase 1) | 🔲 Scoped | Green/yellow/red profit verdict — next dedicated session |
+| Order charting | ⚠️ Partial | Scope incorrect — shows all sessions |
+| Order archive (day/week/month) | 🔲 Not started | |
+| ScreenCaptureService removal | 🔲 Planned | Dedicated 2-3 hour session |
+| Play Store review submission | 🔲 Pending | Submit when testing complete |
+| FB sentiment batch (Phase 2) | 🔲 Planned | Paid feature, future session |
 
 ---
 
 ## Decisions Made This Session
 
-1. **Keep ScreenCaptureService for now** — removal is a 2-3 hour dedicated session.
-   Roots in 5 files + manifest. Small fix applied instead (accessibility branch).
-   TODO markers left in code at all removal points.
-
-2. **Accessibility mode is the recommended default** — validated on real shift.
-   OCR/MediaProjection is fallback only. Plan to remove entirely next dedicated session.
-
-3. **Fastlane over manual Play Store uploads** — pipeline established, JSON key at
-   ~/giglens/google-play-api-key.json. Do not commit key to git (already in .gitignore).
-
-4. **versionName must stay in sync with versionCode** — pre-commit hook handles both.
-   Never manually edit either field — always let the hook bump them.
+1. Toggle ON flow is fully automatic — reads saved mode from Settings DB, no dialogs
+2. "tap" replaces "button" as the saved mode value for tap-to-capture
+3. Debug APK must be signed with release keystore to avoid conflicts
+4. deploy.sh auto-bumps version before every build
+5. Scoring verdict will be GREEN/YELLOW/RED based on net profit, driver-configurable thresholds
+6. Pill shows net profit + color; score shown only on expand (Option C)
+7. 0-100 score kept as internal quality metric
+8. Phase 2 sentiment is a batch process — nightly on milo-dev, cached lookup at offer time
+9. Phase 2 is a paid feature — monetization path confirmed
 
 ---
 
@@ -135,39 +176,54 @@
 - Keystore: ~/giglens/giglens-release.keystore
 - Play Store JSON key: ~/giglens/google-play-api-key.json (DO NOT COMMIT)
 - Ruby: rbenv 3.4.9 at ~/.rbenv/versions/3.4.9
-- Fastlane: 2.236.0 at /usr/local/bin/fastlane (system Ruby — fix with Gemfile next session)
+- Fastlane: 2.236.0 (run `gem install fastlane` to upgrade to 2.236.1)
 
 ## Files Changed This Session
 
-- app/src/main/java/com/augusteenterprise/giglens/service/OfferOverlayService.kt
 - app/src/main/java/com/augusteenterprise/giglens/service/OfferDetectorService.kt
+- app/src/main/java/com/augusteenterprise/giglens/ui/MainActivity.kt
 - app/src/main/java/com/augusteenterprise/giglens/ui/SettingsActivity.kt
 - app/build.gradle.kts
-- version.txt
-- deploy.sh (NEW)
-- metadata/en-US/changelogs/ (NEW)
-- metadata/en-US/title.txt, short_description.txt, full_description.txt, video.txt (NEW)
+- deploy.sh
 
 ---
 
 ## Features Left to Implement (Priority Ranked)
 
 ### High Priority
-1. **Order archive view** — day/week/month grouping UI + fix chart query scope
-2. **ScreenCaptureService removal** — dedicated session, clean up 5 files + manifest
-3. **Pill screen targeting validation** — confirm fix works on real device
+1. **Scoring Phase 1** — GREEN/YELLOW/RED profit verdict, configurable thresholds, pill shows net profit — 3 hour session
+2. **Validate v145 fixes** — accessibility state, LIVE badge, dedup, no MediaProjection dialog
+3. **Map debug log review** — pull after next shift, determine if town data accessible
+4. **ScreenCaptureService removal** — dedicated 2-3 hour session
 
 ### Medium Priority
-4. **Fastlane Ruby fix** — add Gemfile, wire rbenv 3.4.9 into deploy path
-5. **In-app update prompt** — notify driver before shift starts if update available
-6. **Countdown UX improvement** — driver feedback: needs better urgency signal
+5. **Order archive view** — day/week/month grouping + fix chart scope
+6. **Delivery town estimation** — reverse geocode restaurant → estimate drop-off zone
+7. **Fastlane Ruby fix** — Gemfile, wire rbenv 3.4.9
+8. **In-app update prompt** — notify driver before shift if update available
+9. **Countdown UX improvement** — needs better urgency signal
+10. **Play Store review submission** — store listing, screenshots, content rating, privacy policy
 
 ### Low Priority / Tabled
-7. **Robolectric/Espresso automated testing** — tabled from prior session
-8. **Android 14 partial screen sharing** — reduces MediaProjection token expiry risk;
-   irrelevant if ScreenCaptureService is removed
-9. **ConnectionRecord leaks** — ~25 dead entries from OfferDetectorService, low impact
+11. **FB sentiment batch (Phase 2)** — nightly scraper + Ollama + reputation DB
+12. **Robolectric/Espresso testing** — tabled
+13. **ConnectionRecord leaks** — ~25 dead entries, low impact
 
 ---
 
 *Next developer: read SESSION_PROTOCOL.md first, then return here.*
+
+## Addendum — Pill Header Location Placeholder
+
+Pill header must reserve space for delivery town estimation (future paid feature).
+Phase 1: show static placeholder (📍 ---) in pill header alongside net profit.
+Phase 2: replace placeholder with estimated town name from reverse geocode or accessibility tree.
+
+Pill header layout (Phase 1):
+  [$6.42]  •  [📍 ---]
+  green/yellow/red background
+
+Pill header layout (Phase 2 paid):
+  [$6.42]  •  [📍 Cherry Hill]
+
+Design rule: pill width must accommodate ~15 char town name without reflow.
