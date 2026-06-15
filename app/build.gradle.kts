@@ -25,8 +25,8 @@ android {
         applicationId = "com.augusteenterprise.giglens"
         minSdk = 26
         targetSdk = 35
-        versionCode = 142
-        versionName = "0.1.142"
+        versionCode = 143
+        versionName = "0.1.143"
     }
 
     signingConfigs {
@@ -38,6 +38,11 @@ android {
         }
     }
     buildTypes {
+        debug {
+            // CORRECT: sign debug with release keystore — avoids signature conflict on device
+            // WRONG:   default debug keystore — conflicts with Play Store release install
+            signingConfig = signingConfigs.getByName("release")
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
