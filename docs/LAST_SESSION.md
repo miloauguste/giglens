@@ -285,3 +285,41 @@ NOT the pickup/restaurant location. The DELIVERY destination town.
 DoorDash hides the delivery address. Restaurant = pickup, not delivery.
 Town estimation must be based on distance + direction from restaurant,
 or from accessibility tree map data if exposed.
+
+## Addendum — Voice/Hands-Free Feature
+
+### Goal
+Read offer data aloud when pill appears — driver keeps eyes on road.
+
+### Spoken format
+"$8.42 net. 6.2 miles. Cherry Hill. Green offer."
+"$4.10 net. 8.5 miles. Destination unknown. Yellow offer."
+
+### Technology
+- Android TextToSpeech API — built into Android SDK
+- No external dependency, no cost, works fully offline
+- No new libraries needed
+
+### Settings options to add
+- Voice enabled/disabled toggle (default OFF)
+- Speech rate — slow/normal/fast
+- Individual toggles:
+  - Read net profit (default ON)
+  - Read distance (default ON)
+  - Read verdict color (default ON)
+  - Read estimated town (default ON — says "destination unknown" if unavailable)
+
+### Tiered model
+- Tier 1 (Free): profit + distance + color read aloud
+- Tier 2/3 (Paid): town name included in voice when available
+
+### Implementation notes
+- Trigger: when offer pill appears (same event that morphs camera button)
+- File to modify: OfferOverlayService.kt — add TTS init in onCreate(), speak() on offer received
+- Respect Android DND and driving mode
+- Cancel speech if offer expires or pill dismissed
+- Estimated effort: 1-2 hours, single file change
+
+### Phase 1 priority
+Add alongside scoring redesign — same session, low risk, no new dependencies.
+Total revised Phase 1 estimate: ~4.5 hours
