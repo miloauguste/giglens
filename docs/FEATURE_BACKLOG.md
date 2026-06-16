@@ -198,3 +198,74 @@ reputation.db — ready for GigLens (direct read now, API/Telegram bridge later)
 ### Status
 🔲 Not started — repo not yet created. Scope this when ready to begin Phase 2
 sentiment work (after delivery town accuracy data collection is further along).
+
+---
+
+## Registration + Billing — Local Onboarding with Stripe (Planned)
+
+**Decision summary:**
+- Registration is skippable — app usable with limited features until paid
+- Billing via Stripe Checkout (hosted page, not custom form)
+- Registration data (name/alias, email) stored locally in SQLCipher-encrypted
+  Room database — NOT plaintext
+- Paid/tier status CANNOT be determined by the phone alone — requires a minimal
+  backend relay to Stripe (phone cannot hold Stripe secret key)
+
+### Why a backend is required (not optional)
+Stripe's secret key must never ship inside an APK — it would let anyone extract
+it via decompilation and create/refund charges arbitrarily. Stripe Checkout still
+needs a server to (1) create the checkout session, (2) receive the webhook
+confirming payment, (3) let the phone confirm "tier=paid" status. This is true
+even though Stripe Checkout itself is hosted by Stripe — only the keys must
+never touch the device.
+
+### Architecture
+Phone (SQLCipher-encrypted Room DB)
+
+→ name/alias, email, tier flag (free/paid), stripe_customer_id
+Minimal backend (FastAPI on milo-dev now, Railway/Render later)
+
+→ POST /create-checkout-session  → returns Stripe Checkout URL
+
+→ POST /webhook (Stripe)          → receives payment success event
+
+→ GET  /tier-status?email=X       → phone polls/confirms tier after checkout
+
+### Part 1 — Local registration UI + SQLCipher migration
+- Add `net.zetetic:android-database-sqlcipher` dependency
+- Migrate OfferDatabase to SQLCipher-backed Room (passphrase from Android Keystore)
+- New RegistrationActivity: name/alias, email fields, "Skip for now" option
+- New Room entity: UserProfile (id, alias, email, tier, stripeCustomerId, createdAt)
+- Settings: show current tier (Free/Paid), "Upgrade" button if free
+- Effort: ~3-4hr (SQLCipher migration touches existing DB, needs careful testing
+  with existing offer_captures data — migration must not corrupt history)
+
+### Part 2 — Minimal Stripe backend
+- New FastAPI app on milo-dev (separate from sentiment_agent, separate from
+  Auguste CRM — likely its own small repo or folder)
+- Endpoints: create-checkout-session, stripe webhook receiver, tier-status check
+- Stripe test mode first, switch to live mode before public launch
+- Effort: ~3-4hr (FastAPI + Stripe SDK — you already know FastAPI from Auguste CRM)
+
+### Part 3 — Wire registration to feature gating
+- Free tier: color pill + net profit + GPS-based town estimate (per current
+  monetization model in this doc)
+- Paid tier: unlocks score detail on expand, voice readout, future sentiment
+  features, etc.
+- GigLens checks local `tier` flag before rendering gated features
+- Effort: ~1-2hr (mostly conditionals in existing UI code)
+
+### Total estimate: ~8-10hr across 2-3 dedicated sessions
+Recommend splitting: Session A = SQLCipher migration + registration UI,
+Session B = Stripe backend, Session C = feature gating + end-to-end test.
+
+### Open questions for next session
+- Repo location for Stripe backend — own repo (consistent with Sentiment Agent
+  decision) or folder inside an existing project?
+- Stripe test vs live mode timeline — when do we need real payments working?
+- What exactly is "limited usage" for free tier — time-limited trial, offer-count
+  limited, or feature-limited (current plan)?
+
+### Status
+🔲 Not started — scoped only. Do not begin until Phase 1 scoring redesign and
+delivery town accuracy validation are further along, per priority order.
