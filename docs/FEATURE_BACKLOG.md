@@ -142,3 +142,59 @@ restaurant name → Telegram bot → driver's local DB → score returned
 *Update this file at the start of every session AND at handover. Move completed
 items into the "Completed This Session" section, then fold into LAST_SESSION.md
 on the next handover so this file always reflects only what's still pending.*
+
+---
+
+## Sentiment Agent — Separate Repository (Planned)
+
+**Decision:** Sentiment Agent is a standalone project, own git repo, NOT part of
+GigLens or Auguste CRM. Reason: independent deployment lifecycle — runs on
+milo-dev now, may move to cloud hosting (Supabase/Railway) later, and is shared
+infrastructure that could theoretically serve other apps beyond GigLens.
+
+### Proposed structure
+~/sentiment_agent/          (new git repo)
+
+├── scraper.py               # Playwright — scrapes FB driver groups
+
+├── sentiment.py              # Ollama llama3.1:8b — scores comments
+
+├── aggregator.py             # Aggregates scores per restaurant → reputation DB
+
+├── reputation.db             # SQLite — restaurant_name, sentiment_score, sample_count, last_updated
+
+├── run_agent.sh              # Orchestrates pipeline, runs via cron
+
+├── requirements.txt
+
+├── .gitignore
+
+├── README.md
+
+└── docs/
+
+└── LAST_SESSION.md       # Same handover pattern as GigLens/Auguste CRM
+
+### Pipeline
+
+scraper.py    — Playwright logs into FB, scrapes target driver groups → raw_comments table
+sentiment.py  — reads unprocessed comments, Ollama scores each → sentiment_scores table
+aggregator.py — groups by restaurant name, computes avg sentiment + confidence → reputation table
+reputation.db — ready for GigLens (direct read now, API/Telegram bridge later)
+
+
+### Connection to GigLens (current state: not built)
+- **Now (home server):** GigLens cannot reach reputation.db when phone is remote from milo-dev
+- **Tier 3 self-hosted (future):** Telegram bot bridge — GigLens queries bot, bot reads local DB, responds
+- **Tier 2 hosted (future):** reputation.db synced to cloud Postgres (Supabase), GigLens calls REST API directly
+
+### Effort estimate
+- Repo setup + scraper.py (reuse Auguste CRM FB scout patterns): 2-3hr
+- sentiment.py (Ollama integration): 1-2hr
+- aggregator.py + reputation.db schema: 1hr
+- Testing end-to-end on a few real restaurants: 1-2hr
+- **Total: ~6-8hr** — dedicated session, not a quick add-on
+
+### Status
+🔲 Not started — repo not yet created. Scope this when ready to begin Phase 2
+sentiment work (after delivery town accuracy data collection is further along).
