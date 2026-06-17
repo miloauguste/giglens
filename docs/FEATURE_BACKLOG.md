@@ -269,3 +269,40 @@ Session B = Stripe backend, Session C = feature gating + end-to-end test.
 ### Status
 🔲 Not started — scoped only. Do not begin until Phase 1 scoring redesign and
 delivery town accuracy validation are further along, per priority order.
+
+---
+
+## Accessibility Permission Disclosure Screen (Planned — rebuild with ViewBinding)
+
+**Background:** An earlier session (likely DeepSeek-generated via Project Autonomous)
+created AccessibilityDisclosureScreen.kt + AccessibilityDisclosureActivity.kt using
+Jetpack Compose — a UI framework never configured in this project (GigLens uses
+ViewBinding/XML exclusively). These files were untracked, never wired into any
+navigation flow, and silently broke every clean build since their creation because
+the Compose Gradle plugin was never added. DELETED on 2026-06-17 to unblock builds.
+
+**The underlying idea was good and should be rebuilt properly:**
+A disclosure screen shown to the driver BEFORE requesting the Android Accessibility
+Service permission, explaining in plain language:
+- What GigLens reads (only on-screen text while DoorDash is foregrounded)
+- What GigLens does with it (on-device scoring, nothing sent anywhere unless
+  cloud sentiment features are explicitly enabled)
+- What GigLens never does (never taps/accepts/declines on driver's behalf)
+- How to turn it off (Settings > Scan Mode, or revoke in Android Settings)
+
+**Why this matters:** Google Play reviews accessibility-service apps closely (the
+same API can be abused by stalkerware/banking trojans, as confirmed via research
+this session on takeScreenshot()). A clear, honest disclosure screen shown at the
+right moment is good practice and likely required for smooth Play Store approval.
+
+**Rebuild plan:**
+- New XML layout: activity_accessibility_disclosure.xml (ViewBinding, NOT Compose)
+- New AccessibilityDisclosureActivity.kt using existing ViewBinding pattern
+- Trigger point: shown once, before first accessibility permission request in
+  MainActivity's onboarding flow (showCaptureOnboardingFlow() → showAccessibilityDialog())
+- Content: reuse the well-written disclosure text from the deleted Compose version
+  (4 sections: what's read, what's done with it, what's never done, your control)
+- Effort: ~1-2hr (straightforward ViewBinding screen, content already drafted)
+
+**Status:** 🔲 Not started — content already written (see git history before
+2026-06-17 deletion if needed for reference), just needs ViewBinding implementation.
