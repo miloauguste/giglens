@@ -1,6 +1,6 @@
 # GigLens — Session Handover
-**Date:** 2026-06-15
-**Version at session end:** 0.1.154
+**Date:** 2026-06-17
+**Version at session end:** 0.1.154 (no version bump — no deploy this session, debug-only changes)
 **Build state:** PASSING
 **Conducted by:** Claude (Anthropic) — manual session
 
@@ -8,100 +8,159 @@
 
 ## What Was Completed This Session
 
-### 1. Bug fix — duplicate analytics entries (receiver-level dedup)
-- File: AccessibilityOfferReceiver.kt
-- Root cause: dedup guard in OfferDetectorService reset on service restart, allowing duplicates
-- Fix: added companion-object dedup guard directly in receiver (survives service restarts)
-- New fields: lastFingerprint, lastInsertMs, DEDUP_WINDOW_MS = 30_000L
+### 1. Investigated v154 delivery town estimation results from real shift — FAILED, root cause found
+- GPS-based bearing projection produced wildly wrong towns ("cities never heard of")
+- Root cause: ACCESS_FINE_LOCATION / ACCESS_COARSE_LOCATION permission was DENIED
+  on the Pixel after the debug APK reinstall wiped app data — confirmed via
+  `dumpsys package` showing granted=false for both permissions
+- Even when permission IS granted, GPS `bearing` field is unreliable at low/no
+  speed (defaults to 0.0/north), causing confident-but-wrong projections
+- DB query confirmed: only 1 row inserted despite 5 distinct offers detected in
+  screen_texts.log (dedup guard IS working correctly), but estimatedTown was
+  blank on that row (location permission issue, not a code bug)
 
-### 2. deploy.sh — saved Pixel port + post-deploy instructions
-- File: deploy.sh
-- Port now saved to .pixel_port, only prompts on connection failure
-- Auto version bump before every build (empty git commit)
-- Post-deploy instructions printed with Play Console link + validation checklist
+### 2. Extensive investigation into delivery-town-via-map-data — CLOSED, documented
+- Confirmed (again) that DoorDash's accessibility tree exposes zero map pin
+  coordinates, zero content descriptions on map elements, zero street addresses
+- Discussed and rejected: directional bearing from driver's map pin (not
+  programmatically readable — confirmed dead end, do not revisit)
+- Discussed and rejected: fixed pixel-to-mile conversion constant (zoom level
+  varies per offer based on Mapbox auto-fit-bounds behavior — not reliable)
+- IDENTIFIED VIABLE PATH: pixel-to-mile conversion IS solvable per-offer using
+  the offer's own known total distance as a self-calibrating anchor (no fixed
+  constant needed) — but requires a screenshot to measure pin pixel positions
 
-### 3. Delivery town estimation — built from scratch
-- New file: geocoding/DeliveryTownEstimator.kt
-- Algorithm: geocode restaurant name near driver GPS (Nominatim, Option 1 default) →
-  pickup coordinates → delivery leg = total distance - pickup leg →
-  project from pickup using driver bearing → reverse geocode → town name
-- Option 2 (city-based search) also implemented as fallback/driver choice
-- Investigated map accessibility tree exposure — confirmed DoorDash exposes NO
-  coordinates, NO addresses, NO map tile URLs. Only restaurant name + "customer
-  dropoff" label. Zone text ("nj: moorestown/mt. laurel") visible on idle screen
-  but represents driver's assigned zone, not delivery zone — used only as
-  Nominatim search anchor, not as delivery estimate.
-- Considered and rejected: map screenshot + pixel pin detection (would require
-  MediaProjection — explicitly avoided per product decision, poor UX)
+### 3. Researched MediaProjection consent requirements — confirmed unavoidable for that API
+- Verified via web search: Android 14+ requires fresh consent for every
+  MediaProjection capture session, cannot be suppressed, always shows some
+  system-level indicator (status bar icon minimum, often a notification)
+- This applies regardless of whether capture is triggered by user tap or
+  automatically — Android does not distinguish trigger method for this
+  permission requirement
+- CONCLUSION: MediaProjection itself is not viable given product preference to
+  avoid the consent/notification UX
 
-### 4. Pill + expanded sheet — delivery town display
-- File: OfferOverlayService.kt
-- Added EXTRA_DELIVERY_TOWN constant
-- Pill (PILL state): shows "$8.42  📍 ~Cherry Hill  25s" via netLabelSpannable()
-- MINI state: town shown in teal below restaurant name
-- FULL state: town shown below restaurant name + as "Delivery town" detail row
+### 4. DISCOVERED VIABLE ALTERNATIVE: AccessibilityService.takeScreenshot()
+- Available since Android 11 (API 30) — GigLens's OfferDetectorService is
+  already an AccessibilityService, so this requires NO additional permission
+  beyond what's already granted during onboarding
+- Confirmed via research: captures full screen contents silently — no
+  notification, no toast, no persistent indicator (unlike MediaProjection)
+- This is the SAME API some stalkerware apps abuse for silent screen capture —
+  worth being transparent about this use case in Play Store listing later
+- minSdk is 26 (Android 8) — takeScreenshot() requires API 30, so a runtime
+  version check is mandatory; gracefully no-ops on older devices
 
-### 5. Town estimation wired into offer pipeline
-- File: AccessibilityOfferReceiver.kt
-- Added LocationHelper.getCurrentLocation() call before scoring
-- Added DeliveryTownEstimator.estimateTown() call using restaurant + distance + GPS
-- driverLat/driverLon now populated from real GPS (previously hardcoded null)
-- Town estimate passed to overlay via EXTRA_DELIVERY_TOWN
+### 5. Built test implementation of takeScreenshot() — gated correctly, NOT YET VALIDATED
+- File: OfferDetectorService.kt
+- New function: testTakeScreenshot() — temporary/throwaway, meant to be
+  replaced once confirmed working
+- Gated INSIDE the existing `if (looksLikeOfferScreen(rootNode))` confirmed-new-
+  offer block — physically cannot fire on any screen other than a confirmed
+  DoorDash offer screen (per explicit requirement this session)
+- Gated by `Build.VERSION.SDK_INT >= Build.VERSION_CODES.R` (API 30) check
+- Saves resulting bitmap as PNG to app's debug folder for visual inspection
+- STATUS: code compiles, debug APK built, but NOT YET TESTED on a real offer —
+  no shift happened this session to trigger a live offer screen
 
-### 6. Accuracy tracking system — built for A/B testing town estimation
-- DB migration 7→8: added estimatedTown, estimatedTownMethod, confirmedTown,
-  townAccurate columns to offer_captures
-- New file: TownAccuracyReceiver.kt — handles Yes/No notification taps
-- New DAO method: updateTownAccuracy(captureId, confirmedTown, accurate)
-- Post-offer notification: "Delivering to ~Cherry Hill? ✅ Yes / ❌ No"
-- Manifest: registered TownAccuracyReceiver for TOWN_CONFIRMED/TOWN_WRONG actions
-- Goal: collect real-world accuracy % before deciding if MediaProjection-based
-  map screenshot approach is needed for paid tier
+### 6. Fixed multiple `\$` string-escaping bugs from prior sessions' Python patch scripts
+- Recurring bug pattern: heredoc Python scripts escaping `$` as `\$` when writing
+  Kotlin string templates — produces literal backslash-dollar in the .kt file,
+  which is valid Kotlin syntax (escaped dollar sign) but semantically wrong
+  (prints literal "$variablename" instead of interpolating the actual value)
+- Fixed in: testTakeScreenshot() logging (7 instances), signalCapture() dedup
+  fingerprint logging (3 instances, left over from a previous session's patch)
+- NOT touched: line 440 `Regex("""\$(\d{1,3}\.\d{2})""")` — this is CORRECT,
+  intentionally escapes a literal $ for regex matching, not a bug
+
+### 7. MAJOR BUG HUNT: diagnosed and fixed a build-blocking issue unrelated to this
+   session's actual work
+- Discovered two completely untracked, uncommitted files from an unknown prior
+  session (likely DeepSeek/Project Autonomous-generated):
+  AccessibilityDisclosureScreen.kt and AccessibilityDisclosureActivity.kt
+- These used Jetpack Compose, but Compose was NEVER configured in this project's
+  build.gradle.kts (confirmed: zero "compose" references anywhere in the
+  Gradle config — GigLens is 100% ViewBinding/XML)
+- This caused a confusing cascading compile failure (`@error.NonExistentClass`
+  on a DIFFERENT, unrelated file) that persisted through clean builds, daemon
+  restarts, and full Gradle cache wipes — took significant diagnostic time to
+  trace back to these two orphaned files
+- RESOLVED: deleted both files. Build is now clean.
+- The underlying idea (a disclosure screen explaining accessibility permission
+  usage before requesting it) was good and well-written — scoped for proper
+  rebuild using ViewBinding in FEATURE_BACKLOG.md, content preserved there for
+  reference
 
 ---
 
 ## What Was Left Incomplete
 
-- Scoring redesign (Phase 1 — GREEN/YELLOW/RED) — still not started, only scoped
-- Voice/TTS feature — scoped, not implemented
-- Analytics export (CSV) — scoped, not implemented
-- Accuracy data collection — needs multiple real shifts before we can evaluate
-- Zone text extraction from idle screen — discussed but not implemented (not
-  needed for current algorithm, zone only would help disambiguate multiple
-  same-name restaurants, deferred until accuracy data shows it's needed)
+- testTakeScreenshot() built but NOT validated on a real device/real offer —
+  needs a live shift to trigger an actual DoorDash offer screen and confirm:
+  (a) the screenshot succeeds without error, (b) the saved PNG actually shows
+  the DoorDash map clearly, (c) no unexpected permission dialog appears
+- OpenCV pin-detection pipeline — not started, blocked on #1 above being
+  validated first
+- Pixel-to-mile self-calibration math (using known offer distance as anchor) —
+  designed conceptually, not yet implemented in code
+- Delivery town estimation via GPS bearing — still broken in v154 (permission
+  was denied during last shift), need driver to manually re-grant location
+  permission before next shift to get a fair test of whether the ORIGINAL
+  bearing approach works at all when permission is properly granted (separate
+  question from whether bearing is reliable at low speed, which is a known
+  limitation regardless)
+- Accessibility disclosure screen rebuild (ViewBinding version) — scoped only
 
 ---
 
 ## Known Broken (do not ignore)
 
-- Play Store install forces reinstall (not update) — app is unreviewed/unpublished
-  → Data wipe on install until Google review is completed
-- Chart shows ALL captured orders across sessions not just completed ones
-- Map debug logging (map_debug.log) confirmed DoorDash exposes NO useful location
-  data — this investigation is CLOSED, do not re-investigate map content descriptions
-- screen_texts.log confirms accessibility tree text between "pickup"/restaurant
-  name and "customer dropoff" contains NOTHING — no address, no street name reliably
+- Location permission gets reset to denied whenever the debug APK is
+  uninstalled/reinstalled (expected Android behavior, not a bug, but it means
+  EVERY TIME we reinstall debug APK, must manually re-grant location permission
+  before testing town estimation, or it will silently fail with blank fields
+- GPS `bearing` field defaults to 0.0 (interpreted as "due north") when stale
+  or unavailable — this is a real limitation of the original v154 approach,
+  separate from the permission issue. Confirmed via real shift data: produces
+  confidently wrong town guesses. DO NOT re-enable the v154 bearing-based pill
+  display without first solving this — currently the pill estimate is
+  unreliable. Recommend reverting pill to net-profit-only display until either
+  (a) takeScreenshot()-based pin detection is validated, or (b) bearing
+  reliability is independently solved.
+- Two confirmed dead-end investigations (do not re-investigate):
+  1. Map content descriptions / accessibility tree coordinate exposure — DoorDash
+     exposes nothing. Closed permanently across two separate sessions of testing.
+  2. Idle-screen zone text ("nj: moorestown/mt. laurel") — confirmed to be
+     driver's assigned zone, not delivery zone, not useful for this purpose.
 
 ---
 
 ## Next Session — Start Here
 
-1. Confirm v154 installed and working:
-   - Pill shows net profit + delivery town
-   - Confirmation notification appears after offer detected
-   - Yes/No taps save to DB correctly
-2. After 5-10 shifts with confirmations logged, run accuracy query:
-```sql
-   SELECT COUNT(*) as total,
-     SUM(CASE WHEN townAccurate = 1 THEN 1 ELSE 0 END) as correct,
-     ROUND(100.0 * SUM(CASE WHEN townAccurate = 1 THEN 1 ELSE 0 END) / COUNT(*), 1) as accuracy_pct
-   FROM offer_captures
-   WHERE estimatedTown IS NOT NULL AND townAccurate IS NOT NULL;
-```
-3. Decision point: if accuracy >80% → GPS geocoding approach is sufficient, drop
-   MediaProjection entirely. If <80% → reconsider paid-tier map screenshot approach.
-4. Start Phase 1 scoring redesign (GREEN/YELLOW/RED) — ~4.5 hours, see
-   FEATURE_BACKLOG.md for full scope
+1. **CRITICAL FIRST STEP**: before any further town estimation work, manually
+   re-grant location permission on the Pixel (Settings → Apps → GigLens →
+   Permissions → Location → Allow) since the debug APK reinstall this session
+   reset it to denied
+2. On next real shift: trigger at least one real offer to test
+   testTakeScreenshot() — pull the saved PNG afterward via:
+adb -s 10.0.0.110:<port> pull /sdcard/Android/data/com.augusteenterprise.giglens/files/debug/ ~/giglens/docs/screenshot_test/
+Visually inspect the PNG — does it clearly show the DoorDash map, pins, and
+   route line? Any visual artifacts, blank/black image, or errors in logcat?
+3. If screenshot test succeeds: scope and build the OpenCV pin-detection +
+   self-calibrating pixel-to-mile pipeline as a proper Phase 2 feature
+4. If screenshot test fails: town estimation is likely a dead end entirely —
+   revert pill to net-profit-only, remove delivery town estimation code/UI,
+   keep accuracy-tracking DB columns dormant in case revisited later
+5. Decide: should the v154 bearing-based estimate be temporarily disabled in
+   the pill (reverted to profit-only) RIGHT NOW, given it's been shown to
+   produce wrong results, even before the screenshot approach is validated?
+   This wasn't decided definitively this session — worth a clear yes/no answer
+   to start next session.
+6. Rebuild accessibility disclosure screen using ViewBinding (see
+   FEATURE_BACKLOG.md for full content/scope — was deleted this session due to
+   being built with unconfigured Compose framework)
+7. Continue with previously-scoped work: Phase 1 scoring redesign (GREEN/
+   YELLOW/RED), Registration + Stripe billing, Sentiment Agent repo
 
 ---
 
@@ -110,80 +169,93 @@
 | Feature | Status | Notes |
 |---------|--------|-------|
 | Offer detection (looksLikeOfferScreen) | ✅ Working | Validated on real shift |
-| Accessibility extraction (extractOfferFromNodes) | ✅ Working | pay, distance, restaurant, countdown |
-| Offer dedup guard (receiver-level) | ✅ Fixed | v154 — survives service restarts |
-| Delivery town estimation | ✅ Built | GPS + Nominatim geocode + bearing projection |
-| Town accuracy tracking | ✅ Built | Yes/No notification, DB columns, awaiting real data |
-| Pill shows town | ✅ Added | PILL/MINI/FULL all updated |
+| Accessibility extraction (extractOfferFromNodes) | ✅ Working | |
+| Offer dedup guard (receiver-level) | ✅ Confirmed working | Real shift data: 5 offers seen, 1 correctly inserted |
+| Delivery town estimation (GPS bearing) | ❌ BROKEN | Confirmed wrong on real shift — see Known Broken |
+| AccessibilityService.takeScreenshot() test | 🔲 Built, unvalidated | Needs real shift to test |
+| Town accuracy tracking infrastructure | ✅ Built | DB columns + notification system intact, dormant pending decision |
 | MediaProjection dialog suppression | ✅ Fixed | No dialog for accessibility/tap modes |
-| Tap-to-capture mode | ✅ Added | Saved as "tap" in Settings |
+| Tap-to-capture mode | ✅ Working | |
 | LIVE badge in accessibility mode | ✅ Fixed | |
-| Accessibility state in Settings | ✅ Fixed | |
-| Debug APK signing | ✅ Fixed | Uses release keystore |
-| deploy.sh port persistence | ✅ Added | .pixel_port file, prompts only on failure |
-| Scoring redesign (Phase 1) | 🔲 Scoped | GREEN/YELLOW/RED profit verdict — not started |
-| Voice/TTS | 🔲 Scoped | Not started |
-| Analytics export | 🔲 Scoped | Not started |
+| Accessibility disclosure screen | 🔲 Deleted, rescoped | Was broken Compose code, rebuild planned with ViewBinding |
+| Scoring redesign (Phase 1) | 🔲 Scoped | Not started |
+| Registration + Stripe billing | 🔲 Scoped | Not started |
+| Sentiment Agent (separate repo) | 🔲 Scoped | Not started |
 | Order archive (day/week/month) | 🔲 Not started | |
-| ScreenCaptureService removal | 🔲 Planned | Dedicated 2-3 hour session |
+| ScreenCaptureService removal | 🔲 Planned | |
 | Play Store review submission | 🔲 Pending | |
 
 ---
 
 ## Decisions Made This Session
 
-1. MediaProjection map screenshot approach explicitly rejected for now — poor UX,
-   driver preference is GPS-based estimation. Will revisit ONLY if accuracy data
-   shows GPS approach is insufficient (<80% threshold).
-2. Delivery town estimation uses Option 1 (Nominatim nearest POI to driver GPS) as
-   default; Option 2 (city-based search) as fallback/driver-selectable in future.
-3. Zone text from idle screen ("nj: moorestown/mt. laurel") is the driver's
-   ASSIGNED zone, not delivery zone — confirmed NOT to use for delivery estimation,
-   only potentially useful as restaurant geocode search anchor if needed later.
-4. Accuracy tracking built BEFORE scoring redesign — need real data to decide
-   if/how town confidence should factor into scoring.
-5. Receiver-level dedup guard added as defense-in-depth alongside service-level
-   guard — protects against service restarts resetting in-memory state.
+1. MediaProjection confirmed unusable given product requirement to avoid
+   consent dialogs/persistent notifications — Android provides no way around
+   this for that specific API, confirmed via research, regardless of trigger
+   method (tap vs automatic).
+2. AccessibilityService.takeScreenshot() identified and adopted as the
+   replacement approach — no MediaProjection needed, since GigLens already has
+   accessibility service permission. This is a meaningfully better path than
+   what was being pursued earlier in the session.
+3. Pixel-to-mile conversion for map-based pin distance CAN be solved without a
+   fixed constant, using the offer's own known total distance as a per-offer
+   calibration anchor — conceptually sound, not yet implemented.
+4. On-device computer vision (OpenCV bundled in APK) confirmed as the right
+   approach for pin detection — no cloud vision API, no recurring cost, no data
+   leaving the device. Matches existing project philosophy (local Ollama,
+   self-hosted DB, etc.)
+5. Two Compose-based files from an unknown prior session were deleted after
+   being identified as the root cause of a confusing, persistent build failure.
+   The underlying disclosure-screen concept was good and is preserved in the
+   backlog for a proper ViewBinding rebuild.
+6. NOT YET DECIDED: whether to immediately revert the pill's delivery-town
+   display back to profit-only given confirmed inaccuracy, or leave it as-is
+   while the screenshot-based approach is being validated. Flagged explicitly
+   for next session's first decision.
 
 ---
 
 ## Devices & Build Environment
 
 - Build server: milo-dev (i9, 48GB RAM, Ubuntu 24) at 10.0.0.16
-- Pixel 10 XL: IP 10.0.0.110, port saved in ~/giglens/.pixel_port (currently 36103,
-  changes on reboot — deploy.sh handles reconnection automatically)
-- Samsung S20 (10.0.0.189:5555): run `adb connect 10.0.0.189:5555` to verify
+- Pixel 10 XL: IP 10.0.0.110, port saved in ~/giglens/.pixel_port (was 41149
+  this session, changes on reboot — deploy.sh handles reconnection automatically)
+- Location permission on Pixel: CURRENTLY DENIED as of session end — must
+  manually re-grant before any town-estimation testing
+- Samsung S20 (10.0.0.189:5555): available as alternate test device, not used
+  this session
 - Keystore: ~/giglens/giglens-release.keystore
 - Play Store JSON key: ~/giglens/google-play-api-key.json (DO NOT COMMIT)
-- MOBSF_APIKEY now in ~/.bashrc as env var, not hardcoded in pre-commit hook
 
 ## Files Changed This Session
 
-- app/src/main/java/com/augusteenterprise/giglens/service/AccessibilityOfferReceiver.kt
-- app/src/main/java/com/augusteenterprise/giglens/service/OfferOverlayService.kt
-- app/src/main/java/com/augusteenterprise/giglens/service/TownAccuracyReceiver.kt (NEW)
-- app/src/main/java/com/augusteenterprise/giglens/geocoding/DeliveryTownEstimator.kt (NEW)
-- app/src/main/java/com/augusteenterprise/giglens/data/OfferCapture.kt
-- app/src/main/java/com/augusteenterprise/giglens/data/OfferCaptureDao.kt
-- app/src/main/java/com/augusteenterprise/giglens/data/OfferDatabase.kt (migration 7→8)
-- app/src/main/AndroidManifest.xml
-- deploy.sh
-- .git/hooks/pre-commit (MOBSF_APIKEY env var)
+- app/src/main/java/com/augusteenterprise/giglens/service/OfferDetectorService.kt
+  (testTakeScreenshot() added, dollar-escaping bugs fixed)
+- app/src/main/java/com/augusteenterprise/giglens/ui/AccessibilityDisclosureScreen.kt
+  (DELETED — was broken, uncommitted, Compose-based, never wired up)
+- app/src/main/java/com/augusteenterprise/giglens/ui/AccessibilityDisclosureActivity.kt
+  (DELETED — same as above)
+- docs/FEATURE_BACKLOG.md (added disclosure screen rebuild scope)
+
+No deploy.sh run this session — all changes are debug-build-only pending real
+offer testing. No version bump, no Play Store upload.
 
 ---
 
 ## Features Left to Implement (Priority Ranked)
 
-See docs/FEATURE_BACKLOG.md for full list and tiered monetization model.
+See docs/FEATURE_BACKLOG.md for full list. Top of stack as of this session end:
 
-### High Priority
-1. **Collect town accuracy data** — need 5-10 shifts of Yes/No confirmations before deciding architecture
-2. **Scoring redesign (Phase 1)** — GREEN/YELLOW/RED profit verdict, ~4.5 hours
-3. **ScreenCaptureService removal** — dedicated 2-3 hour session
-
-### Medium Priority
-4. Order archive view, voice/TTS, analytics export — see FEATURE_BACKLOG.md
+1. **Validate testTakeScreenshot()** on next real shift — blocking everything else town-related
+2. **Decide pill display** — revert to profit-only now, or wait for screenshot validation?
+3. **Re-grant location permission** on Pixel before next test
+4. **Accessibility disclosure screen** — rebuild with ViewBinding
+5. **Scoring redesign (Phase 1)** — still queued, untouched this session
+6. **Registration + Stripe billing** — still queued, untouched this session
+7. **Sentiment Agent repo** — still queued, untouched this session
 
 ---
 
-*Next developer: read SESSION_PROTOCOL.md first, then return here.*
+*Next developer: read SESSION_PROTOCOL.md first, then return here. PRIORITY:
+re-grant location permission before testing anything town-related — see Known
+Broken section.*
