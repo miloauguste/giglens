@@ -259,3 +259,46 @@ See docs/FEATURE_BACKLOG.md for full list. Top of stack as of this session end:
 *Next developer: read SESSION_PROTOCOL.md first, then return here. PRIORITY:
 re-grant location permission before testing anything town-related — see Known
 Broken section.*
+
+---
+
+## Addendum — GPS Permission Toggle Fix (built, not yet validated)
+
+### What was built
+SettingsActivity.kt: switchGps toggle now actually requests Android location
+permission (ACCESS_FINE_LOCATION + ACCESS_COARSE_LOCATION) when turned ON,
+instead of silently just setting a DB flag with no real permission behind it.
+Mirrors the existing switchWidget/OverlayPermissionHelper pattern already used
+in this file.
+
+### Why this was needed
+Confirmed bug from 2026-06-17 shift: GPS_ENABLED flag could be "true" in the DB
+while actual Android location permission was denied, causing
+LocationHelper.getCurrentLocation() to silently return null with zero warning
+to the driver — this is what caused delivery town estimation to fail silently
+that shift.
+
+### New behavior
+- Toggle ON + permission already granted → DB flag set true immediately
+- Toggle ON + permission not granted → toggle snaps back to OFF, real Android
+  permission dialog launches via locationPermissionLauncher
+- Permission granted in dialog → toggle flips back to ON, DB flag set true
+- Permission denied in dialog → toggle stays OFF, Toast shown explaining why,
+  DB flag set false
+
+### NOT YET VALIDATED
+Built and compiles cleanly (debug APK built successfully), but could not be
+sideloaded/tested this session — developer was remote, away from home network,
+saved Pixel port (41149) unreachable. 
+
+### Next session — test this first
+1. Connect to Pixel (port may have changed again — check Wireless Debugging)
+2. Sideload latest debug APK
+3. In Settings, toggle GPS off then on — confirm REAL Android permission
+   dialog appears (not silent flag flip)
+4. Deny once to confirm toggle correctly snaps back to OFF with Toast message
+5. Toggle on again, grant permission, confirm toggle stays ON and DB reflects
+   "true"
+6. THEN proceed with re-testing delivery town estimation / testTakeScreenshot()
+   from previous session, now that there's a reliable way to ensure location
+   permission is actually granted before testing
