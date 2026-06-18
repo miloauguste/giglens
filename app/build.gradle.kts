@@ -39,8 +39,8 @@ android {
         applicationId = "com.augusteenterprise.giglens"
         minSdk = 26
         targetSdk = 35
-        versionCode = 173
-        versionName = "0.1.173"
+        versionCode = 174
+        versionName = "0.1.174"
 
         // CORRECT: defined here (not inside debug{} alone) so the field exists in
         //          EVERY variant's BuildConfig, including release -- fixes

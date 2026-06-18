@@ -1,3 +1,64 @@
+## [v0.1.172] - 2026-06-18
+### Note
+Consolidated entry covering v0.1.80 through v0.1.172 — this file fell out of
+sync with actual releases for several weeks (last entry was v0.1.79, 2026-06-02).
+Detailed per-session history for this period is preserved in docs/LAST_SESSION*.md
+files and git log. Going forward, this file should be updated every session,
+not backfilled in bulk like this.
+
+### Added
+- AccessibilityService-based offer extraction pipeline (AccessibilityOfferReceiver,
+  extractOfferFromNodes()) — full replacement of the MediaProjection/OCR pipeline
+- Delivery town estimation: GPS + Nominatim geocode + bearing projection
+  (DeliveryTownEstimator.kt), pill/MINI/FULL display, accuracy tracking via
+  TownAccuracyReceiver and Yes/No confirmation notifications
+- Receiver-level offer dedup guard (companion-object fingerprint, survives
+  service restarts)
+- Fastlane deploy pipeline with Google Cloud service account, auto-bumping
+  version codes, saved Pixel ADB port persistence (deploy.sh)
+- Debug-only offer-capture email pipeline (DebugOfferEmailer.kt) — emails
+  screenshot + extracted data + ScoreResult + town estimate per offer via
+  Gmail SMTP, gated by BuildConfig.DEBUG
+- android:canTakeScreenshot="true" capability declaration, enabling
+  AccessibilityService.takeScreenshot() as MediaProjection replacement
+  (no consent dialog, no persistent notification)
+- GPS settings toggle now requests real Android location permission instead
+  of silently setting a DB flag
+- AUTO_CAPTURE_MODE default changed to "accessibility" (fully automatic)
+
+### Fixed
+- Stale overlay pill bug: sheetState now resets to IDLE on silent window
+  re-attach in OfferOverlayService, preventing past offer data from
+  rendering after a service restart
+- JavaMail/android-mail dependency: FileDataSource unresolved on Android —
+  switched to ByteArrayDataSource
+- Release-variant build failure: SMTP buildConfigField entries moved from
+  debug{} to defaultConfig{} so they exist in every build variant
+- Duplicate META-INF/NOTICE.md packaging conflict between android-mail and
+  android-activation — added packaging.resources.excludes
+- OWASP Dependency Check pre-push hook: downgraded from hard block to
+  warning after confirming a known, unresolved upstream NPE bug in the NVD
+  client library (NvdCveClient) causes intermittent false failures
+  unrelated to actual dependency vulnerabilities
+- Reconciled 3 drifted AUTO_CAPTURE_MODE fallback defaults across
+  AppConfig.kt, MainActivity.kt, OfferDetectorService.kt
+
+### Security
+- Google Play service account credential (google-play-api-key.json) was
+  committed to git in error on 2026-06-09. Old key revoked, old service
+  account deleted and recreated, new key generated and verified working
+  end-to-end. .gitignore rule added to prevent recurrence. File untracked
+  from git but remains on disk for Fastlane.
+
+### Known issues
+- Delivery town estimation accuracy not yet validated — GPS bearing
+  unreliable at low speed, separate from a since-fixed location permission
+  bug
+- testTakeScreenshot() capability fix and debug email pipeline both
+  compile-verified but not yet validated on a real device/shift
+- Accessibility disclosure screen still not rebuilt (ViewBinding) — content
+  drafted, not implemented
+
 ## [Unreleased] - 2026-06-06
 ### Added
 - Firebase Crashlytics logs verified working — Logs & Breadcrumbs tab confirmed in console
