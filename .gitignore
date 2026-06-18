@@ -44,3 +44,6 @@ docs/security-reports/
 # Runtime debug output — not source
 docs/*.log
 docs/*.db
+
+# Google Play service account credential — NEVER commit
+google-play-api-key.json
