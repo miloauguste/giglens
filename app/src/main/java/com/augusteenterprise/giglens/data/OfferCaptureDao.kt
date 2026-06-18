@@ -83,6 +83,14 @@ interface OfferCaptureDao {
     @Query("SELECT AVG(netValue) FROM offer_captures WHERE netValue IS NOT NULL AND timestamp > (strftime('%s','now') - :days * 86400) * 1000")
     suspend fun getAvgNetValue(days: Int): Double?
 
+    @Query("""
+        UPDATE offer_captures
+        SET confirmedTown = :confirmedTown,
+            townAccurate  = :accurate
+        WHERE id = :captureId
+    """)
+    suspend fun updateTownAccuracy(captureId: Long, confirmedTown: String?, accurate: Boolean)
+
     @Query("SELECT MIN(netValue) FROM offer_captures WHERE netValue IS NOT NULL AND timestamp > (strftime('%s','now') - :days * 86400) * 1000")
     suspend fun getWorstNetValue(days: Int): Double?
 

@@ -70,32 +70,46 @@ class MainActivity : AppCompatActivity() {
     ) { _ -> }
 
     private fun showAutoModeDialog() {
+        // CORRECT: read saved capture mode — start service automatically, no dialog
+        // WRONG:   showing MediaProjection dialog for all modes — not needed for accessibility/tap
         if (ScreenCaptureService.isRunning) {
             Toast.makeText(this, "Screen capture already active", Toast.LENGTH_SHORT).show()
             return
         }
-        AlertDialog.Builder(this)
-            .setTitle("Enable Offer Capture?")
-            .setMessage(
-                "GigLens will capture offer screens automatically.\n\n" +
-                "Tap the floating camera button over DoorDash to capture an offer.\n\n" +
-                "Screen recording permission is required. " +
-                "GigLens only reads DoorDash offer screens."
-            )
-            .setPositiveButton("Enable") { _, _ ->
-                requestScreenCapturePermission()
-            }
-            .setNegativeButton("Not now") { _, _ ->
-                pendingScreenCaptureGrant = false
-                binding.switchFloatingButton.setOnCheckedChangeListener(null)
-                binding.switchFloatingButton.isChecked = false
-                binding.switchFloatingButton.setOnCheckedChangeListener { _, isChecked ->
-                    if (isChecked && !ScreenCaptureService.isRunning) showCaptureOnboardingFlow()
-                    else if (!isChecked && ScreenCaptureService.isRunning)
-                        stopService(Intent(this, ScreenCaptureService::class.java))
+        lifecycleScope.launch {
+            val appDao = GigLensApp.instance.database.appConfigDao()
+            val savedMode = appDao.getValue(AppConfigKeys.AUTO_CAPTURE_MODE) ?: "accessibility"
+            runOnUiThread {
+                when (savedMode) {
+                    "accessibility", "automatic", "tap" -> startAccessibilityOnlyServices()
+                    "ocr", "both" -> requestScreenCapturePermission()
+                    else -> startAccessibilityOnlyServices()
                 }
             }
-            .show()
+        }
+    }
+
+    private fun startAccessibilityOnlyServices() {
+        // CORRECT: start overlay only — no screen capture needed for accessibility/tap modes
+        // WRONG:   requiring MediaProjection before pill appears
+        if (!OfferOverlayService.isRunning) {
+            val overlayIntent = Intent(this, OfferOverlayService::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(overlayIntent)
+            } else {
+                startService(overlayIntent)
+            }
+        }
+        lifecycleScope.launch {
+            val appDao = GigLensApp.instance.database.appConfigDao()
+            appDao.setValue(AppConfigKeys.WIDGET_ENABLED, "true")
+        }
+        Toast.makeText(this, "GigLens active", Toast.LENGTH_SHORT).show()
+        // CORRECT: delay updateUI so OfferOverlayService.isRunning flips true before badge check
+        // WRONG:   calling updateUI() immediately — isRunning still false, badge stays OFF
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+            updateUI()
+        }, 500L)
     }
 
     private fun requestScreenCapturePermission() {
@@ -255,17 +269,22 @@ class MainActivity : AppCompatActivity() {
         if (pendingAccessibilityEnable) {
             pendingAccessibilityEnable = false
             if (isAccessibilityEnabled()) {
-                // Keep toggle ON and continue to screen capture dialog
+                // CORRECT: accessibility granted — update perm UI then start services automatically
+                // WRONG:   calling showAutoModeDialog() — triggers MediaProjection for accessibility mode
+                // Accessibility state now reflected via isAccessibilityEnabled() on next UI refresh
                 binding.switchFloatingButton.setOnCheckedChangeListener(null)
                 binding.switchFloatingButton.isChecked = true
                 binding.switchFloatingButton.setOnCheckedChangeListener { _, isChecked ->
                     if (isChecked && !ScreenCaptureService.isRunning) showCaptureOnboardingFlow()
-                    else if (!isChecked && ScreenCaptureService.isRunning)
-                        stopService(Intent(this, ScreenCaptureService::class.java))
+                    else if (!isChecked) {
+                        if (ScreenCaptureService.isRunning) stopService(Intent(this, ScreenCaptureService::class.java))
+                        if (OfferOverlayService.isRunning) stopService(Intent(this, OfferOverlayService::class.java))
+                    }
                 }
-                showAutoModeDialog()
+                // Start services based on saved mode — no dialog needed
+                startAccessibilityOnlyServices()
             } else {
-                // User didn't enable it — reset toggle to OFF
+                // User didn't enable accessibility — reset toggle to OFF
                 binding.switchFloatingButton.setOnCheckedChangeListener(null)
                 binding.switchFloatingButton.isChecked = false
                 binding.switchFloatingButton.setOnCheckedChangeListener { _, isChecked ->
@@ -375,7 +394,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateUI() {
-        val captureActive = ScreenCaptureService.isRunning
+        // CORRECT: LIVE when either capture service OR overlay service running in accessibility mode
+        // WRONG:   only checking ScreenCaptureService — always OFF in accessibility-only mode
+        val captureActive = ScreenCaptureService.isRunning || OfferOverlayService.isRunning
 
         // CORRECT: set background color on View — viewCaptureDot is a View not a TextView
         // WRONG:   calling setTextColor on viewCaptureDot — View has no setTextColor

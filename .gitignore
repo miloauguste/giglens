@@ -33,3 +33,14 @@ docs/transcripts/
 # Security scan reports
 docs/security-reports/
 .pixel_port
+
+# Session scratch artifacts — never commit (added 2026-06-17)
+*.backup.*
+*.broken_today
+/patch_*.py
+/create_giglens_debug_email.py
+/smptdefault.py
+
+# Runtime debug output — not source
+docs/*.log
+docs/*.db

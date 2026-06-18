@@ -1,8 +1,8 @@
 package com.augusteenterprise.giglens.data
 
 // Author: Claude (Anthropic) - Feature #8: Migration 4→5 adds auto_capture_mode + enabled_platforms
-// Last modified: DeepSeek (Ollama) - June 02 2026 - Migration 6→7 adds timeCost + minutesOnJob
-// Room database singleton — v7 adds timeCost + minutesOnJob to offer_captures
+// Last modified: Claude (Anthropic) - 2026-06-15 - Migration 7→8 adds town estimation accuracy tracking
+// Room database singleton — v8 adds estimatedTown, estimatedTownMethod, confirmedTown, townAccurate to offer_captures
 
 import android.content.Context
 import androidx.room.Database
@@ -13,7 +13,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [OfferCapture::class, ScorerConfig::class, AppConfig::class],
-    version = 7,
+    version = 8,
     exportSchema = false
 )
 abstract class OfferDatabase : RoomDatabase() {
@@ -92,6 +92,17 @@ abstract class OfferDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // CORRECT: ALTER TABLE adds nullable columns — existing rows get NULL
+                // WRONG:   dropping and recreating table — destroys existing offer data
+                db.execSQL("ALTER TABLE offer_captures ADD COLUMN estimatedTown TEXT")
+                db.execSQL("ALTER TABLE offer_captures ADD COLUMN estimatedTownMethod TEXT")
+                db.execSQL("ALTER TABLE offer_captures ADD COLUMN confirmedTown TEXT")
+                db.execSQL("ALTER TABLE offer_captures ADD COLUMN townAccurate INTEGER")
+            }
+        }
+
         fun getInstance(context: Context): OfferDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -99,7 +110,7 @@ abstract class OfferDatabase : RoomDatabase() {
                     OfferDatabase::class.java,
                     "offer_database"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
                     .build()
                 INSTANCE = instance
                 instance

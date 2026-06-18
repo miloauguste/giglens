@@ -29,6 +29,33 @@ class SettingsActivity : AppCompatActivity() {
     // MediaProjection permission launcher
     // CORRECT: request from Settings when driver enables floating button — one step
     // WRONG:   requiring driver to go to MainActivity separately to grant permission
+    // CORRECT: request both FINE and COARSE in one prompt — matches manifest permissions
+    // WRONG:   requesting only FINE — some OEMs grant COARSE-only on first ask, leaves a gap
+    private val locationPermissionLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
+    ) { grants ->
+        val fineGranted = grants[android.Manifest.permission.ACCESS_FINE_LOCATION] == true
+        val coarseGranted = grants[android.Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        if (fineGranted || coarseGranted) {
+            Log.d(TAG, "Location permission granted (fine=$fineGranted coarse=$coarseGranted)")
+            binding.switchGps.isChecked = true
+            GlobalScope.launch {
+                GigLensApp.instance.database.appConfigDao()
+                    .setValue(AppConfigKeys.GPS_ENABLED, "true")
+            }
+        } else {
+            Log.d(TAG, "Location permission denied — keeping GPS toggle OFF")
+            binding.switchGps.isChecked = false
+            Toast.makeText(this,
+                "Location permission is required for delivery town estimation",
+                Toast.LENGTH_LONG).show()
+            GlobalScope.launch {
+                GigLensApp.instance.database.appConfigDao()
+                    .setValue(AppConfigKeys.GPS_ENABLED, "false")
+            }
+        }
+    }
+
     private val mediaProjectionLauncher = registerForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -95,6 +122,44 @@ class SettingsActivity : AppCompatActivity() {
         binding.btnGrantOverlay.setOnClickListener {
             OverlayPermissionHelper.requestPermission(this)
         }
+        // CORRECT: toggle ON requests real Android location permission if not already granted
+        // WRONG:   toggle just sets a DB flag — GPS_ENABLED=true with no actual permission means
+        //          LocationHelper.getCurrentLocation() silently returns null, town estimation
+        //          fails with no warning to the driver (confirmed bug, 2026-06-17 shift)
+        binding.switchGps.setOnCheckedChangeListener { _, isChecked ->
+            Log.d(TAG, "switchGps toggled: $isChecked")
+            if (isChecked) {
+                val fineGranted = androidx.core.content.ContextCompat.checkSelfPermission(
+                    this, android.Manifest.permission.ACCESS_FINE_LOCATION
+                ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                val coarseGranted = androidx.core.content.ContextCompat.checkSelfPermission(
+                    this, android.Manifest.permission.ACCESS_COARSE_LOCATION
+                ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+                if (fineGranted || coarseGranted) {
+                    Log.d(TAG, "Location permission already granted")
+                    GlobalScope.launch {
+                        GigLensApp.instance.database.appConfigDao()
+                            .setValue(AppConfigKeys.GPS_ENABLED, "true")
+                    }
+                } else {
+                    Log.d(TAG, "Location permission not granted — requesting now")
+                    // CORRECT: snap toggle back to OFF while request is pending — avoids showing
+                    //          a checked state that doesn't yet reflect real permission status
+                    // WRONG:   leaving toggle ON during request — driver sees ON even if they deny
+                    binding.switchGps.isChecked = false
+                    locationPermissionLauncher.launch(arrayOf(
+                        android.Manifest.permission.ACCESS_FINE_LOCATION,
+                        android.Manifest.permission.ACCESS_COARSE_LOCATION
+                    ))
+                }
+            } else {
+                GlobalScope.launch {
+                    GigLensApp.instance.database.appConfigDao()
+                        .setValue(AppConfigKeys.GPS_ENABLED, "false")
+                }
+            }
+        }
         
         binding.rgCaptureMode.setOnCheckedChangeListener { _, _ ->
             updateAccessibilityPermUI()
@@ -140,10 +205,10 @@ class SettingsActivity : AppCompatActivity() {
                 updateWidgetPermUI()
                 binding.switchWidget.isChecked = widgetEnabled
                 when (captureMode) {
-                    "accessibility" -> binding.rbCaptureAccessibility.isChecked = true
-                    "button"        -> binding.rbCaptureButton.isChecked = true
-                    "both"          -> binding.rbCaptureBoth.isChecked = true
-                    else            -> binding.rbCaptureOff.isChecked = true
+                    "accessibility"  -> binding.rbCaptureAccessibility.isChecked = true
+                    "tap", "button"  -> binding.rbCaptureButton.isChecked = true
+                    "both"           -> binding.rbCaptureBoth.isChecked = true
+                    else             -> binding.rbCaptureOff.isChecked = true
                 }
                 val platforms = enabledPlatforms.split(",").map { it.trim() }
                 binding.cbPlatformDoordash.isChecked = "doordash" in platforms
@@ -189,7 +254,7 @@ class SettingsActivity : AppCompatActivity() {
             appDao.setValue(AppConfigKeys.GPS_ENABLED, gpsEnabled.toString())
             val captureMode = when {
                 binding.rbCaptureAccessibility.isChecked -> "accessibility"
-                binding.rbCaptureButton.isChecked        -> "button"
+                binding.rbCaptureButton.isChecked        -> "tap"
                 binding.rbCaptureBoth.isChecked          -> "both"
                 else                                     -> "off"
             }

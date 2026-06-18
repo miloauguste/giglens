@@ -1,0 +1,1 @@
+Fix accessibility state not reflected in Settings; fix LIVE badge not showing in accessibility mode

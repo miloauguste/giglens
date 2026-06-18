@@ -20,6 +20,8 @@ import kotlinx.coroutines.runBlocking
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import android.accessibilityservice.AccessibilityService.TakeScreenshotCallback
+import android.accessibilityservice.AccessibilityService.ScreenshotResult
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.augusteenterprise.giglens.ocr.ParsedOffer
 import com.augusteenterprise.giglens.BuildConfig
@@ -42,6 +44,11 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
         // Cooldown to avoid duplicate captures (ms)
         private const val CAPTURE_COOLDOWN_MS = 3000L
 
+        // Offer fingerprint dedup — suppresses re-broadcast of same offer within window
+        // CORRECT: hash pay+distance, ignore re-fires while same offer is on screen
+        // WRONG:   recording every accessibility event as a new offer entry
+        private const val OFFER_DEDUP_WINDOW_MS = 30_000L
+
         // DoorDash package
         private const val DOORDASH_PACKAGE = "com.doordash.driverapp"
 
@@ -51,11 +58,12 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
 
     private var lastCaptureTime = 0L
     private var lastOfferFingerprint = ""  // detects new vs same offer screen
+    private var lastOfferBroadcastMs = 0L        // timestamp of last offer broadcast for dedup window
     private val accessibilityOfferReceiver = com.augusteenterprise.giglens.service.AccessibilityOfferReceiver()
 
     // CORRECT: cache DB config values at connect time — read once, not on every accessibility event
     // WRONG: calling runBlocking inside onAccessibilityEvent() — blocks accessibility thread, ANR risk
-    private var cachedAutoCapureMode = "button"
+    private var cachedAutoCapureMode = "tap"
     private var cachedEnabledPlatforms = "doordash"
 
     override fun onServiceConnected() {
@@ -92,7 +100,7 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
         // Populate config cache on connect — avoids runBlocking on every accessibility event
         CoroutineScope(Dispatchers.IO).launch {
             val dao = GigLensApp.instance.database.appConfigDao()
-            cachedAutoCapureMode = dao.getValue(AppConfigKeys.AUTO_CAPTURE_MODE) ?: "button"
+            cachedAutoCapureMode = dao.getValue(AppConfigKeys.AUTO_CAPTURE_MODE) ?: "accessibility"
             cachedEnabledPlatforms = dao.getValue(AppConfigKeys.ENABLED_PLATFORMS) ?: "doordash"
             Log.d(TAG, "Config cache loaded: mode=$cachedAutoCapureMode platforms=$cachedEnabledPlatforms")
         }
@@ -177,6 +185,17 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
                 if (now - lastCaptureTime < CAPTURE_COOLDOWN_MS) return
                 lastCaptureTime = now
                 signalCapture()
+
+                // TEST ONLY — confirms AccessibilityService.takeScreenshot() works on this device
+                // CORRECT: gated by same looksLikeOfferScreen() confirmation — only fires on real DD offer screen
+                // WRONG:   calling on every accessibility event — would fire on every screen, not just offers
+                // CORRECT: API 30+ check — takeScreenshot() unavailable below Android 11
+                // WRONG:   calling unconditionally — crashes on minSdk 26 devices
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                    testTakeScreenshot()
+                } else {
+                    Log.w(TAG, "testTakeScreenshot skipped — requires Android 11+ (API 30), device is API ${android.os.Build.VERSION.SDK_INT}")
+                }
             } else {
                 // No offer screen detected — hide camera button if it was showing
                 // CORRECT: send HIDE_CAMERA when offer screen gone — camera button clears
@@ -296,6 +315,56 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
      * CORRECT: morph widget first, then conditionally auto-capture
      * WRONG:   always triggering capture regardless of mode setting
      */
+    /**
+     * TEST ONLY — confirms AccessibilityService.takeScreenshot() captures the DoorDash offer
+     * screen with no MediaProjection dialog, no persistent notification. Only ever called from
+     * inside the looksLikeOfferScreen() == true branch — guarantees this NEVER fires on any
+     * screen other than a confirmed DoorDash offer screen.
+     * Saves bitmap to app's debug folder for visual inspection. Remove once confirmed working
+     * and replaced with real OpenCV pin-detection pipeline.
+     */
+    private fun testTakeScreenshot() {
+        Log.i(TAG, "testTakeScreenshot() called — attempting silent screenshot via AccessibilityService")
+        takeScreenshot(
+            android.view.Display.DEFAULT_DISPLAY,
+            android.content.Context::class.java.let { java.util.concurrent.Executors.newSingleThreadExecutor() },
+            object : TakeScreenshotCallback {
+                override fun onSuccess(result: ScreenshotResult) {
+                    try {
+                        val bitmap = android.graphics.Bitmap.wrapHardwareBuffer(
+                            result.hardwareBuffer, result.colorSpace
+                        )
+                        if (bitmap == null) {
+                            Log.e(TAG, "testTakeScreenshot: wrapHardwareBuffer returned null")
+                            result.hardwareBuffer.close()
+                            return
+                        }
+                        // Hardware bitmaps can't be saved directly — copy to software bitmap first
+                        val softwareBitmap = bitmap.copy(android.graphics.Bitmap.Config.ARGB_8888, false)
+                        result.hardwareBuffer.close()
+
+                        val dir = java.io.File(GigLensApp.instance.getExternalFilesDir(null), "debug")
+                        dir.mkdirs()
+                        val timestamp = System.currentTimeMillis()
+                        val file = java.io.File(dir, "offer_screenshot_$timestamp.png")
+                        java.io.FileOutputStream(file).use { out ->
+                            softwareBitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, out)
+                        }
+                        Log.i(TAG, "testTakeScreenshot SUCCESS — saved to ${file.absolutePath} (${softwareBitmap.width}x${softwareBitmap.height})")
+                        FirebaseCrashlytics.getInstance().log("testTakeScreenshot: saved ${file.name}")
+                    } catch (e: Exception) {
+                        Log.e(TAG, "testTakeScreenshot: error processing result: ${e.message}", e)
+                    }
+                }
+
+                override fun onFailure(errorCode: Int) {
+                    Log.e(TAG, "testTakeScreenshot FAILED — errorCode=$errorCode")
+                    FirebaseCrashlytics.getInstance().log("testTakeScreenshot failed: errorCode=$errorCode")
+                }
+            }
+        )
+    }
+
     private fun signalCapture() {
         Log.d(TAG, "signalCapture() called")
         // CORRECT: try accessibility extraction first -- faster and more accurate
@@ -307,6 +376,18 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
                 if (extracted != null) {
                     Log.i(TAG, "Accessibility extraction SUCCESS -- pay=${extracted.payAmount} distance=${extracted.distance}")
                     FirebaseCrashlytics.getInstance().log("EXTRACT:accessibility pay=${extracted.payAmount} dist=${extracted.distance}")
+                    // CORRECT: fingerprint offer — skip if same offer re-fired within 30s
+                    // WRONG: broadcasting every accessibility event — causes duplicate analytics
+                    val fingerprint = "${extracted.payAmount}:${extracted.distance}"
+                    val now = System.currentTimeMillis()
+                    if (fingerprint == lastOfferFingerprint && (now - lastOfferBroadcastMs) < OFFER_DEDUP_WINDOW_MS) {
+                        Log.d(TAG, "signalCapture: duplicate suppressed fingerprint=$fingerprint")
+                        return
+                    }
+                    lastOfferFingerprint = fingerprint
+                    lastOfferBroadcastMs = now
+                    Log.i(TAG, "signalCapture: new offer fingerprint=$fingerprint — broadcasting")
+
                     val broadcastIntent = Intent(ACTION_OFFER_EXTRACTED).apply {
                         setPackage(packageName)
                         putExtra(EXTRA_PAY, extracted.payAmount ?: 0.0)
@@ -335,11 +416,14 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
             return
         }
         if (cachedAutoCapureMode == "accessibility" || cachedAutoCapureMode == "both") {
+            // CORRECT: "tap" mode waits for driver tap — only "accessibility"/"both" auto-trigger OCR
+            // WRONG:   auto-triggering OCR in tap mode — defeats the purpose of tap-to-capture
             Log.i(TAG, "Auto-capture mode=$cachedAutoCapureMode -- triggering OCR capture fallback")
             val captureIntent = Intent(ACTION_OFFER_DETECTED)
             captureIntent.setPackage(packageName)
             sendBroadcast(captureIntent)
         } else {
+            // CORRECT: tap/button/off modes wait for driver to tap camera button
             Log.d(TAG, "Mode=$cachedAutoCapureMode -- waiting for driver tap")
         }
     }
@@ -357,9 +441,18 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
         val distanceRegex = Regex("""^(\d+\.?\d*)\s*mi$""", RegexOption.IGNORE_CASE)
         val deliverByRegex = Regex("""deliver\s+by\s+(\d{1,2}:\d{2}\s*[ap]m)""", RegexOption.IGNORE_CASE)
         val texts = mutableListOf<String>()
+        // Content descriptions — may expose map pin location or address fragments
+        val contentDescs = mutableListOf<String>()
+        val viewIds = mutableListOf<String>()
         fun walk(node: AccessibilityNodeInfo) {
             val t = node.text?.toString()?.trim() ?: ""
             if (t.isNotBlank()) texts.add(t)
+            // CORRECT: collect contentDescription — map views expose location here, not in text
+            // WRONG:   text only — misses map pin descriptions and hidden address nodes
+            val cd = node.contentDescription?.toString()?.trim() ?: ""
+            if (cd.isNotBlank()) contentDescs.add(cd)
+            val vid = node.viewIdResourceName?.toString()?.trim() ?: ""
+            if (vid.isNotBlank()) viewIds.add(vid)
             for (i in 0 until node.childCount) {
                 val child = node.getChild(i) ?: continue
                 walk(child)
@@ -367,6 +460,32 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
             }
         }
         walk(root)
+
+        // Log content descriptions and view IDs to Crashlytics for post-shift analysis
+        // Goal: determine if map pin location or delivery town is exposed in accessibility tree
+        if (BuildConfig.DEBUG) {
+            val cdJoined = contentDescs.take(20).joinToString(" | ")
+            val vidJoined = viewIds.take(20).joinToString(" | ")
+            FirebaseCrashlytics.getInstance().log("MAP_DEBUG contentDesc: $cdJoined")
+            FirebaseCrashlytics.getInstance().log("MAP_DEBUG viewIds: $vidJoined")
+            Log.d(TAG, "MAP_DEBUG contentDesc: $cdJoined")
+            Log.d(TAG, "MAP_DEBUG viewIds: $vidJoined")
+            // Also write to debug log file for offline review
+            try {
+                val dir = java.io.File(
+                    GigLensApp.instance.getExternalFilesDir(null), "debug"
+                )
+                dir.mkdirs()
+                val file = java.io.File(dir, "map_debug.log")
+                if (file.exists() && file.length() > 2 * 1024 * 1024) file.delete()
+                val timestamp = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US)
+                    .format(java.util.Date())
+                file.appendText("$timestamp CONTENT_DESCS: $cdJoined\n")
+                file.appendText("$timestamp VIEW_IDS: $vidJoined\n")
+            } catch (e: Exception) {
+                Log.w(TAG, "MAP_DEBUG write failed: ${e.message}")
+            }
+        }
         var pay: Double? = null
         var distance: Double? = null
         var restaurant: String? = null

@@ -1,0 +1,1 @@
+Fix duplicate analytics entries at receiver level — dedup guard in AccessibilityOfferReceiver

@@ -27,4 +27,5 @@
     android:notificationTimeout="500"
 
     android:packageNames="com.doordash.driverapp"
-    android:isAccessibilityTool="true" />
+    android:isAccessibilityTool="true"
+    android:canTakeScreenshot="true" />

@@ -306,3 +306,33 @@ right moment is good practice and likely required for smooth Play Store approval
 
 **Status:** 🔲 Not started — content already written (see git history before
 2026-06-17 deletion if needed for reference), just needs ViewBinding implementation.
+
+
+## ⚠️ Pre-Launch Review Needed — AUTO_CAPTURE_MODE Default Changed to "accessibility"
+
+**What changed (2026-06-17 session):** Seed default for `AUTO_CAPTURE_MODE`
+config key changed from `"off"` to `"accessibility"` (fully automatic,
+no-tap capture mode) in `AppConfig.kt`, plus aligned the matching
+null-fallback in `OfferDetectorService.kt` to the same value. This was done
+as a developer convenience to speed up real-shift validation testing — Milo
+wanted Settings to default to Fully Automatic rather than Off, to avoid
+manually toggling it after every fresh install during this dev/test phase.
+
+**Why this needs reconsideration before Play Store release:** A default-on
+automatic accessibility-capture mode is a stronger behavioral claim than an
+opt-in one, and interacts directly with the still-unbuilt Accessibility
+Disclosure Screen (see separate backlog item above). Google Play's review of
+accessibility-service apps scrutinizes default-on capture behavior more than
+user-initiated capture. Before public release, explicitly decide:
+- Should a fresh install for a real driver default to "accessibility" (current
+  state) or "off" (original default, requires driver to opt in via Settings)?
+- Does the disclosure screen's "how to turn it off" language need to instead
+  say "how to turn it on," given the new default?
+- Does this change anything about what's stated in the Play Console
+  accessibility-service declaration or demo video (both already drafted per
+  earlier session notes)?
+
+**Status:** 🔲 Not decided — currently shipping as "accessibility" default in
+the debug/internal-testing build. Must be explicitly revisited as part of
+Play Store review submission prep (see item #13 above), not left as an
+accidental holdover from dev convenience.

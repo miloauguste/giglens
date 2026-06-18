@@ -48,6 +48,11 @@
             android:name=".ui.SettingsActivity"
             android:label="Settings"
             android:parentActivityName=".ui.MainActivity" />
+        <activity
+            android:name=".ui.AccessibilityDisclosureActivity"
+            android:label="Accessibility Permission"
+            android:exported="false"
+            android:parentActivityName=".ui.SettingsActivity" />
 
         <activity
             android:name=".ui.ShareReceiverActivity"
@@ -97,6 +102,15 @@
             </intent-filter>
         </receiver>
 
+        <!-- Town accuracy confirmation — handles Yes/No notification taps -->
+        <receiver
+            android:name=".service.TownAccuracyReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.augusteenterprise.giglens.TOWN_CONFIRMED" />
+                <action android:name="com.augusteenterprise.giglens.TOWN_WRONG" />
+            </intent-filter>
+        </receiver>
         <!-- DEBUG ONLY: ADB trigger receiver for testing widget states -->
         <receiver
             android:name=".service.DebugTriggerReceiver"

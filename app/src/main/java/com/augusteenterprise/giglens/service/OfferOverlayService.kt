@@ -48,6 +48,7 @@ const val EXTRA_TOTAL_COST     = "total_cost"
 const val EXTRA_MINUTES_ON_JOB = "minutes_on_job"
 const val EXTRA_SCORE          = "score"
 const val EXTRA_COST_PER_MILE  = "cost_per_mile"
+const val EXTRA_DELIVERY_TOWN  = "delivery_town"   // estimated delivery city/town
 const val ACTION_SHOW_CAMERA   = "com.augusteenterprise.giglens.SHOW_CAMERA"
 const val ACTION_HIDE_CAMERA   = "com.augusteenterprise.giglens.HIDE_CAMERA"
 
@@ -80,6 +81,7 @@ class OfferOverlayService : Service() {
 
     // Offer data
     private var netValue     = 0.0
+    private var deliveryTown = "📍 ---"   // estimated delivery town
     private var verdict      = "UNKNOWN"
     private var payAmount    = 0.0
     private var restaurant   = ""
@@ -135,10 +137,23 @@ class OfferOverlayService : Service() {
                 } catch (e: IllegalArgumentException) {
                     Log.w(TAG, "Overlay window lost — re-adding silently: ${e.message}")
                     isViewAdded = false
+                    // CORRECT: reset sheetState to IDLE on a silent re-attach -- the window was
+                    //          lost (e.g. service process restart) but sheetState in memory still
+                    //          holds whatever offer state was last rendered, which would otherwise
+                    //          get drawn again on the NEXT SHOW_CAMERA/HIDE_CAMERA broadcast, showing
+                    //          stale offer data on a screen where no current offer exists
+                    // WRONG:   leaving sheetState untouched -- a stray broadcast arriving after this
+                    //          silent re-attach (e.g. from OfferDetectorService restarting mid-cycle)
+                    //          calls updateWidget() against the OLD sheetState, rendering a past
+                    //          offer's pay/restaurant/verdict on an unrelated foreground app
+                    sheetState = SheetState.IDLE
                     showWidget()
                 }
             } else if (!isViewAdded) {
                 Log.d(TAG, "onStartCommand: isViewAdded=false — calling showWidget()")
+                // CORRECT: same reset as above -- a fresh attach (service just created/recreated)
+                //          should never inherit stale in-memory sheetState from before
+                sheetState = SheetState.IDLE
                 showWidget()
             }
         } else {
@@ -279,6 +294,7 @@ class OfferOverlayService : Service() {
         minutesOnJob = intent.getDoubleExtra(EXTRA_MINUTES_ON_JOB, 0.0)
         score        = intent.getIntExtra(EXTRA_SCORE,             0)
         costPerMile  = intent.getDoubleExtra(EXTRA_COST_PER_MILE,  0.90)
+        deliveryTown = intent.getStringExtra(EXTRA_DELIVERY_TOWN) ?: "📍 ---"
         Log.d(TAG, "Result: verdict=$verdict net=$netValue restaurant=$restaurant")
     }
 
@@ -520,6 +536,12 @@ class OfferOverlayService : Service() {
                     setTextColor(Color.parseColor("#CCCCCC"))
                     textSize = 11f
                 }
+                val tvTownMini = TextView(this).apply {
+                    text = deliveryTown
+                    setTextColor(Color.parseColor("#00C9A7"))
+                    textSize = 11f
+                    setPadding(0, 2, 0, 0)
+                }
                 val tvOneLiner = TextView(this).apply {
                     text = "$${"%.2f".format(payAmount)} · ${"%.1f".format(totalMiles)}mi est."
                     setTextColor(Color.parseColor("#AAAAAA"))
@@ -541,6 +563,7 @@ class OfferOverlayService : Service() {
                 }
 
                 drawer.addView(tvRest)
+                drawer.addView(tvTownMini)
                 drawer.addView(tvOneLiner)
                 drawer.addView(tvCosts)
                 drawer.addView(tvHint)
@@ -609,6 +632,7 @@ class OfferOverlayService : Service() {
 
                 drawer.addView(tv(netLabel(), 18f, color, bold = true))
                 drawer.addView(tv(restaurant, 11f, Color.parseColor("#CCCCCC"), padTop = 4))
+                drawer.addView(tv(deliveryTown, 11f, Color.parseColor("#00C9A7"), padTop = 2))
                 drawer.addView(divider())
                 drawer.addView(rowLayout("Pay", "$${"%.2f".format(payAmount)}"))
                 drawer.addView(rowLayout("To pickup", "${"%.1f".format(pickupMiles)} mi"))
@@ -618,6 +642,7 @@ class OfferOverlayService : Service() {
                 drawer.addView(rowLayout("Wear & tear", "$${"%.2f".format(wearTearCost)}"))
                 drawer.addView(rowLayout("Total cost", "$${"%.2f".format(gasCost + wearTearCost)}"))
                 drawer.addView(divider())
+                drawer.addView(rowLayout("Delivery town", deliveryTown, Color.parseColor("#00C9A7")))
                 drawer.addView(rowLayout("Net value", netLabel(), color))
                 drawer.addView(rowLayout("Score", "$score / 100"))
                 drawer.addView(tv("tap to close", 8f,

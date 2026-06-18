@@ -33,5 +33,10 @@ data class OfferCapture(
     val netValue: Double? = null,
     val estimatedMinutes: Int? = null,
     val timeCost: Double? = null,
-    val minutesOnJob: Double? = null
+    val minutesOnJob: Double? = null,
+    // Delivery town estimation accuracy tracking
+    val estimatedTown: String? = null,        // what GigLens guessed
+    val estimatedTownMethod: String? = null,  // "gps_bearing" | "city_fallback"
+    val confirmedTown: String? = null,        // driver confirmed actual town
+    val townAccurate: Boolean? = null         // true/false/null (null = not yet confirmed)
 )

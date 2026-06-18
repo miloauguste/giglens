@@ -34,6 +34,6 @@ fun defaultAppConfig(): List<AppConfig> = listOf(
     AppConfig(AppConfigKeys.MAPS_API_KEY,         "",     "Google Maps Distance Matrix API key (Pro tier)"),
     AppConfig(AppConfigKeys.DATA_SHARING,         "none", "Community data sharing: none | aggregate | individual"),
     AppConfig(AppConfigKeys.WIDGET_ENABLED,       "false","Widget overlay enabled/disabled"),
-    AppConfig(AppConfigKeys.AUTO_CAPTURE_MODE,    "off",  "Auto capture mode: off | accessibility | button | both"),
+    AppConfig(AppConfigKeys.AUTO_CAPTURE_MODE,    "accessibility",  "Auto capture mode: off | accessibility | button | both"),
     AppConfig(AppConfigKeys.ENABLED_PLATFORMS,    "doordash", "Enabled gig platforms (comma-separated)")
 )

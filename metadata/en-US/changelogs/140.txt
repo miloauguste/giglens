@@ -1,0 +1,1 @@
+Skip screen share dialog in accessibility mode

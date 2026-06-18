@@ -1,0 +1,1 @@
+Fix duplicate analytics; remove MediaProjection dialog; tap-to-capture mode; map debug logging; debug APK signed with release keystore

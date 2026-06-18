@@ -1,0 +1,1 @@
+Fix GPS toggle to request real location permission instead of silently setting a flag
