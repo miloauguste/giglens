@@ -25,8 +25,20 @@ android {
         applicationId = "com.augusteenterprise.giglens"
         minSdk = 26
         targetSdk = 35
-        versionCode = 163
-        versionName = "0.1.163"
+        versionCode = 164
+        versionName = "0.1.164"
+
+        // CORRECT: defined here (not inside debug{} alone) so the field exists in
+        //          EVERY variant's BuildConfig, including release -- fixes
+        //          "Unresolved reference: DEBUG_SMTP_USER" in compileReleaseKotlin
+        // WRONG:   defining only in debug{} -- compileReleaseKotlin (used by deploy.sh)
+        //          compiles against release's BuildConfig, which would lack the field
+        //          entirely, since debug{} and release{} generate separate BuildConfig
+        //          classes and do not inherit each other's buildConfigField calls
+        val debugSmtpUser = System.getenv("GIGLENS_DEBUG_SMTP_USER") ?: ""
+        val debugSmtpPass = System.getenv("GIGLENS_DEBUG_SMTP_PASS") ?: ""
+        buildConfigField("String", "DEBUG_SMTP_USER", """"$debugSmtpUser"""")
+        buildConfigField("String", "DEBUG_SMTP_PASS", """"$debugSmtpPass"""")
     }
 
     signingConfigs {
@@ -42,15 +54,6 @@ android {
             // CORRECT: sign debug with release keystore — avoids signature conflict on device
             // WRONG:   default debug keystore — conflicts with Play Store release install
             signingConfig = signingConfigs.getByName("release")
-
-            // CORRECT: SMTP creds via env var, same pattern as GIGLENS_STORE_PASSWORD above --
-            //          never committed, never hardcoded in this file
-            // WRONG:   hardcoding credentials here or in DebugOfferEmailer.kt directly --
-            //          would ship inside the debug APK, decompilable
-            val debugSmtpUser = System.getenv("GIGLENS_DEBUG_SMTP_USER") ?: ""
-            val debugSmtpPass = System.getenv("GIGLENS_DEBUG_SMTP_PASS") ?: ""
-            buildConfigField("String", "DEBUG_SMTP_USER", """"$debugSmtpUser"""")
-            buildConfigField("String", "DEBUG_SMTP_PASS", """"$debugSmtpPass"""")
         }
         release {
             isMinifyEnabled = true
