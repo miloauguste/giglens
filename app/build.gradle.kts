@@ -139,7 +139,7 @@ dependencies {
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
-    implementation("com.google.android.gms:play-services-location:21.2.0")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
 
     // Firebase BoM — manages all Firebase library versions
     implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
