@@ -25,8 +25,8 @@ android {
         applicationId = "com.augusteenterprise.giglens"
         minSdk = 26
         targetSdk = 35
-        versionCode = 162
-        versionName = "0.1.162"
+        versionCode = 163
+        versionName = "0.1.163"
     }
 
     signingConfigs {
@@ -42,6 +42,15 @@ android {
             // CORRECT: sign debug with release keystore — avoids signature conflict on device
             // WRONG:   default debug keystore — conflicts with Play Store release install
             signingConfig = signingConfigs.getByName("release")
+
+            // CORRECT: SMTP creds via env var, same pattern as GIGLENS_STORE_PASSWORD above --
+            //          never committed, never hardcoded in this file
+            // WRONG:   hardcoding credentials here or in DebugOfferEmailer.kt directly --
+            //          would ship inside the debug APK, decompilable
+            val debugSmtpUser = System.getenv("GIGLENS_DEBUG_SMTP_USER") ?: ""
+            val debugSmtpPass = System.getenv("GIGLENS_DEBUG_SMTP_PASS") ?: ""
+            buildConfigField("String", "DEBUG_SMTP_USER", """"$debugSmtpUser"""")
+            buildConfigField("String", "DEBUG_SMTP_PASS", """"$debugSmtpPass"""")
         }
         release {
             isMinifyEnabled = true
@@ -88,6 +97,13 @@ dependencies {
 
     // RecyclerView for offer history list
     implementation("androidx.recyclerview:recyclerview:1.3.2")
+
+    // JavaMail (Android-compatible build) -- used by DebugOfferEmailer for
+    // direct SMTP send, debug builds only (see BuildConfig.DEBUG gate in
+    // DebugOfferEmailer.kt). Standard javax.mail does not run on Android --
+    // these are the Android-packaged forks.
+    implementation("com.sun.mail:android-mail:1.6.7")
+    implementation("com.sun.mail:android-activation:1.6.7")
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
