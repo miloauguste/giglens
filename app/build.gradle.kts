@@ -25,8 +25,8 @@ android {
         applicationId = "com.augusteenterprise.giglens"
         minSdk = 26
         targetSdk = 35
-        versionCode = 164
-        versionName = "0.1.164"
+        versionCode = 165
+        versionName = "0.1.165"
 
         // CORRECT: defined here (not inside debug{} alone) so the field exists in
         //          EVERY variant's BuildConfig, including release -- fixes
@@ -78,6 +78,21 @@ android {
     buildFeatures {
         viewBinding = true
         buildConfig = true
+    }
+
+    // CORRECT: exclude duplicate META-INF notice/license files shipped by both
+    //          android-mail and android-activation -- they're identical license
+    //          text, not functional code, safe to drop one copy from the APK
+    // WRONG:   leaving both -- mergeReleaseJavaResource fails with "2 files found
+    //          with path 'META-INF/NOTICE.md'" since Android refuses to silently
+    //          pick one when duplicate resource paths collide across dependencies
+    packaging {
+        resources {
+            excludes += "META-INF/NOTICE.md"
+            excludes += "META-INF/LICENSE.md"
+            excludes += "META-INF/LICENSE.txt"
+            excludes += "META-INF/NOTICE.txt"
+        }
     }
 }
 
