@@ -39,20 +39,13 @@ android {
         applicationId = "com.augusteenterprise.giglens"
         minSdk = 26
         targetSdk = 35
-        versionCode = 178
-        versionName = "0.1.178"
+        versionCode = 182
+        versionName = "0.1.182"
 
-        // CORRECT: defined here (not inside debug{} alone) so the field exists in
-        //          EVERY variant's BuildConfig, including release -- fixes
-        //          "Unresolved reference: DEBUG_SMTP_USER" in compileReleaseKotlin
-        // WRONG:   defining only in debug{} -- compileReleaseKotlin (used by deploy.sh)
-        //          compiles against release's BuildConfig, which would lack the field
-        //          entirely, since debug{} and release{} generate separate BuildConfig
-        //          classes and do not inherit each other's buildConfigField calls
-        val debugSmtpUser = System.getenv("GIGLENS_DEBUG_SMTP_USER") ?: ""
-        val debugSmtpPass = System.getenv("GIGLENS_DEBUG_SMTP_PASS") ?: ""
-        buildConfigField("String", "DEBUG_SMTP_USER", """"$debugSmtpUser"""")
-        buildConfigField("String", "DEBUG_SMTP_PASS", """"$debugSmtpPass"""")
+        // SMTP credentials intentionally NOT in defaultConfig -- see buildTypes.debug
+        // and buildTypes.release below for per-variant buildConfigField calls.
+        // This prevents real Gmail App Password values from leaking into the
+        // release APK's BuildConfig (extractable by decompilation).
     }
 
     signingConfigs {
@@ -68,6 +61,19 @@ android {
             // CORRECT: sign debug with release keystore — avoids signature conflict on device
             // WRONG:   default debug keystore — conflicts with Play Store release install
             signingConfig = signingConfigs.getByName("release")
+
+            // CORRECT: real Gmail App Password values from env vars, read at debug
+            //          build time only -- baked into the debug APK's BuildConfig.
+            //          Debug builds are never distributed via Play Store, so the
+            //          App Password never leaves the developer's machine in any
+            //          shippable artifact.
+            // WRONG:   declaring these in defaultConfig -- release builds would
+            //          inherit the real values and ship the App Password in the
+            //          Play Store APK, extractable by decompilation.
+            val debugSmtpUser = System.getenv("GIGLENS_DEBUG_SMTP_USER") ?: ""
+            val debugSmtpPass = System.getenv("GIGLENS_DEBUG_SMTP_PASS") ?: ""
+            buildConfigField("String", "DEBUG_SMTP_USER", """"$debugSmtpUser"""")
+            buildConfigField("String", "DEBUG_SMTP_PASS", """"$debugSmtpPass"""")
         }
         release {
             isMinifyEnabled = true
@@ -77,6 +83,22 @@ android {
                 "proguard-rules.pro"
             )
             signingConfig = signingConfigs.getByName("release")
+
+            // CORRECT: placeholder non-empty string "__RELEASE_NOOP__" -- field
+            //          present so compileReleaseKotlin resolves DEBUG_SMTP_USER/PASS,
+            //          but no real credential ever ships in the release APK.
+            //          DebugOfferEmailer.sendAsync() no-ops in release via
+            //          BuildConfig.DEBUG check; this placeholder is belt-and-
+            //          suspenders defense in depth.
+            // WRONG:   passing """"__RELEASE_NOOP__""""" (9 quotes, 4+5) -- Kotlin
+            //          parses this as raw string with content "__RELEASE_NOOP__""
+            //          (TWO trailing quote chars), AGP emits `"X"";`, Java sees
+            //          unclosed string literal.
+            //          Correct count is 8 (4+4), matching the debug pattern
+            //          """"$value"""" -- same raw-string structure, just literal
+            //          content instead of $interpolation.
+            buildConfigField("String", "DEBUG_SMTP_USER", """"__RELEASE_NOOP__"""")
+            buildConfigField("String", "DEBUG_SMTP_PASS", """"__RELEASE_NOOP__"""")
         }
     }
 
