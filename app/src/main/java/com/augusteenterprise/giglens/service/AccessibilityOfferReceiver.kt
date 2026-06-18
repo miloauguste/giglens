@@ -158,7 +158,6 @@ class AccessibilityOfferReceiver : BroadcastReceiver() {
                     // WRONG:   wrapping this call in its own BuildConfig.DEBUG check here too -- fine to
                     //          be redundant, but the real gate must live in DebugOfferEmailer itself
                     com.augusteenterprise.giglens.debug.DebugOfferEmailer.sendAsync(
-                        scope = this,
                         payload = com.augusteenterprise.giglens.debug.OfferDebugPayload(
                             timestamp = now,
                             payAmount = pay,
@@ -167,7 +166,7 @@ class AccessibilityOfferReceiver : BroadcastReceiver() {
                             deliverByRawText = deliverBy,
                             source = source,
                             score = result.score,
-                            verdict = result.verdict.toString(),
+                            verdict = result.verdict.name,
                             netValue = result.netValue,
                             payPerMile = result.payPerMile,
                             truePayPerMile = result.truePayPerMile,

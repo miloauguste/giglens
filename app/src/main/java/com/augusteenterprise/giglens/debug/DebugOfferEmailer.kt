@@ -76,7 +76,6 @@ object DebugOfferEmailer {
      *          offer's fingerprint
      */
     fun sendAsync(
-        scope: CoroutineScope,
         payload: OfferDebugPayload,
         debugDir: File,
         maxScreenshotAgeMs: Long = 15_000L
@@ -85,7 +84,17 @@ object DebugOfferEmailer {
             // Hard stop. This must never run in a release build.
             return
         }
-        scope.launch(Dispatchers.IO) {
+        // CORRECT: launch on a standalone CoroutineScope, NOT the caller's
+        //          scope -- the caller (AccessibilityOfferReceiver) holds a
+        //          goAsync() pendingResult that must finish() within ~10s.
+        //          SMTP send can take 5-30s on cellular and would block
+        //          finish(), causing the system to kill the process before
+        //          the email is sent.
+        // WRONG:   scope.launch(Dispatchers.IO) as a child of the receiver's
+        //          outer launch -- structured concurrency keeps the parent
+        //          job alive until all children complete, so pendingResult
+        //          would wait for the SMTP send
+        CoroutineScope(Dispatchers.IO).launch {
             try {
                 val screenshotFile = findRecentScreenshot(debugDir, payload.timestamp, maxScreenshotAgeMs)
                 send(payload, screenshotFile)
@@ -100,7 +109,7 @@ object DebugOfferEmailer {
         if (!debugDir.exists()) return null
         return debugDir.listFiles { f -> f.name.startsWith("offer_screenshot_") && f.name.endsWith(".png") }
             ?.filter { kotlin.math.abs(it.lastModified() - aroundTimestamp) <= maxAgeMs }
-            ?.maxByOrNull { it.lastModified() }
+            ?.minByOrNull { kotlin.math.abs(it.lastModified() - aroundTimestamp) }
     }
 
     private fun send(payload: OfferDebugPayload, screenshotFile: File?) {
