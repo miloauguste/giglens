@@ -16,6 +16,20 @@ dependencyCheck {
             enabled = false
         }
     }
+    // CORRECT: read the owasp.nvd.api.key Gradle property (passed via -P on the
+    //          command line, e.g. from the pre-push hook) and wire it into the
+    //          plugin's nvd{} block -- without this, -Powasp.nvd.api.key=... on
+    //          the command line is silently ignored, and the scan runs fully
+    //          unauthenticated against NVD's public (heavily rate-limited) API
+    // WRONG:   assuming a -P property is automatically picked up by the plugin
+    //          just because it's passed on the command line -- Gradle project
+    //          properties must be explicitly read and assigned somewhere
+    nvd {
+        val key = project.findProperty("owasp.nvd.api.key") as String? ?: System.getenv("NVD_API_KEY") ?: ""
+        if (key.isNotBlank()) {
+            apiKey = key
+        }
+    }
 }
 android {
     namespace = "com.augusteenterprise.giglens"
@@ -25,8 +39,8 @@ android {
         applicationId = "com.augusteenterprise.giglens"
         minSdk = 26
         targetSdk = 35
-        versionCode = 171
-        versionName = "0.1.171"
+        versionCode = 172
+        versionName = "0.1.172"
 
         // CORRECT: defined here (not inside debug{} alone) so the field exists in
         //          EVERY variant's BuildConfig, including release -- fixes
