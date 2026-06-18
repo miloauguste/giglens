@@ -2,6 +2,20 @@
 # Author: Claude (Anthropic)
 title = "GigLens Gitleaks Config"
 
+[[rules]]
+id = "gcp-service-account-json"
+description = "Google Cloud / Firebase service account JSON credential"
+regex = '''"type":\s*"service_account"'''
+tags = ["credentials", "gcp"]
+
+[[rules]]
+id = "gcp-private-key-block"
+description = "PEM-format private key (matches GCP service account private_key field)"
+regex = '''-----BEGIN (RSA |EC )?PRIVATE KEY-----'''
+tags = ["credentials", "private-key"]
+
+
+
 [allowlist]
 description = "Allowlisted files and paths"
 paths = [
