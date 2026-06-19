@@ -143,3 +143,88 @@ before it gets built to avoid wasted implementation cycles
 - **Source of truth for widget toggle:** `AppConfigKeys.WIDGET_ENABLED` in DB, not `SharedPreferences` — all code now reads from DB
 - **Window recovery approach:** Detect and re-add lost window in `onStartCommand()` instead of service restart — better battery, no flicker
 - **Auto-shutdown design:** 60-second countdown when DoorDash closes, auto-disable toggle + stop services — deferred to next session
+## 2026-06-19 — Pin-detection town estimator (replaces GPS-bearing as primary)
+
+**Decision:** Replace GPS-bearing-based delivery town estimation with a
+computer-vision pin-detection approach as the primary algorithm. GPS-bearing
+remains as fallback when CV pin detection fails.
+
+**Algorithm:**
+1. Screenshot DoorDash offer screen (existing testTakeScreenshot path)
+2. Use OpenCV template matching to locate three pins on the map:
+   - Driver location (blue circle, low-saturation)
+   - Pickup/restaurant (white circle with black briefcase icon)
+   - Dropoff/customer (white circle with black house icon)
+3. Compute pixel distances between pins
+4. Calibrate miles-per-pixel from offer's stated total distance
+   (driver -> pickup -> dropoff) divided by total pixel distance
+5. Compute compass bearing from pickup -> dropoff (map is north-up,
+   confirmed across multiple screenshots)
+6. Project delivery point from restaurant GPS at calibrated distance + bearing
+7. Reverse geocode to town name
+
+**Fallbacks:**
+- If driver pin not detected: calibrate from real GPS driver->pickup distance
+  (computed from driverGPS + geocoded restaurant), confidence=MEDIUM
+- If fewer than 2 pins detected: fall back to GPS-bearing estimator
+  (existing DeliveryTownEstimator behavior), confidence=LOW
+- If GPS-bearing also fails: show "📍 ?" in pill, no wrong answer
+
+**Sanity checks (defense in depth):**
+- delivery_leg_miles > 30 -> LOW confidence
+- projected point > 50 miles from driver -> LOW confidence
+- pixel_total < 50 -> LOW confidence
+
+**Rationale:**
+- GPS bearing at low speed is unreliable (confirmed broken across multiple
+  shifts; bearing jitter +-45deg at <5mph). This was the core architecture
+  limitation flagged in the 2026-06-18 handover.
+- Town labels visible on the map (e.g., "Colemantown", "Cox's Corner") are
+  REFERENCE geography, not the actual delivery town. OCR on these would
+  produce wrong answers (Milo correction during 2026-06-19 design session).
+- DoorDash offer distance represents the FULL trip (driver -> pickup -> dropoff),
+  not just one leg. This makes it usable as a calibration anchor for
+  miles-per-pixel computation.
+- Map is always north-up (confirmed by Milo across all sample screenshots).
+  This is the load-bearing assumption; if DoorDash ever rotates the map,
+  results will be wrong. Sanity checks catch gross errors.
+
+**Alternatives rejected:**
+1. OCR-based town detection from map labels
+   - REJECTED: town labels on map are reference geography (shown for context),
+     not the delivery town. Would produce systematically wrong answers.
+2. Pure GPS-bearing estimator (current approach)
+   - REJECTED: confirmed unreliable at low speeds (handover 2026-06-18).
+3. MediaProjection + full-screen map capture + pin detection
+   - REJECTED: poor UX (separate permission flow), explicitly avoided per
+     FEATURE_BACKLOG.md. AccessibilityService.takeScreenshot() suffices.
+4. Color-based HSV filtering for pin detection
+   - REJECTED during 2026-06-19 analysis: driver pin uses soft muted blue
+     with low saturation, indistinguishable from map water/features by
+     color alone. Template matching is required for reliable detection.
+
+**Approved by:** Milo (2026-06-19)
+
+**Open risks:**
+- Pin template stability across DoorDash app updates: templates extracted
+  from 2026-06-18 screenshot. If DoorDash redesigns pin icons, templates
+  must be re-extracted. Mitigation: log match scores to logcat; if scores
+  drop below threshold consistently across offers, alert driver to update.
+- Map north-up assumption: if DoorDash introduces map rotation during
+  navigation, all results will be wrong. Sanity checks (50-mile radius
+  from driver) catch gross errors but not subtle ones.
+- Restaurant GPS geocoding accuracy: Nominatim geocode of restaurant name
+  near driverGPS may return wrong location in dense areas with multiple
+  same-name restaurants. Pre-existing issue, not introduced by this change.
+
+**Implementation files:**
+- app/src/main/java/com/augusteenterprise/giglens/town/PinDetectionTownEstimator.kt (NEW)
+- app/src/main/res/drawable/pin_template_briefcase.png (NEW)
+- app/src/main/res/drawable/pin_template_house.png (NEW)
+- app/src/main/res/drawable/pin_template_driver.png (NEW)
+- app/src/main/java/com/augusteenterprise/giglens/town/DeliveryTownEstimator.kt (MODIFIED — dispatch)
+- app/src/main/java/com/augusteenterprise/giglens/data/AppConfig.kt (MODIFIED — new key)
+- app/build.gradle.kts (MODIFIED — OpenCV dependency)
+
+---
+
