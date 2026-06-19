@@ -33,7 +33,14 @@ data class TownEstimate(
     val town: String?,           // e.g. "Cherry Hill" or null if unavailable
     val confidence: String,      // "high" | "medium" | "low"
     val method: String,          // "gps_bearing" | "city_fallback" | "unavailable"
-    val displayName: String      // e.g. "📍 ~Cherry Hill" or "📍 ---"
+    val displayName: String,     // e.g. "📍 ~Cherry Hill" or "📍 ---"
+    // CORRECT: carry pickup/delivery leg distances out of estimateTown() so the
+    //          caller can persist them to the DB and diagnose accuracy later
+    // WRONG:   computing these internally and discarding them — confirmed as the
+    //          root cause of null pickupDistance/deliveryDistance columns in the
+    //          offer_captures DB, found during 2026-06-18 post-shift analysis
+    val pickupLegMi: Double = 0.0,
+    val deliveryLegMi: Double = 0.0
 )
 
 object DeliveryTownEstimator {
@@ -105,14 +112,28 @@ object DeliveryTownEstimator {
                 driverLocation != null -> "medium"                                // stationary = bearing unreliable
                 else -> "low"
             }
+            // CORRECT: log a warning when bearing is unreliable (speed <= 2.0) so
+            //          post-shift analysis can distinguish bearing-error misses from
+            //          geocoding misses — confirmed during 2026-06-18 analysis that
+            //          speed/bearing state at offer time is critical diagnostic data
+            // WRONG:   silently projecting with bearing=0.0 (north) when stationary
+            //          with no indication in logs or DB that the result is unreliable
+            if (confidence != "high") {
+                Log.w(TAG, "Town estimate confidence=$confidence — bearing may be unreliable " +
+                    "(speed=${driverLocation?.speed ?: 0f} m/s, bearing=${driverLocation?.bearing ?: 0f}°) " +
+                    "pickupLeg=${pickupLegMi}mi deliveryLeg=${deliveryLegMi}mi")
+            }
             TownEstimate(
-                town        = town,
-                confidence  = confidence,
-                method      = if (useGpsMethod) "gps_bearing" else "city_fallback",
-                displayName = "📍 ~$town"
+                town          = town,
+                confidence    = confidence,
+                method        = if (useGpsMethod) "gps_bearing" else "city_fallback",
+                displayName   = "📍 ~$town",
+                pickupLegMi   = pickupLegMi,
+                deliveryLegMi = deliveryLegMi
             )
         } else {
-            TownEstimate(null, "low", "unavailable", "📍 ---")
+            TownEstimate(null, "low", "unavailable", "📍 ---",
+                pickupLegMi = pickupLegMi, deliveryLegMi = deliveryLegMi)
         }
     }
 

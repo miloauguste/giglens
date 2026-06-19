@@ -190,8 +190,15 @@ class AccessibilityOfferReceiver : BroadcastReceiver() {
                         vsPersonalAvg  = result.vsPersonalAvg,
                         driverLat      = driverLocation?.latitude,
                         driverLon      = driverLocation?.longitude,
-                        totalDistance  = result.totalDistance,
-                        truePayPerMile = result.truePayPerMile,
+                        totalDistance    = result.totalDistance,
+                        // CORRECT: persist the actual calculated pickup/delivery leg distances
+                        //          from DeliveryTownEstimator so post-shift accuracy analysis
+                        //          can see the real leg split, not nulls
+                        // WRONG:   leaving these unset — confirmed root cause of null
+                        //          pickupDistance/deliveryDistance in DB (2026-06-18 analysis)
+                        pickupDistance   = townEstimate?.pickupLegMi,
+                        deliveryDistance = townEstimate?.deliveryLegMi,
+                        truePayPerMile   = result.truePayPerMile,
                         vehicleCost    = result.vehicleCost,
                         netValue            = result.netValue,
                         estimatedTown       = townEstimate?.town,
