@@ -191,8 +191,20 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
                 // WRONG:   calling on every accessibility event — would fire on every screen, not just offers
                 // CORRECT: API 30+ check — takeScreenshot() unavailable below Android 11
                 // WRONG:   calling unconditionally — crashes on minSdk 26 devices
+                // CORRECT: 1500ms delay via Handler.postDelayed() — gives Mapbox tile rendering time
+                //          to complete before screenshot fires. Without this delay, the screenshot
+                //          captures the map before pins are rendered, producing images with only
+                //          the route line and driver dot but no pickup/dropoff pin icons —
+                //          confirmed from real shift screenshots (2026-06-18/19). 1500ms is the
+                //          starting value; tune based on whether next shift screenshots show
+                //          fully-rendered pins. If pins still missing, increase to 2000ms.
+                //          If pins always present at 1500ms, try reducing to 1000ms.
+                // WRONG:   calling testTakeScreenshot() synchronously — fires before Mapbox
+                //          finishes rendering, produces incomplete screenshots
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-                    testTakeScreenshot()
+                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                        testTakeScreenshot()
+                    }, 1500L)
                 } else {
                     Log.w(TAG, "testTakeScreenshot skipped — requires Android 11+ (API 30), device is API ${android.os.Build.VERSION.SDK_INT}")
                 }
