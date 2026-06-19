@@ -202,9 +202,20 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
                 // WRONG:   calling testTakeScreenshot() synchronously — fires before Mapbox
                 //          finishes rendering, produces incomplete screenshots
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                    // CORRECT: read delay from DB so it can be tuned in Settings without rebuild
+                    // WRONG:   hardcoding 1500L — forces a rebuild to adjust timing per device
+                    kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
+                        val delayMs = try {
+                            val dao = com.augusteenterprise.giglens.GigLensApp.instance.database.appConfigDao()
+                            dao.getValue(com.augusteenterprise.giglens.data.AppConfigKeys.SCREENSHOT_DELAY_MS)
+                                ?.toLongOrNull() ?: 1500L
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Could not read SCREENSHOT_DELAY_MS — using default 1500ms")
+                            1500L
+                        }
+                        kotlinx.coroutines.delay(delayMs)
                         testTakeScreenshot()
-                    }, 1500L)
+                    }
                 } else {
                     Log.w(TAG, "testTakeScreenshot skipped — requires Android 11+ (API 30), device is API ${android.os.Build.VERSION.SDK_INT}")
                 }

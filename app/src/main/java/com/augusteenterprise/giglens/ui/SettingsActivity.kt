@@ -193,6 +193,7 @@ class SettingsActivity : AppCompatActivity() {
             val costPerMile = scorerDao.getValue(ScorerConfigKeys.COST_PER_MILE) ?: 0.90
             val hourlyRate = scorerDao.getValue(ScorerConfigKeys.HOURLY_RATE) ?: 15.00
             val resultDuration = scorerDao.getValue(ScorerConfigKeys.RESULT_DISPLAY_SECONDS) ?: 60.0
+                val screenshotDelayMs = appDao.getValue(AppConfigKeys.SCREENSHOT_DELAY_MS)?.toLongOrNull() ?: 1500L
             val mpg = scorerDao.getValue(ScorerConfigKeys.MPG) ?: 30.0
             val gasPrice = scorerDao.getValue(ScorerConfigKeys.GAS_PRICE) ?: 3.20
             val dataSharing = appDao.getValue(AppConfigKeys.DATA_SHARING) ?: "none"
@@ -223,6 +224,7 @@ class SettingsActivity : AppCompatActivity() {
                 binding.etCostPerMile.setText("%.2f".format(costPerMile))
                 binding.etHourlyRate.setText("%.2f".format(hourlyRate))
                 binding.etResultDuration.setText("%.0f".format(resultDuration))
+                binding.etScreenshotDelayMs.setText(screenshotDelayMs.toString())
                 binding.etMpg.setText("%.1f".format(mpg))
                 binding.etGasPrice.setText("%.2f".format(gasPrice))
                 when (dataSharing) {
@@ -240,6 +242,7 @@ class SettingsActivity : AppCompatActivity() {
         val costPerMile = binding.etCostPerMile.text.toString().toDoubleOrNull() ?: 0.90
         val hourlyRate = binding.etHourlyRate.text.toString().toDoubleOrNull() ?: 15.00
         val resultDuration = binding.etResultDuration.text.toString().toDoubleOrNull()?.coerceIn(5.0, 300.0) ?: 60.0
+        val screenshotDelayMs = binding.etScreenshotDelayMs.text.toString().toLongOrNull()?.coerceIn(0L, 5000L) ?: 1500L
         val dataSharing = when {
             binding.rbSharingAggregate.isChecked -> "aggregate"
             binding.rbSharingIndividual.isChecked -> "individual"
@@ -252,6 +255,7 @@ class SettingsActivity : AppCompatActivity() {
             
             appDao.setValue(AppConfigKeys.DRIVER_MANUAL_REGION, manualRegion)
             appDao.setValue(AppConfigKeys.GPS_ENABLED, gpsEnabled.toString())
+            appDao.setValue(AppConfigKeys.SCREENSHOT_DELAY_MS, screenshotDelayMs.toString())
             val captureMode = when {
                 binding.rbCaptureAccessibility.isChecked -> "accessibility"
                 binding.rbCaptureButton.isChecked        -> "tap"

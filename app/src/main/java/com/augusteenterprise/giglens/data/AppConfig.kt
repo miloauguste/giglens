@@ -23,6 +23,7 @@ object AppConfigKeys {
     const val DATA_SHARING         = "data_sharing"          // "none" | "aggregate" | "individual"
     const val WIDGET_ENABLED       = "widget_enabled"         // "true" | "false"
     const val AUTO_CAPTURE_MODE    = "auto_capture_mode"     // "off" | "accessibility" | "button" | "both"
+        const val SCREENSHOT_DELAY_MS  = "screenshot_delay_ms"  // ms delay before takeScreenshot() fires
     const val ENABLED_PLATFORMS    = "enabled_platforms"     // comma-separated platform IDs e.g. "doordash"
 }
 
@@ -35,5 +36,6 @@ fun defaultAppConfig(): List<AppConfig> = listOf(
     AppConfig(AppConfigKeys.DATA_SHARING,         "none", "Community data sharing: none | aggregate | individual"),
     AppConfig(AppConfigKeys.WIDGET_ENABLED,       "false","Widget overlay enabled/disabled"),
     AppConfig(AppConfigKeys.AUTO_CAPTURE_MODE,    "accessibility",  "Auto capture mode: off | accessibility | button | both"),
+    AppConfig(AppConfigKeys.SCREENSHOT_DELAY_MS,  "1500",           "Delay (ms) before screenshot fires after offer detected — allows Mapbox to finish rendering"),
     AppConfig(AppConfigKeys.ENABLED_PLATFORMS,    "doordash", "Enabled gig platforms (comma-separated)")
 )
