@@ -201,7 +201,8 @@ class SettingsActivity : AppCompatActivity() {
             val captureMode = appDao.getValue(AppConfigKeys.AUTO_CAPTURE_MODE) ?: "off"
             android.util.Log.d("SettingsActivity", "loadSettings: widget=$widgetEnabled mode=$captureMode")
             val enabledPlatforms = appDao.getValue(AppConfigKeys.ENABLED_PLATFORMS) ?: "doordash"
-            
+            val pinDetectionEnabled = appDao.getValue(AppConfigKeys.PIN_DETECTION_ENABLED) == "true"
+
             runOnUiThread {
                 updateWidgetPermUI()
                 binding.switchWidget.isChecked = widgetEnabled
@@ -225,6 +226,7 @@ class SettingsActivity : AppCompatActivity() {
                 binding.etHourlyRate.setText("%.2f".format(hourlyRate))
                 binding.etResultDuration.setText("%.0f".format(resultDuration))
                 binding.etScreenshotDelayMs.setText(screenshotDelayMs.toString())
+                binding.switchPinDetectionEnabled.isChecked = pinDetectionEnabled
                 binding.etMpg.setText("%.1f".format(mpg))
                 binding.etGasPrice.setText("%.2f".format(gasPrice))
                 when (dataSharing) {
@@ -256,6 +258,7 @@ class SettingsActivity : AppCompatActivity() {
             appDao.setValue(AppConfigKeys.DRIVER_MANUAL_REGION, manualRegion)
             appDao.setValue(AppConfigKeys.GPS_ENABLED, gpsEnabled.toString())
             appDao.setValue(AppConfigKeys.SCREENSHOT_DELAY_MS, screenshotDelayMs.toString())
+            appDao.setValue(AppConfigKeys.PIN_DETECTION_ENABLED, binding.switchPinDetectionEnabled.isChecked.toString())
             val captureMode = when {
                 binding.rbCaptureAccessibility.isChecked -> "accessibility"
                 binding.rbCaptureButton.isChecked        -> "tap"
