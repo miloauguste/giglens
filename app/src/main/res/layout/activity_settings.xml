@@ -1,336 +1,453 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:attr/windowBackground">
+    android:background="#F2F4F7">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:paddingBottom="32dp">
 
+        <!-- ── LOCATION ─────────────────────────────────────────────────── -->
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="LOCATION"
-            android:textSize="12sp"
-            android:textColor="?attr/colorPrimary"
-            android:layout_marginBottom="8dp"/>
-
-        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp">
+            android:text="LOCATION"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#6B7280"
+            android:letterSpacing="0.08"
+            android:paddingStart="18dp"
+            android:paddingTop="18dp"
+            android:paddingBottom="8dp" />
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="14dp"
+            android:layout_marginEnd="14dp"
+            android:layout_marginBottom="14dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#FFFFFF">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:orientation="vertical">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginBottom="16dp">
+                    android:paddingStart="18dp"
+                    android:paddingEnd="18dp"
+                    android:paddingTop="14dp"
+                    android:paddingBottom="14dp">
+
+                    <TextView
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:text="📍"
+                        android:textSize="16sp"
+                        android:gravity="center"
+                        android:background="#00C9A7"
+                        android:alpha="0.12" />
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:layout_marginStart="14dp">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Use GPS for region"
-                            android:textSize="16sp"
-                            android:textColor="?attr/colorOnBackground"/>
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:textColor="#1A1A2E" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Automatically detects your region for better distance estimates"
-                            android:textSize="13sp"
-                            android:textColor="#999999"
-                            android:layout_marginTop="2dp"/>
+                            android:textSize="11sp"
+                            android:textColor="#6B7280" />
                     </LinearLayout>
 
                     <androidx.appcompat.widget.SwitchCompat
                         android:id="@+id/switchGps"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"/>
+                        android:layout_height="wrap_content" />
                 </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#E5E7EB" />
 
                 <TextView
                     android:id="@+id/tvDetectedRegion"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Detected region: --"
-                    android:textSize="13sp"
-                    android:textColor="#999999"
-                    android:layout_marginBottom="16dp"/>
+                    android:textSize="11sp"
+                    android:textColor="#6B7280"
+                    android:paddingStart="18dp"
+                    android:paddingEnd="18dp"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp" />
 
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:background="#DDDDDD"
-                    android:layout_marginBottom="16dp"/>
+                    android:background="#E5E7EB" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Manual region (fallback if GPS off)"
-                    android:textSize="14sp"
-                    android:textColor="?attr/colorOnBackground"
-                    android:layout_marginBottom="8dp"/>
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/tilRegion"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="e.g. Newark, New Jersey, USA"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                    android:orientation="vertical"
+                    android:paddingStart="18dp"
+                    android:paddingEnd="18dp"
+                    android:paddingTop="14dp"
+                    android:paddingBottom="14dp">
 
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etRegion"
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Manual region"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="#1A1A2E"
+                        android:layout_marginBottom="4dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Fallback if GPS is off (e.g. Newark, New Jersey, USA)"
+                        android:textSize="11sp"
+                        android:textColor="#6B7280"
+                        android:layout_marginBottom="10dp" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilRegion"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="text"
-                        android:imeOptions="actionDone"/>
-                </com.google.android.material.textfield.TextInputLayout>
+                        android:hint="e.g. Newark, New Jersey, USA"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etRegion"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text"
+                            android:imeOptions="actionDone" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
             </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+        </androidx.cardview.widget.CardView>
 
+        <!-- ── SCORING ─────────────────────────────────────────────────── -->
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="SCORING"
-            android:textSize="12sp"
-            android:textColor="?attr/colorPrimary"
-            android:layout_marginBottom="8dp"/>
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#6B7280"
+            android:letterSpacing="0.08"
+            android:paddingStart="18dp"
+            android:paddingTop="18dp"
+            android:paddingBottom="8dp" />
 
-        <com.google.android.material.card.MaterialCardView
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp">
+            android:layout_marginStart="14dp"
+            android:layout_marginEnd="14dp"
+            android:layout_marginBottom="14dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#FFFFFF">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:orientation="vertical">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Vehicle cost per mile"
-                    android:textSize="16sp"
-                    android:textColor="?attr/colorOnBackground"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="IRS standard is $0.90/mile. Adjust for your vehicle."
-                    android:textSize="13sp"
-                    android:textColor="#999999"
-                    android:layout_marginTop="2dp"
-                    android:layout_marginBottom="12dp"/>
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/tilCostPerMile"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Cost per mile ($)"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                    android:orientation="vertical"
+                    android:paddingStart="18dp"
+                    android:paddingEnd="18dp"
+                    android:paddingTop="14dp"
+                    android:paddingBottom="14dp">
 
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etCostPerMile"
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Vehicle cost per mile"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="#1A1A2E"
+                        android:layout_marginBottom="4dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="IRS standard is $0.90/mile. Adjust for your vehicle."
+                        android:textSize="11sp"
+                        android:textColor="#6B7280"
+                        android:layout_marginBottom="10dp" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilCostPerMile"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="numberDecimal"
-                        android:imeOptions="actionDone"/>
-                </com.google.android.material.textfield.TextInputLayout>
+                        android:hint="Cost per mile ($)"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etCostPerMile"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="numberDecimal"
+                            android:imeOptions="actionDone" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
 
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:background="#DDDDDD"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginBottom="16dp"/>
+                    android:background="#E5E7EB" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Your hourly rate"
-                    android:textSize="16sp"
-                    android:textColor="?attr/colorOnBackground"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="What your time is worth per hour. Used to calculate time cost per offer."
-                    android:textSize="13sp"
-                    android:textColor="#999999"
-                    android:layout_marginTop="2dp"
-                    android:layout_marginBottom="12dp"/>
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/tilHourlyRate"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Hourly rate ($)"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                    android:orientation="vertical"
+                    android:paddingStart="18dp"
+                    android:paddingEnd="18dp"
+                    android:paddingTop="14dp"
+                    android:paddingBottom="14dp">
 
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etHourlyRate"
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Your hourly rate"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="#1A1A2E"
+                        android:layout_marginBottom="4dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="What your time is worth per hour. Used to calculate time cost per offer."
+                        android:textSize="11sp"
+                        android:textColor="#6B7280"
+                        android:layout_marginBottom="10dp" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilHourlyRate"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="numberDecimal"
-                        android:imeOptions="actionDone"/>
-                </com.google.android.material.textfield.TextInputLayout>
+                        android:hint="Hourly rate ($)"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etHourlyRate"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="numberDecimal"
+                            android:imeOptions="actionDone" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
             </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+        </androidx.cardview.widget.CardView>
 
+        <!-- ── VEHICLE FUEL COST ───────────────────────────────────────── -->
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="VEHICLE FUEL COST"
-            android:textSize="12sp"
-            android:textColor="?attr/colorPrimary"
-            android:layout_marginBottom="8dp"/>
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#6B7280"
+            android:letterSpacing="0.08"
+            android:paddingStart="18dp"
+            android:paddingTop="18dp"
+            android:paddingBottom="8dp" />
 
-        <com.google.android.material.card.MaterialCardView
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp">
+            android:layout_marginStart="14dp"
+            android:layout_marginEnd="14dp"
+            android:layout_marginBottom="14dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#FFFFFF">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:orientation="vertical">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Vehicle MPG"
-                    android:textSize="16sp"
-                    android:textColor="?attr/colorOnBackground"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Fuel economy of your vehicle. Used to calculate real gas cost per offer."
-                    android:textSize="13sp"
-                    android:textColor="#999999"
-                    android:layout_marginTop="2dp"
-                    android:layout_marginBottom="8dp"/>
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnLookupMpg"
-                    style="@style/Widget.MaterialComponents.Button.TextButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Look up my MPG at fueleconomy.gov →"
-                    android:textSize="13sp"
-                    android:layout_marginBottom="8dp"/>
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/tilMpg"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="MPG (e.g. 32 for Honda Civic)"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                    android:orientation="vertical"
+                    android:paddingStart="18dp"
+                    android:paddingEnd="18dp"
+                    android:paddingTop="14dp"
+                    android:paddingBottom="14dp">
 
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etMpg"
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Vehicle MPG"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="#1A1A2E"
+                        android:layout_marginBottom="4dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Fuel economy of your vehicle. Used to calculate real gas cost per offer."
+                        android:textSize="11sp"
+                        android:textColor="#6B7280"
+                        android:layout_marginBottom="8dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnLookupMpg"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Look up my MPG at fueleconomy.gov →"
+                        android:textSize="11sp"
+                        android:layout_marginBottom="8dp" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilMpg"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="numberDecimal"
-                        android:imeOptions="actionNext"/>
-                </com.google.android.material.textfield.TextInputLayout>
+                        android:hint="MPG (e.g. 32 for Honda Civic)"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etMpg"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="numberDecimal"
+                            android:imeOptions="actionNext" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
 
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:background="#DDDDDD"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginBottom="16dp"/>
+                    android:background="#E5E7EB" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Gas price per gallon"
-                    android:textSize="16sp"
-                    android:textColor="?attr/colorOnBackground"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Current gas price in your area. Update weekly for accurate cost estimates."
-                    android:textSize="13sp"
-                    android:textColor="#999999"
-                    android:layout_marginTop="2dp"
-                    android:layout_marginBottom="12dp"/>
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/tilGasPrice"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Gas price ($/gallon)"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                    android:orientation="vertical"
+                    android:paddingStart="18dp"
+                    android:paddingEnd="18dp"
+                    android:paddingTop="14dp"
+                    android:paddingBottom="14dp">
 
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etGasPrice"
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Gas price per gallon"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="#1A1A2E"
+                        android:layout_marginBottom="4dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Current gas price in your area. Update weekly for accurate cost estimates."
+                        android:textSize="11sp"
+                        android:textColor="#6B7280"
+                        android:layout_marginBottom="10dp" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilGasPrice"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="numberDecimal"
-                        android:imeOptions="actionDone"/>
-                </com.google.android.material.textfield.TextInputLayout>
+                        android:hint="Gas price ($/gallon)"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etGasPrice"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="numberDecimal"
+                            android:imeOptions="actionDone" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
             </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+        </androidx.cardview.widget.CardView>
 
+        <!-- ── COMMUNITY DATA ─────────────────────────────────────────── -->
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="COMMUNITY DATA"
-            android:textSize="12sp"
-            android:textColor="?attr/colorPrimary"
-            android:layout_marginBottom="8dp"/>
-
-        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp">
+            android:text="COMMUNITY DATA"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#6B7280"
+            android:letterSpacing="0.08"
+            android:paddingStart="18dp"
+            android:paddingTop="18dp"
+            android:paddingBottom="8dp" />
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="14dp"
+            android:layout_marginEnd="14dp"
+            android:layout_marginBottom="14dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#FFFFFF">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:paddingStart="18dp"
+                android:paddingEnd="18dp"
+                android:paddingTop="14dp"
+                android:paddingBottom="14dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Share offer data"
-                    android:textSize="16sp"
-                    android:textColor="?attr/colorOnBackground"/>
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="#1A1A2E"
+                    android:layout_marginBottom="4dp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Help other drivers by contributing anonymized offer data to community benchmarks."
-                    android:textSize="13sp"
-                    android:textColor="#999999"
-                    android:layout_marginTop="2dp"
-                    android:layout_marginBottom="12dp"/>
+                    android:textSize="11sp"
+                    android:textColor="#6B7280"
+                    android:layout_marginBottom="12dp" />
 
                 <RadioGroup
                     android:id="@+id/rgDataSharing"
@@ -341,58 +458,71 @@
                         android:id="@+id/rbSharingNone"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Don't share anything"/>
+                        android:text="Don't share anything" />
 
                     <RadioButton
                         android:id="@+id/rbSharingAggregate"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Share anonymized averages only"/>
+                        android:text="Share anonymized averages only" />
 
                     <RadioButton
                         android:id="@+id/rbSharingIndividual"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Share individual offers (opted-in)"/>
+                        android:text="Share individual offers (opted-in)" />
                 </RadioGroup>
             </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+        </androidx.cardview.widget.CardView>
 
-
+        <!-- ── AUTO CAPTURE ───────────────────────────────────────────── -->
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="AUTO CAPTURE"
-            android:textSize="12sp"
-            android:textColor="?attr/colorPrimary"
-            android:layout_marginBottom="8dp"/>
-
-        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp">
+            android:text="AUTO CAPTURE"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#6B7280"
+            android:letterSpacing="0.08"
+            android:paddingStart="18dp"
+            android:paddingTop="18dp"
+            android:paddingBottom="8dp" />
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="14dp"
+            android:layout_marginEnd="14dp"
+            android:layout_marginBottom="14dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#FFFFFF">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:paddingStart="18dp"
+                android:paddingEnd="18dp"
+                android:paddingTop="14dp"
+                android:paddingBottom="14dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Capture mode"
-                    android:textSize="16sp"
-                    android:textColor="?attr/colorOnBackground"/>
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="#1A1A2E"
+                    android:layout_marginBottom="4dp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="How GigLens detects and analyzes offer screens."
-                    android:textSize="13sp"
-                    android:textColor="#999999"
-                    android:layout_marginTop="2dp"
-                    android:layout_marginBottom="12dp"/>
+                    android:textSize="11sp"
+                    android:textColor="#6B7280"
+                    android:layout_marginBottom="12dp" />
 
                 <RadioGroup
                     android:id="@+id/rgCaptureMode"
@@ -403,26 +533,25 @@
                         android:id="@+id/rbCaptureOff"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Off (manual share only)"/>
+                        android:text="Off (manual share only)" />
 
                     <RadioButton
                         android:id="@+id/rbCaptureAccessibility"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Accessibility (fully automatic)"/>
+                        android:text="Accessibility (fully automatic)" />
 
                     <RadioButton
                         android:id="@+id/rbCaptureButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Floating button (tap to capture)"/>
+                        android:text="Floating button (tap to capture)" />
 
                     <RadioButton
                         android:id="@+id/rbCaptureBoth"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Both (auto + floating button)"/>
-
+                        android:text="Both (auto + floating button)" />
                 </RadioGroup>
 
                 <TextView
@@ -430,20 +559,20 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Accessibility permission required"
-                    android:textSize="12sp"
+                    android:textSize="11sp"
                     android:paddingTop="12dp"
-                    android:textColor="#FF9800"
-                    android:visibility="gone"/>
+                    android:textColor="#F59E0B"
+                    android:visibility="gone" />
 
                 <TextView
                     android:id="@+id/tvAccessibilityActive"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="✓ Accessibility service active"
-                    android:textSize="12sp"
+                    android:textSize="11sp"
                     android:paddingTop="12dp"
-                    android:textColor="#00E5A0"
-                    android:visibility="gone"/>
+                    android:textColor="#00C9A7"
+                    android:visibility="gone" />
 
                 <Button
                     android:id="@+id/btnGrantAccessibility"
@@ -452,44 +581,56 @@
                     android:text="Grant Accessibility Permission"
                     android:textSize="12sp"
                     android:layout_marginTop="8dp"
-                    android:visibility="gone"/>
-
+                    android:visibility="gone" />
             </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+        </androidx.cardview.widget.CardView>
 
+        <!-- ── SUPPORTED PLATFORMS ────────────────────────────────────── -->
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="SUPPORTED PLATFORMS"
-            android:textSize="12sp"
-            android:textColor="?attr/colorPrimary"
-            android:layout_marginBottom="8dp"/>
-
-        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp">
+            android:text="SUPPORTED PLATFORMS"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#6B7280"
+            android:letterSpacing="0.08"
+            android:paddingStart="18dp"
+            android:paddingTop="18dp"
+            android:paddingBottom="8dp" />
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="14dp"
+            android:layout_marginEnd="14dp"
+            android:layout_marginBottom="14dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#FFFFFF">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:paddingStart="18dp"
+                android:paddingEnd="18dp"
+                android:paddingTop="14dp"
+                android:paddingBottom="14dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Select which apps GigLens monitors"
-                    android:textSize="13sp"
-                    android:textColor="#999999"
-                    android:layout_marginBottom="12dp"/>
+                    android:textSize="11sp"
+                    android:textColor="#6B7280"
+                    android:layout_marginBottom="12dp" />
 
                 <CheckBox
                     android:id="@+id/cbPlatformDoordash"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="DoorDash"
-                    android:enabled="true"/>
+                    android:enabled="true" />
 
                 <CheckBox
                     android:id="@+id/cbPlatformUbereats"
@@ -497,7 +638,7 @@
                     android:layout_height="wrap_content"
                     android:text="Uber Eats (coming soon)"
                     android:enabled="false"
-                    android:textColor="#666666"/>
+                    android:textColor="#6B7280" />
 
                 <CheckBox
                     android:id="@+id/cbPlatformGrubhub"
@@ -505,7 +646,7 @@
                     android:layout_height="wrap_content"
                     android:text="Grubhub (coming soon)"
                     android:enabled="false"
-                    android:textColor="#666666"/>
+                    android:textColor="#6B7280" />
 
                 <CheckBox
                     android:id="@+id/cbPlatformInstacart"
@@ -513,216 +654,294 @@
                     android:layout_height="wrap_content"
                     android:text="Instacart (coming soon)"
                     android:enabled="false"
-                    android:textColor="#666666"/>
-
+                    android:textColor="#6B7280" />
             </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+        </androidx.cardview.widget.CardView>
 
+        <!-- ── FLOATING WIDGET ────────────────────────────────────────── -->
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="FLOATING WIDGET"
-            android:textSize="12sp"
-            android:textColor="?attr/colorPrimary"
-            android:layout_marginBottom="8dp"/>
-
-        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp">
+            android:text="FLOATING WIDGET"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#6B7280"
+            android:letterSpacing="0.08"
+            android:paddingStart="18dp"
+            android:paddingTop="18dp"
+            android:paddingBottom="8dp" />
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="14dp"
+            android:layout_marginEnd="14dp"
+            android:layout_marginBottom="14dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#FFFFFF">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:orientation="vertical">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:gravity="center_vertical"
+                    android:paddingStart="18dp"
+                    android:paddingEnd="18dp"
+                    android:paddingTop="14dp"
+                    android:paddingBottom="14dp">
+
+                    <TextView
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:text="💊"
+                        android:textSize="16sp"
+                        android:gravity="center"
+                        android:background="#8B5CF6"
+                        android:alpha="0.12" />
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:layout_marginStart="14dp">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Show floating widget"
-                            android:textSize="16sp"
-                            android:textColor="?attr/colorOnBackground"/>
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:textColor="#1A1A2E" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Display offer results as a floating pill"
-                            android:textSize="13sp"
-                            android:textColor="#999999"
-                            android:layout_marginTop="2dp"/>
+                            android:textSize="11sp"
+                            android:textColor="#6B7280" />
                     </LinearLayout>
 
                     <androidx.appcompat.widget.SwitchCompat
                         android:id="@+id/switchWidget"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"/>
+                        android:layout_height="wrap_content" />
                 </LinearLayout>
 
-                <TextView
-                    android:id="@+id/tvWidgetPermStatus"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Permission required: Draw over other apps"
-                    android:textSize="12sp"
-                    android:paddingTop="8dp"
-                    android:textColor="#FF9800"/>
+                    android:orientation="vertical"
+                    android:paddingStart="18dp"
+                    android:paddingEnd="18dp"
+                    android:paddingBottom="14dp">
 
-                <Button
-                    android:id="@+id/btnGrantOverlay"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Grant Permission"
-                    android:textSize="12sp"
-                    android:layout_marginTop="8dp"
-                    android:visibility="gone"/>
+                    <TextView
+                        android:id="@+id/tvWidgetPermStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Permission required: Draw over other apps"
+                        android:textSize="11sp"
+                        android:textColor="#F59E0B" />
+
+                    <Button
+                        android:id="@+id/btnGrantOverlay"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Grant Permission"
+                        android:textSize="12sp"
+                        android:layout_marginTop="8dp"
+                        android:visibility="gone" />
+                </LinearLayout>
 
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:background="#DDDDDD"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginBottom="16dp"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Result display duration"
-                    android:textSize="16sp"
-                    android:textColor="?attr/colorOnBackground"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Seconds to show the result pill before it reverts to idle. Default 60."
-                    android:textSize="13sp"
-                    android:textColor="#999999"
-                    android:layout_marginTop="2dp"
-                    android:layout_marginBottom="12dp"/>
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/tilResultDuration"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Duration (seconds)"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etResultDuration"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="number"
-                        android:imeOptions="actionDone"/>
-                </com.google.android.material.textfield.TextInputLayout>
-
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="CAPTURE SETTINGS"
-            android:textSize="12sp"
-            android:textColor="?attr/colorPrimary"
-            android:layout_marginBottom="8dp"/>
-
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp">
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Screenshot Delay (ms)"
-                    android:textAppearance="?attr/textAppearanceSubtitle1"
-                    android:layout_marginBottom="4dp"/>
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Delay before screenshot fires after offer detected — allows map to finish rendering. Default: 1500. Increase if pins are missing from screenshots."
-                    android:textAppearance="?attr/textAppearanceCaption"
-                    android:layout_marginBottom="8dp"/>
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Delay (ms)"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etScreenshotDelayMs"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="number"
-                        android:imeOptions="actionDone"/>
-                </com.google.android.material.textfield.TextInputLayout>
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:padding="16dp">
+                    android:background="#E5E7EB" />
 
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:paddingStart="18dp"
+                    android:paddingEnd="18dp"
+                    android:paddingTop="14dp"
+                    android:paddingBottom="14dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Map Pin Detection"
-                        android:textSize="16sp"
-                        android:textColor="?attr/colorOnBackground"/>
+                        android:text="Result display duration"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="#1A1A2E"
+                        android:layout_marginBottom="4dp" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Use pin positions on map to estimate delivery town (recommended)"
-                        android:textSize="13sp"
-                        android:textColor="#999999"
-                        android:layout_marginTop="2dp"/>
+                        android:text="Seconds to show the result pill before it reverts to idle. Default 60."
+                        android:textSize="11sp"
+                        android:textColor="#6B7280"
+                        android:layout_marginBottom="10dp" />
 
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilResultDuration"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Duration (seconds)"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etResultDuration"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:imeOptions="actionDone" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- ── CAPTURE SETTINGS ───────────────────────────────────────── -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="CAPTURE SETTINGS"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#6B7280"
+            android:letterSpacing="0.08"
+            android:paddingStart="18dp"
+            android:paddingTop="18dp"
+            android:paddingBottom="8dp" />
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="14dp"
+            android:layout_marginEnd="14dp"
+            android:layout_marginBottom="14dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#FFFFFF">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingStart="18dp"
+                    android:paddingEnd="18dp"
+                    android:paddingTop="14dp"
+                    android:paddingBottom="14dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Screenshot delay (ms)"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="#1A1A2E"
+                        android:layout_marginBottom="4dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Delay before screenshot fires after offer detected — allows map to finish rendering. Default: 1500. Increase if pins are missing from screenshots."
+                        android:textSize="11sp"
+                        android:textColor="#6B7280"
+                        android:layout_marginBottom="10dp" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Delay (ms)"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etScreenshotDelayMs"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:imeOptions="actionDone" />
+                    </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
 
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/switchPinDetectionEnabled"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"/>
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#E5E7EB" />
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingStart="18dp"
+                    android:paddingEnd="18dp"
+                    android:paddingTop="14dp"
+                    android:paddingBottom="14dp">
+
+                    <TextView
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:text="📌"
+                        android:textSize="16sp"
+                        android:gravity="center"
+                        android:background="#00C9A7"
+                        android:alpha="0.12" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="14dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Map Pin Detection"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:textColor="#1A1A2E" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Use pin positions on map to estimate delivery town (recommended)"
+                            android:textSize="11sp"
+                            android:textColor="#6B7280" />
+                    </LinearLayout>
+
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/switchPinDetectionEnabled"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
             </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+        </androidx.cardview.widget.CardView>
 
+        <!-- ── SAVE ───────────────────────────────────────────────────── -->
         <Button
             android:id="@+id/btnSaveSettings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Save Settings"
-            android:layout_marginBottom="16dp"/>
+            android:layout_marginStart="14dp"
+            android:layout_marginEnd="14dp"
+            android:layout_marginBottom="16dp"
+            android:text="Save Settings" />
 
     </LinearLayout>
 </ScrollView>
