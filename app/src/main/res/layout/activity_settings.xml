@@ -18,7 +18,7 @@
             android:text="LOCATION"
             android:textSize="11sp"
             android:textStyle="bold"
-            android:textColor="#6B7280"
+            android:textColor="#1A1A2E"
             android:letterSpacing="0.08"
             android:paddingStart="18dp"
             android:paddingTop="18dp"
@@ -78,7 +78,7 @@
                             android:layout_height="wrap_content"
                             android:text="Automatically detects your region for better distance estimates"
                             android:textSize="11sp"
-                            android:textColor="#6B7280" />
+                            android:textColor="#1A1A2E" />
                     </LinearLayout>
 
                     <androidx.appcompat.widget.SwitchCompat
@@ -98,7 +98,7 @@
                     android:layout_height="wrap_content"
                     android:text="Detected region: --"
                     android:textSize="11sp"
-                    android:textColor="#6B7280"
+                    android:textColor="#1A1A2E"
                     android:paddingStart="18dp"
                     android:paddingEnd="18dp"
                     android:paddingTop="10dp"
@@ -132,7 +132,7 @@
                         android:layout_height="wrap_content"
                         android:text="Fallback if GPS is off (e.g. Newark, New Jersey, USA)"
                         android:textSize="11sp"
-                        android:textColor="#6B7280"
+                        android:textColor="#1A1A2E"
                         android:layout_marginBottom="10dp" />
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -160,7 +160,7 @@
             android:text="SCORING"
             android:textSize="11sp"
             android:textStyle="bold"
-            android:textColor="#6B7280"
+            android:textColor="#1A1A2E"
             android:letterSpacing="0.08"
             android:paddingStart="18dp"
             android:paddingTop="18dp"
@@ -204,7 +204,7 @@
                         android:layout_height="wrap_content"
                         android:text="IRS standard is $0.90/mile. Adjust for your vehicle."
                         android:textSize="11sp"
-                        android:textColor="#6B7280"
+                        android:textColor="#1A1A2E"
                         android:layout_marginBottom="10dp" />
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -251,7 +251,7 @@
                         android:layout_height="wrap_content"
                         android:text="What your time is worth per hour. Used to calculate time cost per offer."
                         android:textSize="11sp"
-                        android:textColor="#6B7280"
+                        android:textColor="#1A1A2E"
                         android:layout_marginBottom="10dp" />
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -279,7 +279,7 @@
             android:text="VEHICLE FUEL COST"
             android:textSize="11sp"
             android:textStyle="bold"
-            android:textColor="#6B7280"
+            android:textColor="#1A1A2E"
             android:letterSpacing="0.08"
             android:paddingStart="18dp"
             android:paddingTop="18dp"
@@ -323,7 +323,7 @@
                         android:layout_height="wrap_content"
                         android:text="Fuel economy of your vehicle. Used to calculate real gas cost per offer."
                         android:textSize="11sp"
-                        android:textColor="#6B7280"
+                        android:textColor="#1A1A2E"
                         android:layout_marginBottom="8dp" />
 
                     <com.google.android.material.button.MaterialButton
@@ -379,7 +379,7 @@
                         android:layout_height="wrap_content"
                         android:text="Current gas price in your area. Update weekly for accurate cost estimates."
                         android:textSize="11sp"
-                        android:textColor="#6B7280"
+                        android:textColor="#1A1A2E"
                         android:layout_marginBottom="10dp" />
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -407,7 +407,7 @@
             android:text="COMMUNITY DATA"
             android:textSize="11sp"
             android:textStyle="bold"
-            android:textColor="#6B7280"
+            android:textColor="#1A1A2E"
             android:letterSpacing="0.08"
             android:paddingStart="18dp"
             android:paddingTop="18dp"
@@ -446,7 +446,7 @@
                     android:layout_height="wrap_content"
                     android:text="Help other drivers by contributing anonymized offer data to community benchmarks."
                     android:textSize="11sp"
-                    android:textColor="#6B7280"
+                    android:textColor="#1A1A2E"
                     android:layout_marginBottom="12dp" />
 
                 <RadioGroup
@@ -482,7 +482,7 @@
             android:text="AUTO CAPTURE"
             android:textSize="11sp"
             android:textStyle="bold"
-            android:textColor="#6B7280"
+            android:textColor="#1A1A2E"
             android:letterSpacing="0.08"
             android:paddingStart="18dp"
             android:paddingTop="18dp"
@@ -521,7 +521,7 @@
                     android:layout_height="wrap_content"
                     android:text="How GigLens detects and analyzes offer screens."
                     android:textSize="11sp"
-                    android:textColor="#6B7280"
+                    android:textColor="#1A1A2E"
                     android:layout_marginBottom="12dp" />
 
                 <RadioGroup
@@ -592,7 +592,7 @@
             android:text="SUPPORTED PLATFORMS"
             android:textSize="11sp"
             android:textStyle="bold"
-            android:textColor="#6B7280"
+            android:textColor="#1A1A2E"
             android:letterSpacing="0.08"
             android:paddingStart="18dp"
             android:paddingTop="18dp"
@@ -622,7 +622,7 @@
                     android:layout_height="wrap_content"
                     android:text="Select which apps GigLens monitors"
                     android:textSize="11sp"
-                    android:textColor="#6B7280"
+                    android:textColor="#1A1A2E"
                     android:layout_marginBottom="12dp" />
 
                 <CheckBox
@@ -638,7 +638,7 @@
                     android:layout_height="wrap_content"
                     android:text="Uber Eats (coming soon)"
                     android:enabled="false"
-                    android:textColor="#6B7280" />
+                    android:textColor="#1A1A2E" />
 
                 <CheckBox
                     android:id="@+id/cbPlatformGrubhub"
@@ -646,7 +646,7 @@
                     android:layout_height="wrap_content"
                     android:text="Grubhub (coming soon)"
                     android:enabled="false"
-                    android:textColor="#6B7280" />
+                    android:textColor="#1A1A2E" />
 
                 <CheckBox
                     android:id="@+id/cbPlatformInstacart"
@@ -654,7 +654,7 @@
                     android:layout_height="wrap_content"
                     android:text="Instacart (coming soon)"
                     android:enabled="false"
-                    android:textColor="#6B7280" />
+                    android:textColor="#1A1A2E" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -665,7 +665,7 @@
             android:text="FLOATING WIDGET"
             android:textSize="11sp"
             android:textStyle="bold"
-            android:textColor="#6B7280"
+            android:textColor="#1A1A2E"
             android:letterSpacing="0.08"
             android:paddingStart="18dp"
             android:paddingTop="18dp"
@@ -725,7 +725,7 @@
                             android:layout_height="wrap_content"
                             android:text="Display offer results as a floating pill"
                             android:textSize="11sp"
-                            android:textColor="#6B7280" />
+                            android:textColor="#1A1A2E" />
                     </LinearLayout>
 
                     <androidx.appcompat.widget.SwitchCompat
@@ -788,7 +788,7 @@
                         android:layout_height="wrap_content"
                         android:text="Seconds to show the result pill before it reverts to idle. Default 60."
                         android:textSize="11sp"
-                        android:textColor="#6B7280"
+                        android:textColor="#1A1A2E"
                         android:layout_marginBottom="10dp" />
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -816,7 +816,7 @@
             android:text="CAPTURE SETTINGS"
             android:textSize="11sp"
             android:textStyle="bold"
-            android:textColor="#6B7280"
+            android:textColor="#1A1A2E"
             android:letterSpacing="0.08"
             android:paddingStart="18dp"
             android:paddingTop="18dp"
@@ -860,7 +860,7 @@
                         android:layout_height="wrap_content"
                         android:text="Delay before screenshot fires after offer detected — allows map to finish rendering. Default: 1500. Increase if pins are missing from screenshots."
                         android:textSize="11sp"
-                        android:textColor="#6B7280"
+                        android:textColor="#1A1A2E"
                         android:layout_marginBottom="10dp" />
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -922,7 +922,7 @@
                             android:layout_height="wrap_content"
                             android:text="Use pin positions on map to estimate delivery town (recommended)"
                             android:textSize="11sp"
-                            android:textColor="#6B7280" />
+                            android:textColor="#1A1A2E" />
                     </LinearLayout>
 
                     <com.google.android.material.switchmaterial.SwitchMaterial
