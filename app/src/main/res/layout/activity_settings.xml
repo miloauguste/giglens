@@ -140,14 +140,16 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="e.g. Newark, New Jersey, USA"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:textColorHint="#555555">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etRegion"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="text"
-                            android:imeOptions="actionDone" />
+                            android:imeOptions="actionDone"
+                            android:textColor="#1A1A2E" />
                     </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
             </LinearLayout>
@@ -212,14 +214,16 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Cost per mile ($)"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:textColorHint="#555555">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etCostPerMile"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="numberDecimal"
-                            android:imeOptions="actionDone" />
+                            android:imeOptions="actionDone"
+                            android:textColor="#1A1A2E" />
                     </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
 
@@ -259,14 +263,16 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Hourly rate ($)"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:textColorHint="#555555">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etHourlyRate"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="numberDecimal"
-                            android:imeOptions="actionDone" />
+                            android:imeOptions="actionDone"
+                            android:textColor="#1A1A2E" />
                     </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
             </LinearLayout>
@@ -340,14 +346,16 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="MPG (e.g. 32 for Honda Civic)"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:textColorHint="#555555">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etMpg"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="numberDecimal"
-                            android:imeOptions="actionNext" />
+                            android:imeOptions="actionNext"
+                            android:textColor="#1A1A2E" />
                     </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
 
@@ -387,14 +395,16 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Gas price ($/gallon)"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:textColorHint="#555555">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etGasPrice"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="numberDecimal"
-                            android:imeOptions="actionDone" />
+                            android:imeOptions="actionDone"
+                            android:textColor="#1A1A2E" />
                     </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
             </LinearLayout>
@@ -458,19 +468,22 @@
                         android:id="@+id/rbSharingNone"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Don't share anything" />
+                        android:text="Don't share anything"
+                        android:textColor="#1A1A2E" />
 
                     <RadioButton
                         android:id="@+id/rbSharingAggregate"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Share anonymized averages only" />
+                        android:text="Share anonymized averages only"
+                        android:textColor="#1A1A2E" />
 
                     <RadioButton
                         android:id="@+id/rbSharingIndividual"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Share individual offers (opted-in)" />
+                        android:text="Share individual offers (opted-in)"
+                        android:textColor="#1A1A2E" />
                 </RadioGroup>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
@@ -533,25 +546,29 @@
                         android:id="@+id/rbCaptureOff"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Off (manual share only)" />
+                        android:text="Off (manual share only)"
+                        android:textColor="#1A1A2E" />
 
                     <RadioButton
                         android:id="@+id/rbCaptureAccessibility"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Accessibility (fully automatic)" />
+                        android:text="Accessibility (fully automatic)"
+                        android:textColor="#1A1A2E" />
 
                     <RadioButton
                         android:id="@+id/rbCaptureButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Floating button (tap to capture)" />
+                        android:text="Floating button (tap to capture)"
+                        android:textColor="#1A1A2E" />
 
                     <RadioButton
                         android:id="@+id/rbCaptureBoth"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Both (auto + floating button)" />
+                        android:text="Both (auto + floating button)"
+                        android:textColor="#1A1A2E" />
                 </RadioGroup>
 
                 <TextView
@@ -630,7 +647,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="DoorDash"
-                    android:enabled="true" />
+                    android:enabled="true"
+                    android:textColor="#1A1A2E" />
 
                 <CheckBox
                     android:id="@+id/cbPlatformUbereats"
@@ -796,14 +814,16 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Duration (seconds)"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:textColorHint="#555555">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etResultDuration"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="number"
-                            android:imeOptions="actionDone" />
+                            android:imeOptions="actionDone"
+                            android:textColor="#1A1A2E" />
                     </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
             </LinearLayout>
@@ -867,14 +887,16 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Delay (ms)"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:textColorHint="#555555">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etScreenshotDelayMs"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="number"
-                            android:imeOptions="actionDone" />
+                            android:imeOptions="actionDone"
+                            android:textColor="#1A1A2E" />
                     </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
 
