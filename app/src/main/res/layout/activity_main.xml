@@ -5,7 +5,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F2F4F7">
+    android:background="@color/gl_bg_page">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -17,7 +17,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="#1A1A2E">
+            android:background="@color/gl_bg_header">
 
             <!-- Row A - App header -->
             <LinearLayout
@@ -157,7 +157,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="#FFFFFF">
+            android:background="@color/gl_bg_card">
 
             <!-- Row 1 - Floating button -->
             <LinearLayout
@@ -192,14 +192,14 @@
                         android:text="Floating capture button"
                         android:textSize="14sp"
                         android:textStyle="bold"
-                        android:textColor="#1A1A2E" />
+                        android:textColor="@color/gl_text_primary" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Show 📷 button over DoorDash"
                         android:textSize="11sp"
-                        android:textColor="#6B7280" />
+                        android:textColor="@color/gl_text_secondary" />
                 </LinearLayout>
 
                 <Switch
@@ -212,7 +212,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="#E5E7EB" />
+                android:background="@color/gl_divider" />
 
             <!-- Row 2 - Auto capture -->
             <LinearLayout
@@ -247,14 +247,14 @@
                         android:text="Auto capture"
                         android:textSize="14sp"
                         android:textStyle="bold"
-                        android:textColor="#1A1A2E" />
+                        android:textColor="@color/gl_text_primary" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Detect offers automatically"
                         android:textSize="11sp"
-                        android:textColor="#6B7280" />
+                        android:textColor="@color/gl_text_secondary" />
                 </LinearLayout>
 
                 <Switch
@@ -267,7 +267,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="#E5E7EB" />
+                android:background="@color/gl_divider" />
 
             <!-- Row 3 - Offer history -->
             <LinearLayout
@@ -303,14 +303,14 @@
                         android:text="Offer history"
                         android:textSize="14sp"
                         android:textStyle="bold"
-                        android:textColor="#1A1A2E" />
+                        android:textColor="@color/gl_text_primary" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="View all captured offers"
                         android:textSize="11sp"
-                        android:textColor="#6B7280" />
+                        android:textColor="@color/gl_text_secondary" />
                 </LinearLayout>
 
                 <TextView
@@ -333,7 +333,7 @@
                     android:layout_height="wrap_content"
                     android:text="›"
                     android:textSize="18sp"
-                    android:textColor="#C4C9D4"
+                    android:textColor="@color/gl_text_chevron"
                     android:layout_marginStart="8dp" />
             </LinearLayout>
 
@@ -341,7 +341,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="#E5E7EB" />
+                android:background="@color/gl_divider" />
 
             <!-- Row 4 - Settings -->
             <LinearLayout
@@ -377,14 +377,14 @@
                         android:text="Settings"
                         android:textSize="14sp"
                         android:textStyle="bold"
-                        android:textColor="#1A1A2E" />
+                        android:textColor="@color/gl_text_primary" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="MPG, scoring thresholds, vehicle"
                         android:textSize="11sp"
-                        android:textColor="#6B7280" />
+                        android:textColor="@color/gl_text_secondary" />
                 </LinearLayout>
 
                 <TextView
@@ -392,7 +392,7 @@
                     android:layout_height="wrap_content"
                     android:text="›"
                     android:textSize="18sp"
-                    android:textColor="#C4C9D4" />
+                    android:textColor="@color/gl_text_chevron" />
             </LinearLayout>
         </LinearLayout>
 
@@ -403,7 +403,7 @@
             android:text="TODAY"
             android:textSize="11sp"
             android:textStyle="bold"
-            android:textColor="#6B7280"
+            android:textColor="@color/gl_text_secondary"
             android:letterSpacing="0.08"
             android:paddingStart="18dp"
             android:paddingTop="18dp"
@@ -426,7 +426,7 @@
                 android:layout_marginEnd="5dp"
                 app:cardCornerRadius="14dp"
                 app:cardElevation="0dp"
-                android:backgroundTint="#FFFFFF">
+                android:backgroundTint="@color/gl_bg_card">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -443,7 +443,7 @@
                         android:textSize="21sp"
                         android:textStyle="bold"
                         android:fontFamily="monospace"
-                        android:textColor="#1A1A2E" />
+                        android:textColor="@color/gl_text_primary" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -451,7 +451,7 @@
                         android:text="CAPTURED"
                         android:textSize="10sp"
                         android:textStyle="bold"
-                        android:textColor="#6B7280"
+                        android:textColor="@color/gl_text_secondary"
                         android:layout_marginTop="5dp" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -464,7 +464,7 @@
                 android:layout_marginEnd="5dp"
                 app:cardCornerRadius="14dp"
                 app:cardElevation="0dp"
-                android:backgroundTint="#FFFFFF">
+                android:backgroundTint="@color/gl_bg_card">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -481,7 +481,7 @@
                         android:textSize="21sp"
                         android:textStyle="bold"
                         android:fontFamily="monospace"
-                        android:textColor="#1A1A2E" />
+                        android:textColor="@color/gl_text_primary" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -489,7 +489,7 @@
                         android:text="AVG PAY"
                         android:textSize="10sp"
                         android:textStyle="bold"
-                        android:textColor="#6B7280"
+                        android:textColor="@color/gl_text_secondary"
                         android:layout_marginTop="5dp" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -501,7 +501,7 @@
                 android:layout_marginStart="5dp"
                 app:cardCornerRadius="14dp"
                 app:cardElevation="0dp"
-                android:backgroundTint="#FFFFFF">
+                android:backgroundTint="@color/gl_bg_card">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -518,7 +518,7 @@
                         android:textSize="21sp"
                         android:textStyle="bold"
                         android:fontFamily="monospace"
-                        android:textColor="#1A1A2E" />
+                        android:textColor="@color/gl_text_primary" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -526,7 +526,7 @@
                         android:text="AVG $/MI"
                         android:textSize="10sp"
                         android:textStyle="bold"
-                        android:textColor="#6B7280"
+                        android:textColor="@color/gl_text_secondary"
                         android:layout_marginTop="5dp" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -539,7 +539,7 @@
             android:text="EARNINGS OVERVIEW"
             android:textSize="11sp"
             android:textStyle="bold"
-            android:textColor="#6B7280"
+            android:textColor="@color/gl_text_secondary"
             android:letterSpacing="0.08"
             android:paddingStart="18dp"
             android:paddingTop="18dp"
@@ -757,7 +757,7 @@
             android:text="ANALYTICS"
             android:textSize="11sp"
             android:textStyle="bold"
-            android:textColor="#6B7280"
+            android:textColor="@color/gl_text_secondary"
             android:letterSpacing="0.08"
             android:paddingStart="18dp"
             android:paddingTop="18dp"
@@ -793,7 +793,7 @@
                         android:text="NET VALUE TREND"
                         android:textSize="13sp"
                         android:textStyle="bold"
-                        android:textColor="#1A1A2E" />
+                        android:textColor="@color/gl_text_primary" />
 
                     <LinearLayout
                         android:layout_width="wrap_content"
@@ -870,14 +870,14 @@
                             android:layout_height="wrap_content"
                             android:text="Best offer"
                             android:textSize="11sp"
-                            android:textColor="#6B7280"
+                            android:textColor="@color/gl_text_secondary"
                             android:layout_marginTop="2dp" />
                     </LinearLayout>
 
                     <View
                         android:layout_width="1dp"
                         android:layout_height="match_parent"
-                        android:background="#E5E7EB" />
+                        android:background="@color/gl_divider" />
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -893,21 +893,21 @@
                             android:text="--"
                             android:textSize="16sp"
                             android:textStyle="bold"
-                            android:textColor="#1A1A2E" />
+                            android:textColor="@color/gl_text_primary" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Avg net"
                             android:textSize="11sp"
-                            android:textColor="#6B7280"
+                            android:textColor="@color/gl_text_secondary"
                             android:layout_marginTop="2dp" />
                     </LinearLayout>
 
                     <View
                         android:layout_width="1dp"
                         android:layout_height="match_parent"
-                        android:background="#E5E7EB" />
+                        android:background="@color/gl_divider" />
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -930,7 +930,7 @@
                             android:layout_height="wrap_content"
                             android:text="Worst offer"
                             android:textSize="11sp"
-                            android:textColor="#6B7280"
+                            android:textColor="@color/gl_text_secondary"
                             android:layout_marginTop="2dp" />
                     </LinearLayout>
                 </LinearLayout>
@@ -944,7 +944,7 @@
             android:text="VERDICT BREAKDOWN"
             android:textSize="11sp"
             android:textStyle="bold"
-            android:textColor="#6B7280"
+            android:textColor="@color/gl_text_secondary"
             android:letterSpacing="0.08"
             android:paddingStart="18dp"
             android:paddingTop="18dp"
@@ -980,7 +980,7 @@
                         android:text="OFFER QUALITY"
                         android:textSize="13sp"
                         android:textStyle="bold"
-                        android:textColor="#1A1A2E" />
+                        android:textColor="@color/gl_text_primary" />
 
                     <TextView
                         android:id="@+id/tvBreakdownPeriod"
@@ -988,7 +988,7 @@
                         android:layout_height="wrap_content"
                         android:text="Last 7 days · 0 offers"
                         android:textSize="11sp"
-                        android:textColor="#6B7280" />
+                        android:textColor="@color/gl_text_secondary" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -1030,7 +1030,7 @@
                         android:layout_height="wrap_content"
                         android:text="0%"
                         android:textSize="11sp"
-                        android:textColor="#6B7280"
+                        android:textColor="@color/gl_text_secondary"
                         android:layout_marginStart="6dp" />
                 </LinearLayout>
 
@@ -1073,7 +1073,7 @@
                         android:layout_height="wrap_content"
                         android:text="0%"
                         android:textSize="11sp"
-                        android:textColor="#6B7280"
+                        android:textColor="@color/gl_text_secondary"
                         android:layout_marginStart="6dp" />
                 </LinearLayout>
 
@@ -1115,7 +1115,7 @@
                         android:layout_height="wrap_content"
                         android:text="0%"
                         android:textSize="11sp"
-                        android:textColor="#6B7280"
+                        android:textColor="@color/gl_text_secondary"
                         android:layout_marginStart="6dp" />
                 </LinearLayout>
             </LinearLayout>
@@ -1128,7 +1128,7 @@
             android:text="RECENT OFFERS"
             android:textSize="11sp"
             android:textStyle="bold"
-            android:textColor="#6B7280"
+            android:textColor="@color/gl_text_secondary"
             android:letterSpacing="0.08"
             android:paddingStart="18dp"
             android:paddingTop="18dp"
@@ -1142,7 +1142,7 @@
             android:layout_marginEnd="14dp"
             app:cardCornerRadius="16dp"
             app:cardElevation="0dp"
-            android:backgroundTint="#FFFFFF">
+            android:backgroundTint="@color/gl_bg_card">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -1163,7 +1163,7 @@
                         android:text="LAST 3 OFFERS"
                         android:textSize="13sp"
                         android:textStyle="bold"
-                        android:textColor="#1A1A2E" />
+                        android:textColor="@color/gl_text_primary" />
 
                     <TextView
                         android:id="@+id/tvSeeAll"
@@ -1177,7 +1177,7 @@
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:background="#E5E7EB" />
+                    android:background="@color/gl_divider" />
 
                 <LinearLayout
                     android:id="@+id/layoutOffer1"
@@ -1195,7 +1195,7 @@
                         android:textSize="11sp"
                         android:textStyle="bold"
                         android:gravity="center"
-                        android:background="#E5E7EB" />
+                        android:background="@color/gl_divider" />
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -1211,7 +1211,7 @@
                             android:text="—"
                             android:textSize="14sp"
                             android:textStyle="bold"
-                            android:textColor="#1A1A2E" />
+                            android:textColor="@color/gl_text_primary" />
 
                         <TextView
                             android:id="@+id/tvOffer1Meta"
@@ -1219,7 +1219,7 @@
                             android:layout_height="wrap_content"
                             android:text="—"
                             android:textSize="12sp"
-                            android:textColor="#6B7280"
+                            android:textColor="@color/gl_text_secondary"
                             android:layout_marginTop="2dp" />
                     </LinearLayout>
 
@@ -1238,7 +1238,7 @@
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:background="#E5E7EB" />
+                    android:background="@color/gl_divider" />
 
                 <LinearLayout
                     android:id="@+id/layoutOffer2"
@@ -1256,7 +1256,7 @@
                         android:textSize="11sp"
                         android:textStyle="bold"
                         android:gravity="center"
-                        android:background="#E5E7EB" />
+                        android:background="@color/gl_divider" />
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -1272,7 +1272,7 @@
                             android:text="—"
                             android:textSize="14sp"
                             android:textStyle="bold"
-                            android:textColor="#1A1A2E" />
+                            android:textColor="@color/gl_text_primary" />
 
                         <TextView
                             android:id="@+id/tvOffer2Meta"
@@ -1280,7 +1280,7 @@
                             android:layout_height="wrap_content"
                             android:text="—"
                             android:textSize="12sp"
-                            android:textColor="#6B7280"
+                            android:textColor="@color/gl_text_secondary"
                             android:layout_marginTop="2dp" />
                     </LinearLayout>
 
@@ -1299,7 +1299,7 @@
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:background="#E5E7EB" />
+                    android:background="@color/gl_divider" />
 
                 <LinearLayout
                     android:id="@+id/layoutOffer3"
@@ -1317,7 +1317,7 @@
                         android:textSize="11sp"
                         android:textStyle="bold"
                         android:gravity="center"
-                        android:background="#E5E7EB" />
+                        android:background="@color/gl_divider" />
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -1333,7 +1333,7 @@
                             android:text="—"
                             android:textSize="14sp"
                             android:textStyle="bold"
-                            android:textColor="#1A1A2E" />
+                            android:textColor="@color/gl_text_primary" />
 
                         <TextView
                             android:id="@+id/tvOffer3Meta"
@@ -1341,7 +1341,7 @@
                             android:layout_height="wrap_content"
                             android:text="—"
                             android:textSize="12sp"
-                            android:textColor="#6B7280"
+                            android:textColor="@color/gl_text_secondary"
                             android:layout_marginTop="2dp" />
                     </LinearLayout>
 
@@ -1367,7 +1367,7 @@
             android:text="GigLens v0.1.73 · Auguste Enterprise"
             android:textSize="11sp"
             android:fontFamily="monospace"
-            android:textColor="#9CA3AF"
+            android:textColor="@color/gl_text_muted"
             android:gravity="center"
             android:paddingTop="24dp"
             android:paddingBottom="32dp"

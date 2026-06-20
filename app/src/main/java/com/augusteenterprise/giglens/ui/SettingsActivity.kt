@@ -1,12 +1,14 @@
 package com.augusteenterprise.giglens.ui
 // Author: Claude - Feature #8: Added auto capture mode + supported platforms UI
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.lifecycleScope
 import android.content.ComponentName
 import android.provider.Settings
@@ -89,11 +91,23 @@ class SettingsActivity : AppCompatActivity() {
         setContentView(binding.root)
         
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        
+
+        loadDarkModeToggle()
         setupListeners()
         loadSettings()
     }
     
+    private fun loadDarkModeToggle() {
+        val prefs = getSharedPreferences(GigLensApp.PREFS_NAME, Context.MODE_PRIVATE)
+        binding.switchDarkMode.isChecked = prefs.getBoolean(GigLensApp.PREF_DARK_MODE, false)
+        binding.switchDarkMode.setOnCheckedChangeListener { _, isChecked ->
+            prefs.edit().putBoolean(GigLensApp.PREF_DARK_MODE, isChecked).apply()
+            AppCompatDelegate.setDefaultNightMode(
+                if (isChecked) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
+            )
+        }
+    }
+
     private fun setupListeners() {
         binding.switchWidget.setOnCheckedChangeListener { _, isChecked ->
             Log.d(TAG, "switchWidget toggled: $isChecked")

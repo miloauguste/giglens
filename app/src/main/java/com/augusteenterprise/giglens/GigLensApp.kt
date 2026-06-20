@@ -4,7 +4,9 @@ package com.augusteenterprise.giglens
 import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.content.Context
 import android.os.Build
+import androidx.appcompat.app.AppCompatDelegate
 import com.augusteenterprise.giglens.data.OfferDatabase
 import com.augusteenterprise.giglens.geocoding.GeocodingHelper
 
@@ -15,6 +17,14 @@ class GigLensApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        // Apply dark mode before any Activity is created so the first frame is correct
+        val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        AppCompatDelegate.setDefaultNightMode(
+            if (prefs.getBoolean(PREF_DARK_MODE, false))
+                AppCompatDelegate.MODE_NIGHT_YES
+            else
+                AppCompatDelegate.MODE_NIGHT_NO
+        )
         instance = this
         database = OfferDatabase.getInstance(this)
         GeocodingHelper.loadStateNameMap(this)
@@ -37,6 +47,8 @@ class GigLensApp : Application() {
 
     companion object {
         const val NOTIFICATION_CHANNEL_ID = "giglens_capture"
+        const val PREFS_NAME = "giglens_prefs"
+        const val PREF_DARK_MODE = "dark_mode"
         lateinit var instance: GigLensApp
             private set
     }

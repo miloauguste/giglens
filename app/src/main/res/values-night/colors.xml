@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dark mode color tokens — overrides values/colors.xml in night configuration -->
+<resources>
+    <!-- Page / surface -->
+    <color name="gl_bg_page">#121212</color>
+    <color name="gl_bg_card">#1E1E2E</color>
+    <color name="gl_bg_header">#0A0A18</color>
+
+    <!-- Text -->
+    <color name="gl_text_primary">#E8E8F0</color>
+    <color name="gl_text_secondary">#9CA3AF</color>
+    <color name="gl_text_muted">#6B7280</color>
+    <color name="gl_text_chevron">#4A4A5A</color>
+    <color name="gl_text_hint">#8888AA</color>
+
+    <!-- Structural -->
+    <color name="gl_divider">#2A2A3A</color>
+    <color name="gl_stroke">#5A5A7A</color>
+</resources>
