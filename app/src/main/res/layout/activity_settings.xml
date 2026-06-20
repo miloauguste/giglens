@@ -141,7 +141,10 @@
                         android:layout_height="wrap_content"
                         android:hint="e.g. Newark, New Jersey, USA"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        android:textColorHint="#555555">
+                        android:textColorHint="#555555"
+                        app:boxStrokeColor="#1A1A2E"
+                        app:boxStrokeWidth="1dp"
+                        app:boxStrokeWidthFocused="2dp">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etRegion"
@@ -215,7 +218,10 @@
                         android:layout_height="wrap_content"
                         android:hint="Cost per mile ($)"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        android:textColorHint="#555555">
+                        android:textColorHint="#555555"
+                        app:boxStrokeColor="#1A1A2E"
+                        app:boxStrokeWidth="1dp"
+                        app:boxStrokeWidthFocused="2dp">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etCostPerMile"
@@ -264,7 +270,10 @@
                         android:layout_height="wrap_content"
                         android:hint="Hourly rate ($)"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        android:textColorHint="#555555">
+                        android:textColorHint="#555555"
+                        app:boxStrokeColor="#1A1A2E"
+                        app:boxStrokeWidth="1dp"
+                        app:boxStrokeWidthFocused="2dp">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etHourlyRate"
@@ -347,7 +356,10 @@
                         android:layout_height="wrap_content"
                         android:hint="MPG (e.g. 32 for Honda Civic)"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        android:textColorHint="#555555">
+                        android:textColorHint="#555555"
+                        app:boxStrokeColor="#1A1A2E"
+                        app:boxStrokeWidth="1dp"
+                        app:boxStrokeWidthFocused="2dp">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etMpg"
@@ -396,7 +408,10 @@
                         android:layout_height="wrap_content"
                         android:hint="Gas price ($/gallon)"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        android:textColorHint="#555555">
+                        android:textColorHint="#555555"
+                        app:boxStrokeColor="#1A1A2E"
+                        app:boxStrokeWidth="1dp"
+                        app:boxStrokeWidthFocused="2dp">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etGasPrice"
@@ -815,7 +830,10 @@
                         android:layout_height="wrap_content"
                         android:hint="Duration (seconds)"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        android:textColorHint="#555555">
+                        android:textColorHint="#555555"
+                        app:boxStrokeColor="#1A1A2E"
+                        app:boxStrokeWidth="1dp"
+                        app:boxStrokeWidthFocused="2dp">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etResultDuration"
@@ -888,7 +906,10 @@
                         android:layout_height="wrap_content"
                         android:hint="Delay (ms)"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        android:textColorHint="#555555">
+                        android:textColorHint="#555555"
+                        app:boxStrokeColor="#1A1A2E"
+                        app:boxStrokeWidth="1dp"
+                        app:boxStrokeWidthFocused="2dp">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etScreenshotDelayMs"
