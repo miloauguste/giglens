@@ -213,7 +213,7 @@ class OfferOverlayService : Service() {
         cancelRevertTimer()
         // CORRECT: read from DB via revertDelaySeconds() -- configurable in Settings
         // WRONG: hardcoding 30 -- operator cannot adjust without a rebuild
-        secondsRemaining = revertDelaySeconds().coerceAtMost(30)
+        secondsRemaining = revertDelaySeconds().coerceIn(5, 300)
         Log.d(TAG, "Revert timer started (${secondsRemaining}s)")
         // Tick every second -- update countdown on pill, revert to IDLE at 0
         tickRunnable = object : Runnable {

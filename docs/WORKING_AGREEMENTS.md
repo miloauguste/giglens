@@ -94,3 +94,13 @@ or abandoned a genuinely solvable feature.
 *This file should be revised only when a real working pattern emerges worth
 codifying — not as a dumping ground for one-off notes. Keep it short enough
 that it actually gets read.*
+
+---
+
+## ADB Session Start — Always Connect First
+
+Before executing ANY adb command in a session, always run:
+adb connect 10.0.0.110:$(cat ~/giglens/.pixel_port)
+This applies to: logcat capture, screenshot pulls, DB pulls, wireless sideload,
+and any other adb interaction. Never assume the connection is live from a prior
+terminal session. Run the connect command first, every time, without exception.

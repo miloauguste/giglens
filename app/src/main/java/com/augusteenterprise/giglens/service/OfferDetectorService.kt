@@ -25,6 +25,7 @@ import android.accessibilityservice.AccessibilityService.ScreenshotResult
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.augusteenterprise.giglens.ocr.ParsedOffer
 import com.augusteenterprise.giglens.BuildConfig
+import com.augusteenterprise.giglens.town.PinDetector
 
 class OfferDetectorService : AccessibilityService() {
     private var lastShowCameraMs = 0L
@@ -97,9 +98,15 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
         )
         Log.i(TAG, "AccessibilityOfferReceiver registered")
 
-        // Populate config cache on connect — avoids runBlocking on every accessibility event
+        // Populate config cache on connect — avoids runBlocking on every accessibility event.
+        // Also seeds any keys added after initial install that the DB won't have yet.
         CoroutineScope(Dispatchers.IO).launch {
             val dao = GigLensApp.instance.database.appConfigDao()
+            dao.seedIfAbsent(
+                AppConfigKeys.PIN_DETECTION_ENABLED,
+                "true",
+                "Use map pin pixel detection for town estimate: true | false"
+            )
             cachedAutoCapureMode = dao.getValue(AppConfigKeys.AUTO_CAPTURE_MODE) ?: "accessibility"
             cachedEnabledPlatforms = dao.getValue(AppConfigKeys.ENABLED_PLATFORMS) ?: "doordash"
             Log.d(TAG, "Config cache loaded: mode=$cachedAutoCapureMode platforms=$cachedEnabledPlatforms")
@@ -375,6 +382,19 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
                         }
                         Log.i(TAG, "testTakeScreenshot SUCCESS — saved to ${file.absolutePath} (${softwareBitmap.width}x${softwareBitmap.height})")
                         FirebaseCrashlytics.getInstance().log("testTakeScreenshot: saved ${file.name}")
+
+                        // Run pin detection on the captured frame so DeliveryTownEstimator
+                        // can use pixel positions instead of GPS bearing for the town estimate
+                        val pinResult = PinDetector.detect(softwareBitmap)
+                        Log.i(TAG, "PinDetector: driverDot=${pinResult.driverDot} " +
+                            "briefcase=${pinResult.briefcasePins.size} " +
+                            "house=${pinResult.housePins.size} success=${pinResult.success}")
+                        FirebaseCrashlytics.getInstance().log(
+                            "PinDetector: success=${pinResult.success} " +
+                            "driverDot=${pinResult.driverDot} " +
+                            "briefcase=${pinResult.briefcasePins.size} " +
+                            "house=${pinResult.housePins.size}"
+                        )
                     } catch (e: Exception) {
                         Log.e(TAG, "testTakeScreenshot: error processing result: ${e.message}", e)
                     }

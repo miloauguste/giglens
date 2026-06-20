@@ -24,7 +24,8 @@ object AppConfigKeys {
     const val WIDGET_ENABLED       = "widget_enabled"         // "true" | "false"
     const val AUTO_CAPTURE_MODE    = "auto_capture_mode"     // "off" | "accessibility" | "button" | "both"
         const val SCREENSHOT_DELAY_MS  = "screenshot_delay_ms"  // ms delay before takeScreenshot() fires
-    const val ENABLED_PLATFORMS    = "enabled_platforms"     // comma-separated platform IDs e.g. "doordash"
+    const val ENABLED_PLATFORMS      = "enabled_platforms"       // comma-separated platform IDs e.g. "doordash"
+    const val PIN_DETECTION_ENABLED  = "pin_detection_enabled"   // "true" | "false"
 }
 
 fun defaultAppConfig(): List<AppConfig> = listOf(
@@ -37,5 +38,6 @@ fun defaultAppConfig(): List<AppConfig> = listOf(
     AppConfig(AppConfigKeys.WIDGET_ENABLED,       "false","Widget overlay enabled/disabled"),
     AppConfig(AppConfigKeys.AUTO_CAPTURE_MODE,    "accessibility",  "Auto capture mode: off | accessibility | button | both"),
     AppConfig(AppConfigKeys.SCREENSHOT_DELAY_MS,  "1500",           "Delay (ms) before screenshot fires after offer detected — allows Mapbox to finish rendering"),
-    AppConfig(AppConfigKeys.ENABLED_PLATFORMS,    "doordash", "Enabled gig platforms (comma-separated)")
+    AppConfig(AppConfigKeys.ENABLED_PLATFORMS,    "doordash", "Enabled gig platforms (comma-separated)"),
+    AppConfig(AppConfigKeys.PIN_DETECTION_ENABLED, "true",    "Use map pin pixel detection for town estimate: true | false")
 )

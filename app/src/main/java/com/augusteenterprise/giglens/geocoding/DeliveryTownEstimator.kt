@@ -13,6 +13,10 @@ package com.augusteenterprise.giglens.geocoding
 
 import android.location.Location
 import android.util.Log
+import com.augusteenterprise.giglens.GigLensApp
+import com.augusteenterprise.giglens.data.AppConfigKeys
+import com.augusteenterprise.giglens.town.PinDetector
+import com.augusteenterprise.giglens.town.PinDetectionTownEstimator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -81,6 +85,35 @@ object DeliveryTownEstimator {
         }
 
         Log.d(TAG, "Restaurant geocoded: ${restaurantCoords.first}, ${restaurantCoords.second}")
+
+        // Pin-detection path: use pixel positions from the last screenshot instead of GPS bearing.
+        // CORRECT: check flag + consume result here, after restaurant geocode — we need restaurantCoords
+        //          as the projection anchor for PinDetectionTownEstimator
+        // WRONG:   checking before geocoding — PinDetectionTownEstimator requires restaurantLat/Lng
+        val pinDetectionEnabled = withContext(Dispatchers.IO) {
+            try {
+                GigLensApp.instance.database.appConfigDao()
+                    .getValue(AppConfigKeys.PIN_DETECTION_ENABLED) == "true"
+            } catch (e: Exception) {
+                Log.w(TAG, "PIN_DETECTION_ENABLED read failed — defaulting false: ${e.message}")
+                false
+            }
+        }
+        val pinResult = PinDetector.latestResult
+        if (pinDetectionEnabled && pinResult?.success == true) {
+            // CORRECT: clear latestResult immediately after consuming — prevents a stale result
+            //          from a previous offer screen from being reused on the next offer
+            // WRONG:   leaving latestResult set — next offer picks up last shift's pin positions
+            PinDetector.latestResult = null
+            Log.i(TAG, "estimateTown: using pin_detection path (driverDot=${pinResult.driverDot})")
+            return PinDetectionTownEstimator.estimate(
+                result        = pinResult,
+                totalDistanceMi  = totalDistanceMi,
+                restaurantLat    = restaurantCoords.first,
+                restaurantLng    = restaurantCoords.second
+            )
+        }
+        Log.d(TAG, "estimateTown: pin_detection skipped (enabled=$pinDetectionEnabled pinResult=${pinResult?.success}) — using gps_bearing")
 
         // Step 2: Compute pickup leg distance
         val pickupLegMi = if (driverLocation != null) {

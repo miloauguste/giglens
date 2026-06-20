@@ -22,6 +22,10 @@ interface AppConfigDao {
     @Query("INSERT INTO app_config (key, value, description) VALUES (:key, :value, '') ON CONFLICT(key) DO UPDATE SET value = :value")
     suspend fun setValue(key: String, value: String)
 
+    // Inserts the key only if it does not already exist — safe to call on every startup
+    @Query("INSERT OR IGNORE INTO app_config (key, value, description) VALUES (:key, :value, :description)")
+    suspend fun seedIfAbsent(key: String, value: String, description: String)
+
     @Query("SELECT COUNT(*) FROM app_config")
     suspend fun count(): Int
 }
