@@ -336,3 +336,51 @@ user-initiated capture. Before public release, explicitly decide:
 the debug/internal-testing build. Must be explicitly revisited as part of
 Play Store review submission prep (see item #13 above), not left as an
 accidental holdover from dev convenience.
+
+---
+
+## Updated: 2026-06-19 — Post-session sync
+
+### ✅ Completed This Session
+- TownEstimate now exposes pickupLegMi/deliveryLegMi (was discarded internally)
+- OfferCapture now persists pickupDistance/deliveryDistance correctly
+- SCREENSHOT_DELAY_MS configurable in Settings (default 1500ms, range 0-5000ms)
+- OfferDetectorService screenshot delay is now DB-driven (not hardcoded)
+- Shift log infrastructure created (docs/shift_logs/, gitignored)
+- Pin-detection algorithm fully designed and documented in DECISIONS.md
+
+### 🔲 In Progress / Needs Validation
+- testTakeScreenshot() rendering timing fix (1500ms delay) — NEEDS real-shift
+  screenshot validation before PinDetector.kt implementation begins
+- Debug email pipeline (DebugOfferEmailer) — NEEDS logcat capture next shift
+  to diagnose why no email was received
+
+### 🔲 Next Priority (blocked on screenshot validation)
+1. PinDetector.kt — pure Kotlin HSV color filter for briefcase/house/driver pins
+2. PinDetectionTownEstimator.kt — CV-based town estimation using pin positions
+3. Wire CV estimator as primary, GPS-bearing as fallback in DeliveryTownEstimator
+
+### 🔲 Queued (unchanged from prior sessions)
+4. Decide pill display — town vs profit-only (blocked on accuracy validation)
+5. Decide AUTO_CAPTURE_MODE default for real drivers (pre-launch review)
+6. Accessibility disclosure screen rebuild (ViewBinding)
+7. Phase 1 scoring redesign (GREEN/YELLOW/RED configurable thresholds)
+8. Registration + Stripe billing (SQLCipher + FastAPI backend)
+9. Sentiment Agent repo (separate project)
+10. Order archive view (day/week/month grouping)
+11. Play Store review submission
+12. ScreenCaptureService removal (5 files + manifest, TODO markers in place)
+
+### ⚠️ Pre-Launch Review Required (must decide before public release)
+- AUTO_CAPTURE_MODE default set to "accessibility" for dev convenience —
+  must explicitly decide whether this is right for real drivers before shipping
+- Accessibility disclosure screen content must reflect default-on capture mode
+- google-play-api-key.json stripped from git history (2026-06-18) — confirm
+  no other credential exposure remains before public launch
+
+### 🔲 Tabled (not forgotten, just not urgent)
+- Robolectric/Espresso automated testing (T1) — too early, app still in flux
+- Town accuracy cross-reference via Nominatim full address components —
+  deferred until CV estimator is working
+- Dependabot alert handling workflow — documented in 2026-06-18 handover,
+  monitor Security tab weekly
