@@ -349,24 +349,24 @@ class OfferOverlayService : Service() {
             setTextColor(Color.WHITE)
             textSize = if (sheetState == SheetState.IDLE) 12f else 14f
             setTypeface(null, Typeface.BOLD)
-            gravity = Gravity.CENTER_HORIZONTAL
             setPadding(40, 18, 40, 18)
             background = pillBg(color, hasDrawer)
             setOnTouchListener(makeTouchListener())
         }
     }
 
-    // ── Pill heading: net value + estimated delivery town (Pro feature) ────────
+    // ── Pill heading: net value · town on same line (Pro feature) ────────────
     private fun pillTextWithTown(): SpannableString {
         val sign = if (netValue >= 0) "+" else ""
         val net = "$sign$${"%.2f".format(netValue)}"
         val timer = if (secondsRemaining > 0) " ${secondsRemaining}s" else ""
         val townClean = deliveryTown.removePrefix("📍 ~").removePrefix("📍 ").trim()
-        val full = "$net$timer\n📍 $townClean"
+        val townSegment = " · 📍 $townClean"
+        val full = "$net$timer$townSegment"
         val builder = android.text.SpannableStringBuilder(full)
-        val townStart = full.indexOf('\n') + 1
+        val townStart = full.length - townSegment.length
         builder.setSpan(
-            android.text.style.RelativeSizeSpan(0.72f),
+            android.text.style.RelativeSizeSpan(0.80f),
             townStart, full.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
         )
         builder.setSpan(
