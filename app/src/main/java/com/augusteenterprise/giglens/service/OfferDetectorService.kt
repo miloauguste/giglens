@@ -48,7 +48,7 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
         // Offer fingerprint dedup — suppresses re-broadcast of same offer within window
         // CORRECT: hash pay+distance, ignore re-fires while same offer is on screen
         // WRONG:   recording every accessibility event as a new offer entry
-        private const val OFFER_DEDUP_WINDOW_MS = 30_000L
+        private const val OFFER_DEDUP_WINDOW_MS = 120_000L  // 2 min — 30s let a 60s gap through
 
         // DoorDash package
         private const val DOORDASH_PACKAGE = "com.doordash.driverapp"
