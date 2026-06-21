@@ -99,72 +99,62 @@ object DeliveryTownEstimator {
                 false
             }
         }
+        // CORRECT: always consume latestResult here — stale pins from a prior offer must
+        //          not bleed into the next offer, regardless of which path we take below
+        // WRONG:   only consuming inside the success==true branch — lets stale pins persist
         val pinResult = PinDetector.latestResult
+        PinDetector.latestResult = null
+
+        // Full pin detection path — driver dot + pickup + dropoff all found
         if (pinDetectionEnabled && pinResult?.success == true) {
-            // CORRECT: clear latestResult immediately after consuming — prevents a stale result
-            //          from a previous offer screen from being reused on the next offer
-            // WRONG:   leaving latestResult set — next offer picks up last shift's pin positions
-            PinDetector.latestResult = null
-            Log.i(TAG, "estimateTown: using pin_detection path (driverDot=${pinResult.driverDot})")
+            Log.i(TAG, "estimateTown: pin_detection path (driverDot=${pinResult.driverDot})")
             return PinDetectionTownEstimator.estimate(
-                result        = pinResult,
-                totalDistanceMi  = totalDistanceMi,
-                restaurantLat    = restaurantCoords.first,
-                restaurantLng    = restaurantCoords.second
+                result          = pinResult,
+                totalDistanceMi = totalDistanceMi,
+                restaurantLat   = restaurantCoords.first,
+                restaurantLng   = restaurantCoords.second
             )
         }
-        Log.d(TAG, "estimateTown: pin_detection skipped (enabled=$pinDetectionEnabled pinResult=${pinResult?.success}) — using gps_bearing")
 
-        // Step 2: Compute pickup leg distance
+        // Step 2: Compute pickup leg distance (used by both partial-pin and fallback paths)
         val pickupLegMi = if (driverLocation != null) {
             GeocodingHelper.straightLineMiles(
                 driverLocation.latitude, driverLocation.longitude,
                 restaurantCoords.first, restaurantCoords.second
             )
-        } else 1.0  // fallback estimate if no GPS
-
-        // Step 3: Delivery leg = total - pickup leg
+        } else 1.0
         val deliveryLegMi = (totalDistanceMi - pickupLegMi).coerceAtLeast(0.5)
         Log.d(TAG, "Total: ${totalDistanceMi}mi | Pickup leg: ${pickupLegMi}mi | Delivery leg: ${deliveryLegMi}mi")
 
-        // Step 4: Project delivery leg from restaurant using driver→restaurant bearing.
-        // CORRECT: compute bearing from driver coords to restaurant coords — always accurate
-        //          whether or not the driver is moving (device bearing is 0/stale when parked)
-        // WRONG:   use driverLocation.bearing — driver is stationary when offers arrive,
-        //          so device bearing is stale garbage, causing systematic wrong-town estimates
-        val bearing = if (driverLocation != null) {
-            computeBearing(
-                driverLocation.latitude, driverLocation.longitude,
-                restaurantCoords.first, restaurantCoords.second
+        // Partial pin path — pickup + dropoff pins found but driver dot missing.
+        // CORRECT: use pixel bearing (pickup→dropoff) for direction + GPS delivery leg for distance.
+        //          Direction comes from the map pins, which encode actual route geometry.
+        // WRONG:   use driver→restaurant bearing — customer is NOT necessarily along that line;
+        //          driver→restaurant bearing is the pickup direction, not the delivery direction
+        val pickupPin  = pinResult?.briefcasePins?.firstOrNull()
+        val dropoffPin = pinResult?.housePins?.firstOrNull()
+        if (pinDetectionEnabled && pickupPin != null && dropoffPin != null) {
+            val dx = (dropoffPin.x - pickupPin.x).toDouble()
+            val dy = (dropoffPin.y - pickupPin.y).toDouble()
+            val pinBearing = (Math.toDegrees(atan2(dx, -dy)) + 360.0) % 360.0
+            Log.i(TAG, "estimateTown: partial_pin path — bearing=$pinBearing° (no driver dot; distance from GPS)")
+            val (dropoffLat, dropoffLon) = projectPoint(
+                restaurantCoords.first, restaurantCoords.second, deliveryLegMi, pinBearing
             )
-        } else 0.0
-        val (dropoffLat, dropoffLon) = projectPoint(
-            restaurantCoords.first, restaurantCoords.second,
-            deliveryLegMi, bearing
-        )
-
-        Log.d(TAG, "Projected dropoff: $dropoffLat, $dropoffLon (coord-bearing: $bearing°)")
-
-        // Step 5: Reverse geocode projected point → town name
-        val town = reverseGeocodeCity(dropoffLat, dropoffLon)
-
-        return if (town != null) {
-            val confidence = when {
-                driverLocation != null -> "high"   // coord-based bearing is always reliable
-                else -> "low"
+            val town = reverseGeocodeCity(dropoffLat, dropoffLon)
+            return if (town != null) {
+                TownEstimate(town, "medium", "partial_pin", "📍 ~$town", pickupLegMi, deliveryLegMi)
+            } else {
+                TownEstimate(null, "low", "unavailable", "📍 ---", pickupLegMi, deliveryLegMi)
             }
-            TownEstimate(
-                town          = town,
-                confidence    = confidence,
-                method        = if (useGpsMethod) "gps_bearing" else "city_fallback",
-                displayName   = "📍 ~$town",
-                pickupLegMi   = pickupLegMi,
-                deliveryLegMi = deliveryLegMi
-            )
-        } else {
-            TownEstimate(null, "low", "unavailable", "📍 ---",
-                pickupLegMi = pickupLegMi, deliveryLegMi = deliveryLegMi)
         }
+
+        // No usable pins — delivery direction is unknown, do not project.
+        // CORRECT: return unavailable — projecting in any arbitrary direction is worse than nothing
+        // WRONG:   project using driver bearing or driver→restaurant bearing — customer may be
+        //          in any direction from the restaurant; a wrong town is misleading, not helpful
+        Log.w(TAG, "estimateTown: no pin data (enabled=$pinDetectionEnabled pinResult=${pinResult?.success}) — unavailable")
+        return TownEstimate(null, "low", "unavailable", "📍 ---", pickupLegMi, deliveryLegMi)
     }
 
     /**
@@ -264,19 +254,6 @@ object DeliveryTownEstimator {
                 null
             }
         }
-
-    /**
-     * Computes forward bearing in degrees (0–360, clockwise from north) from point 1 to point 2.
-     * Uses actual coordinates — does not require device movement or GPS heading.
-     */
-    private fun computeBearing(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
-        val dLon = Math.toRadians(lon2 - lon1)
-        val lat1Rad = Math.toRadians(lat1)
-        val lat2Rad = Math.toRadians(lat2)
-        val y = sin(dLon) * cos(lat2Rad)
-        val x = cos(lat1Rad) * sin(lat2Rad) - sin(lat1Rad) * cos(lat2Rad) * cos(dLon)
-        return (Math.toDegrees(atan2(y, x)) + 360) % 360
-    }
 
     /**
      * Projects a point from origin in bearing direction by distance miles.
