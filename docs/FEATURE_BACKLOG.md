@@ -1,5 +1,5 @@
 # GigLens — Feature Backlog
-**Last updated:** 2026-06-15 (v154)
+**Last updated:** 2026-06-21 (v0.1.211)
 
 ---
 
@@ -14,6 +14,31 @@
 
 ---
 
+## ✅ Completed 2026-06-20 Session (v0.1.192 → v0.1.205)
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| PinDetector.kt | ✅ Built | Pure Kotlin HSV blob detection — `town/PinDetector.kt` |
+| PinDetectionTownEstimator.kt | ✅ Built | Pixel calibration → bearing → Nominatim — `town/PinDetectionTownEstimator.kt` |
+| PIN_DETECTION_ENABLED config key | ✅ Built | Seeded via `seedIfAbsent()` on service connect — `AppConfig.kt` |
+| `seedIfAbsent()` DAO method | ✅ Built | INSERT OR IGNORE — safe upgrade path for new config keys — `AppConfigDao.kt` |
+| Pin detection wired into screenshot flow | ✅ Built | `testTakeScreenshot()` onSuccess calls `PinDetector.detect()` |
+| DeliveryTownEstimator pin dispatch | ✅ Built | pin_detection → partial_pin → GPS fallback (GPS fallback later replaced, see June 21) |
+| Pin Detection toggle in Settings | ✅ Built | `switchPinDetectionEnabled`, loads/saves from DB — `SettingsActivity.kt` |
+| Pill revert timer bug | ✅ Fixed | `coerceAtMost(30)` → `coerceIn(5, 300)` — full 5–300s range now honored |
+| Settings page design | ✅ Rebuilt | Matches main page — 3 contrast passes, all text visible — `activity_settings.xml` |
+| Dark mode | ✅ Built | Persistent via SharedPreferences, full color token system, `values-night/colors.xml` |
+| Dedup window fix (partial) | ✅ Partial | `AccessibilityOfferReceiver.DEDUP_WINDOW_MS` 30s→120s; `OfferDetectorService` still 30s |
+
+## ✅ Completed 2026-06-21 Session (v0.1.206 → v0.1.211)
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Dedup window fix (complete) | ✅ Fixed | `OfferDetectorService.OFFER_DEDUP_WINDOW_MS` 30s→120s — both constants now 2min |
+| Town bearing overhaul (3-tier) | ✅ Built | Full pin → partial pin → unavailable — no GPS bearing fallback; stale result cleared on entry |
+| Pill heading town | ✅ Built (Pro) | `+$X.XX 45s · 📍 Burlington` inline, teal #00C9A7 80% size — `pillTextWithTown()` |
+| Play Store internal testing deploy | ✅ Deployed | v0.1.211 on internal track + Pixel sideload |
+
 ## ✅ Completed This Session (v154)
 
 | Feature | Status | Notes |
@@ -26,31 +51,35 @@
 
 ---
 
-## 🔬 Decision Point — Delivery Town Architecture (BLOCKING)
+## 🔬 Decision Point — Delivery Town Accuracy (COLLECTING DATA)
 
-**Before building anything else town-related, we need real accuracy data.**
+**Pin-based CV estimation is now built and wired (v0.1.194+).** The GPS-bearing fallback is permanently removed as of v0.1.208. The 3-tier estimation logic is: full pin → partial pin → unavailable.
 
-Run this after 5-10 shifts with Yes/No confirmations logged:
+**Next milestone: collect Yes/No confirmations from real shifts.** Run this after 5-10 shifts with confirmations logged:
 ```sql
-SELECT COUNT(*) as total,
+SELECT estimatedTownMethod,
+  COUNT(*) as total,
   SUM(CASE WHEN townAccurate = 1 THEN 1 ELSE 0 END) as correct,
   ROUND(100.0 * SUM(CASE WHEN townAccurate = 1 THEN 1 ELSE 0 END) / COUNT(*), 1) as accuracy_pct
 FROM offer_captures
-WHERE estimatedTown IS NOT NULL AND townAccurate IS NOT NULL;
+WHERE estimatedTown IS NOT NULL AND townAccurate IS NOT NULL
+GROUP BY estimatedTownMethod;
 ```
 
-- **>80% accurate** → GPS geocoding approach confirmed sufficient. Drop MediaProjection
-  permanently. Proceed with Phase 1/2 features as planned.
-- **<80% accurate** → Reconsider paid-tier map screenshot + pixel pin detection
-  (requires MediaProjection, explicitly avoided so far due to poor UX — only
-  revisit if data demands it).
+- **`pin_detection` >80%** → algorithm confirmed. Keep as-is.
+- **`partial_pin` >80%** → partial-pin path also solid.
+- **Either path <80%** → investigate Nominatim reverse geocode response vs. actual town; may need `zoom=12` instead of `zoom=10`.
+- **Most rows `unavailable`** → PinDetector threshold tuning needed; check HSV blob detection vs. actual screenshot samples.
+
+**Status as of 2026-06-21:** 0 confirmations logged — `townAccurate` null on all 15 rows. Driver has not tapped Yes/No on any town notification. Data collection must begin next shift.
 
 **Confirmed dead ends (do not re-investigate):**
 - DoorDash accessibility tree exposes NO coordinates, addresses, or map tile URLs
 - Content descriptions on map view are empty
 - Text between restaurant name and "customer dropoff" label contains nothing useful
-- Idle-screen zone text ("nj: moorestown/mt. laurel") is driver's ASSIGNED zone,
-  not delivery zone — not useful for delivery town estimation
+- Idle-screen zone text ("nj: moorestown/mt. laurel") is driver's ASSIGNED zone, not delivery zone
+- GPS bearing (device sensor) — unreliable when stationary; removed from all estimation paths as of v0.1.208
+- Driver→restaurant coordinate bearing — wrong direction assumption; customer is NOT necessarily along that line
 
 ---
 
@@ -58,7 +87,7 @@ WHERE estimatedTown IS NOT NULL AND townAccurate IS NOT NULL;
 
 | # | Feature | Description | Effort | Tier |
 |---|---------|-------------|--------|------|
-| 5 | **Town estimation upgrade (conditional)** | Only if accuracy <80% — map screenshot + pin detection via MediaProjection | 4-6hr | Tier 2/3 |
+| 5 | **Town estimation accuracy data** | Collect Yes/No confirmations across 5-10 shifts — run accuracy SQL query when sufficient rows collected | 0hr | Free |
 | 6 | **FB sentiment batch** | Nightly scraper + Ollama sentiment → restaurant reputation DB. Tier 2: hosted cloud (Supabase/Railway). Tier 3: self-hosted via Telegram bot | 6-8hr | Tier 2/3 |
 | 7 | **Sentiment score in pill** | Restaurant reputation feeds into 0-100 quality score shown on expand | 2hr | Tier 2/3 |
 | 8 | **PDF shift report** | Formatted export with date range filter | 2-3hr | Tier 2/3 |
@@ -89,7 +118,7 @@ WHERE estimatedTown IS NOT NULL AND townAccurate IS NOT NULL;
 | Delivery town estimate (GPS-based) | ✅ | ✅ | ✅ |
 | Voice readout (profit + distance + color + town) | ✅ | ✅ | ✅ |
 | CSV export (current shift) | ✅ | ✅ | ✅ |
-| High-confidence town (map-based, if needed) | ❌ | ✅ | ✅ |
+| High-confidence town (pin-based CV, built v0.1.194) | ✅ | ✅ | ✅ |
 | Restaurant sentiment score | ❌ | ✅ | ✅ |
 | PDF shift report + date range | ❌ | ✅ | ✅ |
 | Google Sheets sync | ❌ | ✅ | ✅ |
@@ -341,46 +370,43 @@ accidental holdover from dev convenience.
 
 ## Updated: 2026-06-19 — Post-session sync
 
-### ✅ Completed This Session
-- TownEstimate now exposes pickupLegMi/deliveryLegMi (was discarded internally)
-- OfferCapture now persists pickupDistance/deliveryDistance correctly
-- SCREENSHOT_DELAY_MS configurable in Settings (default 1500ms, range 0-5000ms)
-- OfferDetectorService screenshot delay is now DB-driven (not hardcoded)
-- Shift log infrastructure created (docs/shift_logs/, gitignored)
-- Pin-detection algorithm fully designed and documented in DECISIONS.md
+### ✅ Completed 2026-06-20 + 2026-06-21 (see sections above for full detail)
+- PinDetector.kt + PinDetectionTownEstimator.kt — built and wired
+- 3-tier town estimation: full pin → partial pin → unavailable (no wrong projections)
+- Settings page redesign + dark mode
+- Dedup window extended to 2 minutes in both services
+- Town in pill heading (Pro feature, code in place, gate not yet wired)
+- Deployed to Play Store internal track (v0.1.211)
 
-### 🔲 In Progress / Needs Validation
-- testTakeScreenshot() rendering timing fix (1500ms delay) — NEEDS real-shift
-  screenshot validation before PinDetector.kt implementation begins
-- Debug email pipeline (DebugOfferEmailer) — NEEDS logcat capture next shift
-  to diagnose why no email was received
+### 🔲 Immediate Next — Town Accuracy Validation
+1. **Tap Yes/No on town confirmation notifications during next shift** — `townAccurate` is null on all 15 rows; can't measure accuracy improvement without data
+2. **Investigate missing restaurant (IDs 12–14)** — pull `debug/screen_texts.log` from device for 12:28–12:43 AM window
+3. **Investigate missing order #7 (7-Eleven Burlington)** — check Crashlytics `looksLikeOfferScreen` logs from 12:43–1:07 AM; may be a DoorDash UI variant the accessibility service doesn't recognize
 
-### 🔲 Next Priority (blocked on screenshot validation)
-1. PinDetector.kt — pure Kotlin HSV color filter for briefcase/house/driver pins
-2. PinDetectionTownEstimator.kt — CV-based town estimation using pin positions
-3. Wire CV estimator as primary, GPS-bearing as fallback in DeliveryTownEstimator
-
-### 🔲 Queued (unchanged from prior sessions)
-4. Decide pill display — town vs profit-only (blocked on accuracy validation)
-5. Decide AUTO_CAPTURE_MODE default for real drivers (pre-launch review)
-6. Accessibility disclosure screen rebuild (ViewBinding)
-7. Phase 1 scoring redesign (GREEN/YELLOW/RED configurable thresholds)
+### 🔲 Queued (priority order)
+4. Decide AUTO_CAPTURE_MODE default for real drivers (pre-launch review)
+5. Accessibility disclosure screen rebuild (ViewBinding)
+6. Phase 1 scoring redesign (GREEN/YELLOW/RED configurable thresholds)
+7. Pro feature gate for pill heading town (gate logic not yet wired — currently always shows)
 8. Registration + Stripe billing (SQLCipher + FastAPI backend)
 9. Sentiment Agent repo (separate project)
 10. Order archive view (day/week/month grouping)
-11. Play Store review submission
+11. Play Store review submission (store listing, screenshots, content rating, privacy policy)
 12. ScreenCaptureService removal (5 files + manifest, TODO markers in place)
+13. Debug email pipeline validation (DebugOfferEmailer — still unvalidated end-to-end)
 
 ### ⚠️ Pre-Launch Review Required (must decide before public release)
 - AUTO_CAPTURE_MODE default set to "accessibility" for dev convenience —
   must explicitly decide whether this is right for real drivers before shipping
 - Accessibility disclosure screen content must reflect default-on capture mode
+- Pro gate: `pillTextWithTown()` shows town unconditionally — subscription check
+  must be wired before public launch
 - google-play-api-key.json stripped from git history (2026-06-18) — confirm
   no other credential exposure remains before public launch
 
 ### 🔲 Tabled (not forgotten, just not urgent)
 - Robolectric/Espresso automated testing (T1) — too early, app still in flux
 - Town accuracy cross-reference via Nominatim full address components —
-  deferred until CV estimator is working
+  deferred until CV estimator accuracy data collected
 - Dependabot alert handling workflow — documented in 2026-06-18 handover,
   monitor Security tab weekly

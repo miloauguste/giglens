@@ -1,4 +1,12 @@
-# GigLens — Session Handover
+# GigLens — Latest Session Handover
+
+**Most recent session:** 2026-06-20 → see [LAST_SESSION_20260620.md](LAST_SESSION_20260620.md)
+**Previous session:** 2026-06-19 → see [LAST_SESSION_20260619.md](LAST_SESSION_20260619.md)
+**Also see:** [HANDOVER_2026_06_21.md](HANDOVER_2026_06_21.md) — same-day follow-up session (dedup full fix, town bearing overhaul, pill heading town, Play Store deploy v0.1.211)
+
+---
+
+# GigLens — Session Handover (2026-06-19 archive — see above for latest)
 **Date:** 2026-06-19
 **Version at session end:** 0.1.186 (multiple deploys via deploy.sh auto-commit)
 **Build state:** PASSING (compileDebugKotlin + compileReleaseKotlin both clean)
