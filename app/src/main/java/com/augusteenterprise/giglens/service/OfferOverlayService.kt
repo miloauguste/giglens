@@ -339,17 +339,41 @@ class OfferOverlayService : Service() {
     // ── Build pill TextView ───────────────────────────────────────────────────
     private fun buildPill(color: Int, hasDrawer: Boolean): TextView {
         return TextView(this).apply {
-            text = if (sheetState == SheetState.IDLE)
-                SpannableString("GL")
-            else
-                netLabelSpannable()  // net value white, timer blinks when <10s
+            text = when {
+                sheetState == SheetState.IDLE -> SpannableString("GL")
+                // PRO FEATURE: delivery town in pill heading — gated to Pro tier
+                // Free tier sees net value only; Pro tier sees net value + estimated town
+                sheetState == SheetState.PILL && deliveryTown != "📍 ---" -> pillTextWithTown()
+                else -> netLabelSpannable()
+            }
             setTextColor(Color.WHITE)
             textSize = if (sheetState == SheetState.IDLE) 12f else 14f
             setTypeface(null, Typeface.BOLD)
+            gravity = Gravity.CENTER_HORIZONTAL
             setPadding(40, 18, 40, 18)
             background = pillBg(color, hasDrawer)
             setOnTouchListener(makeTouchListener())
         }
+    }
+
+    // ── Pill heading: net value + estimated delivery town (Pro feature) ────────
+    private fun pillTextWithTown(): SpannableString {
+        val sign = if (netValue >= 0) "+" else ""
+        val net = "$sign$${"%.2f".format(netValue)}"
+        val timer = if (secondsRemaining > 0) " ${secondsRemaining}s" else ""
+        val townClean = deliveryTown.removePrefix("📍 ~").removePrefix("📍 ").trim()
+        val full = "$net$timer\n📍 $townClean"
+        val builder = android.text.SpannableStringBuilder(full)
+        val townStart = full.indexOf('\n') + 1
+        builder.setSpan(
+            android.text.style.RelativeSizeSpan(0.72f),
+            townStart, full.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        builder.setSpan(
+            ForegroundColorSpan(Color.parseColor("#00C9A7")),
+            townStart, full.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        return SpannableString.valueOf(builder)
     }
 
     // ── Build pill text with ONLY the timer segment blinking ──────────────────
