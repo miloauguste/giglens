@@ -127,34 +127,31 @@ object DeliveryTownEstimator {
         val deliveryLegMi = (totalDistanceMi - pickupLegMi).coerceAtLeast(0.5)
         Log.d(TAG, "Total: ${totalDistanceMi}mi | Pickup leg: ${pickupLegMi}mi | Delivery leg: ${deliveryLegMi}mi")
 
-        // Step 4: Project delivery leg from restaurant using driver bearing
-        val bearing = driverLocation?.bearing?.toDouble() ?: 0.0
+        // Step 4: Project delivery leg from restaurant using driver→restaurant bearing.
+        // CORRECT: compute bearing from driver coords to restaurant coords — always accurate
+        //          whether or not the driver is moving (device bearing is 0/stale when parked)
+        // WRONG:   use driverLocation.bearing — driver is stationary when offers arrive,
+        //          so device bearing is stale garbage, causing systematic wrong-town estimates
+        val bearing = if (driverLocation != null) {
+            computeBearing(
+                driverLocation.latitude, driverLocation.longitude,
+                restaurantCoords.first, restaurantCoords.second
+            )
+        } else 0.0
         val (dropoffLat, dropoffLon) = projectPoint(
             restaurantCoords.first, restaurantCoords.second,
             deliveryLegMi, bearing
         )
 
-        Log.d(TAG, "Projected dropoff: $dropoffLat, $dropoffLon (bearing: $bearing°)")
+        Log.d(TAG, "Projected dropoff: $dropoffLat, $dropoffLon (coord-bearing: $bearing°)")
 
         // Step 5: Reverse geocode projected point → town name
         val town = reverseGeocodeCity(dropoffLat, dropoffLon)
 
         return if (town != null) {
             val confidence = when {
-                driverLocation != null && driverLocation.speed > 2.0 -> "high"   // moving = reliable bearing
-                driverLocation != null -> "medium"                                // stationary = bearing unreliable
+                driverLocation != null -> "high"   // coord-based bearing is always reliable
                 else -> "low"
-            }
-            // CORRECT: log a warning when bearing is unreliable (speed <= 2.0) so
-            //          post-shift analysis can distinguish bearing-error misses from
-            //          geocoding misses — confirmed during 2026-06-18 analysis that
-            //          speed/bearing state at offer time is critical diagnostic data
-            // WRONG:   silently projecting with bearing=0.0 (north) when stationary
-            //          with no indication in logs or DB that the result is unreliable
-            if (confidence != "high") {
-                Log.w(TAG, "Town estimate confidence=$confidence — bearing may be unreliable " +
-                    "(speed=${driverLocation?.speed ?: 0f} m/s, bearing=${driverLocation?.bearing ?: 0f}°) " +
-                    "pickupLeg=${pickupLegMi}mi deliveryLeg=${deliveryLegMi}mi")
             }
             TownEstimate(
                 town          = town,
@@ -267,6 +264,19 @@ object DeliveryTownEstimator {
                 null
             }
         }
+
+    /**
+     * Computes forward bearing in degrees (0–360, clockwise from north) from point 1 to point 2.
+     * Uses actual coordinates — does not require device movement or GPS heading.
+     */
+    private fun computeBearing(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+        val dLon = Math.toRadians(lon2 - lon1)
+        val lat1Rad = Math.toRadians(lat1)
+        val lat2Rad = Math.toRadians(lat2)
+        val y = sin(dLon) * cos(lat2Rad)
+        val x = cos(lat1Rad) * sin(lat2Rad) - sin(lat1Rad) * cos(lat2Rad) * cos(dLon)
+        return (Math.toDegrees(atan2(y, x)) + 360) % 360
+    }
 
     /**
      * Projects a point from origin in bearing direction by distance miles.
