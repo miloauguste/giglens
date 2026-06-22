@@ -2,6 +2,32 @@
 
 ---
 
+## Session 3 — Dark mode UI fix (2026-06-22)
+**Version at session start:** 0.1.222
+**Version at session end:** 0.1.224 (committed, deploy handed off to Milo)
+**Conducted by:** Claude (Anthropic)
+
+### What was fixed
+**Root cause:** `Theme.GigLens` used `DayNight.DarkActionBar` — in dark mode the system action bar rendered white, sitting above the custom dark header whose text is `#FFFFFF`. White text on white bar = invisible.
+
+**Fix 1 — `values/themes.xml`:** Parent changed to `DayNight.NoActionBar`. Eliminates the system action bar entirely. The layout has its own custom dark header (`gl_bg_header`) so the action bar was always redundant.
+
+**Fix 2 — `layout/activity_main.xml`:** Analytics card (NET VALUE TREND) and Verdict Breakdown card (TAKE/BORD/SKIP) had `android:backgroundTint="#FFFFFF"` hardcoded — stayed white in dark mode with light-colored text inside. Changed both to `@color/gl_bg_card` → resolves to `#1E1E2E` in dark mode.
+
+**Build:** Clean. Pre-commit hook bumped 0.1.223 → 0.1.224.
+
+### Deploy
+Handed off to Milo:
+```bash
+cd /home/poppa/giglens && ./deploy.sh "Dark mode fix: top bar washout and analytics card contrast"
+```
+
+### Confirm next session
+- Did deploy complete? Check Play Console for v0.1.224 on internal track.
+- Verify on device: dark mode → main screen top header readable, analytics + verdict cards dark-surfaced.
+
+---
+
 ## Session 2 — Deploy (2026-06-22, brief)
 **Version at session start:** 0.1.221
 **Version at session end:** 0.1.221 (deploy handed off to Milo — not confirmed complete)
