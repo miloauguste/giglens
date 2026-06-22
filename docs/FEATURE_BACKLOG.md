@@ -1,5 +1,5 @@
 # GigLens — Feature Backlog
-**Last updated:** 2026-06-21 (v0.1.211)
+**Last updated:** 2026-06-22 (v0.1.216)
 
 ---
 
@@ -39,6 +39,18 @@
 | Pill heading town | ✅ Built (Pro) | `+$X.XX 45s · 📍 Burlington` inline, teal #00C9A7 80% size — `pillTextWithTown()` |
 | Play Store internal testing deploy | ✅ Deployed | v0.1.211 on internal track + Pixel sideload |
 
+## ✅ Completed 2026-06-22 Session (v0.1.212 → v0.1.216)
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Retail pickup restaurant (Wawa, 7-Eleven) | ✅ Fixed | `extractOfferFromNodes()` + `extractRestaurant()` now match "Retail pickup"; digit-start allowed for "7-Eleven" — v215 |
+| Town truncation in pill | ✅ Fixed | `abbreviateTown()` strips Township/Borough/County suffixes, caps at 14 chars — v215 |
+| `BLOB_MIN_PX` 200→50 | ✅ Fixed | Handles driver dot in zoomed-out maps (~8px min diameter) — Taco Bell case — v215 |
+| Screenshot noise reduction (bitmap crop) | ✅ Built | PinDetector receives y=8%–32% crop only (map region) — excludes notification banner and offer text — v216 |
+| Pill hidden during screenshot | ✅ Built | `alpha=0` before shot, restored in onSuccess/onFailure/catch — v216 |
+| `zoom=10` → `zoom=12` (both estimators) | ✅ Fixed | Borough/village level from Nominatim — fixes Pemberton/Southampton class of error — v216 |
+| Short-trip confidence guard | ✅ Built | pickup→dropoff < 80px → confidence="medium"; logcat warning fires — v216 |
+
 ## ✅ Completed This Session (v154)
 
 | Feature | Status | Notes |
@@ -68,10 +80,10 @@ GROUP BY estimatedTownMethod;
 
 - **`pin_detection` >80%** → algorithm confirmed. Keep as-is.
 - **`partial_pin` >80%** → partial-pin path also solid.
-- **Either path <80%** → investigate Nominatim reverse geocode response vs. actual town; may need `zoom=12` instead of `zoom=10`.
-- **Most rows `unavailable`** → PinDetector threshold tuning needed; check HSV blob detection vs. actual screenshot samples.
+- **Either path <80%** → investigate short-trip confidence guard (< 80px pin separation → "medium") and whether "medium" results should be suppressed to "unavailable".
+- **Most rows `unavailable`** → PinDetector threshold tuning needed; check HSV blob detection vs. actual screenshot samples. Note: `BLOB_MIN_PX` lowered to 50 (v215) and map cropped to 8–32% of screen (v216) — may improve detection rate.
 
-**Status as of 2026-06-21:** 0 confirmations logged — `townAccurate` null on all 15 rows. Driver has not tapped Yes/No on any town notification. Data collection must begin next shift.
+**Status as of 2026-06-22:** 0 confirmations logged — `townAccurate` null on all rows. Driver has not tapped Yes/No on any town notification across any shift. Data collection must begin next shift. Note: `zoom=12` fix (v216) may already fix the Southampton/Pemberton class of error — first confirmation tap will verify.
 
 **Confirmed dead ends (do not re-investigate):**
 - DoorDash accessibility tree exposes NO coordinates, addresses, or map tile URLs
@@ -379,14 +391,14 @@ accidental holdover from dev convenience.
 - Deployed to Play Store internal track (v0.1.211)
 
 ### 🔲 Immediate Next — Town Accuracy Validation
-1. **Tap Yes/No on town confirmation notifications during next shift** — `townAccurate` is null on all 15 rows; can't measure accuracy improvement without data
-2. **Investigate missing restaurant (IDs 12–14)** — pull `debug/screen_texts.log` from device for 12:28–12:43 AM window
-3. **Investigate missing order #7 (7-Eleven Burlington)** — check Crashlytics `looksLikeOfferScreen` logs from 12:43–1:07 AM; may be a DoorDash UI variant the accessibility service doesn't recognize
+1. **Tap Yes/No on town confirmation notifications during next shift** — `townAccurate` is null on all rows; accuracy SQL query cannot run without confirmation data
+2. **Check logcat for short-trip warnings** — `adb logcat -d | grep "short trip"` — if > 30% of offers hit the < 80px guard, consider returning "unavailable" for short trips instead of "medium"
+3. **Verify zoom=12 fixed Pemberton class of error** — first Yes/No confirmation on a township-area offer will tell us if the borough-level naming is now correct
 
 ### 🔲 Queued (priority order)
-4. Decide AUTO_CAPTURE_MODE default for real drivers (pre-launch review)
-5. Accessibility disclosure screen rebuild (ViewBinding)
-6. Phase 1 scoring redesign (GREEN/YELLOW/RED configurable thresholds)
+4. Phase 1 scoring redesign (GREEN/YELLOW/RED configurable thresholds) — **next dedicated feature work**
+5. Decide AUTO_CAPTURE_MODE default for real drivers (pre-launch review)
+6. Accessibility disclosure screen rebuild (ViewBinding)
 7. Pro feature gate for pill heading town (gate logic not yet wired — currently always shows)
 8. Registration + Stripe billing (SQLCipher + FastAPI backend)
 9. Sentiment Agent repo (separate project)

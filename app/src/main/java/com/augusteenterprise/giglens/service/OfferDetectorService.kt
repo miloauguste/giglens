@@ -221,6 +221,8 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
                             1500L
                         }
                         kotlinx.coroutines.delay(delayMs)
+                        OfferOverlayService.hideForScreenshot()
+                        kotlinx.coroutines.delay(50L)  // one frame for hide to render before screenshot fires
                         testTakeScreenshot()
                     }
                 } else {
@@ -383,9 +385,23 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
                         Log.i(TAG, "testTakeScreenshot SUCCESS — saved to ${file.absolutePath} (${softwareBitmap.width}x${softwareBitmap.height})")
                         FirebaseCrashlytics.getInstance().log("testTakeScreenshot: saved ${file.name}")
 
-                        // Run pin detection on the captured frame so DeliveryTownEstimator
-                        // can use pixel positions instead of GPS bearing for the town estimate
-                        val pinResult = PinDetector.detect(softwareBitmap)
+                        // Crop to map region only — top 8% = status bar + notification banner,
+                        // 24% height captures the full DoorDash map (typically 9–27% of screen).
+                        // Keeps PinDetector away from offer-text characters (bottom) and the
+                        // DoorDash heads-up notification (top), both of which produce false
+                        // white blobs that can be misclassified as delivery pins.
+                        val cropTopPx    = (softwareBitmap.height * 0.08).toInt()
+                        val cropHeightPx = (softwareBitmap.height * 0.24).toInt()
+                            .coerceAtMost(softwareBitmap.height - cropTopPx)
+                        val mapBitmap = android.graphics.Bitmap.createBitmap(
+                            softwareBitmap, 0, cropTopPx, softwareBitmap.width, cropHeightPx
+                        )
+                        Log.d(TAG, "Map crop: y=$cropTopPx..${cropTopPx + cropHeightPx} of ${softwareBitmap.height}px (${mapBitmap.width}x${mapBitmap.height})")
+
+                        // Run pin detection on the cropped map frame
+                        val pinResult = PinDetector.detect(mapBitmap)
+                        mapBitmap.recycle()
+                        OfferOverlayService.showAfterScreenshot()
                         Log.i(TAG, "PinDetector: driverDot=${pinResult.driverDot} " +
                             "briefcase=${pinResult.briefcasePins.size} " +
                             "house=${pinResult.housePins.size} success=${pinResult.success}")
@@ -397,12 +413,14 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
                         )
                     } catch (e: Exception) {
                         Log.e(TAG, "testTakeScreenshot: error processing result: ${e.message}", e)
+                        OfferOverlayService.showAfterScreenshot()
                     }
                 }
 
                 override fun onFailure(errorCode: Int) {
                     Log.e(TAG, "testTakeScreenshot FAILED — errorCode=$errorCode")
                     FirebaseCrashlytics.getInstance().log("testTakeScreenshot failed: errorCode=$errorCode")
+                    OfferOverlayService.showAfterScreenshot()
                 }
             }
         )
@@ -552,10 +570,10 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
             if (deliverBy == null) {
                 deliverByRegex.find(text)?.let { deliverBy = it.groupValues[1].trim() }
             }
-            // Restaurant: node immediately after exact "pickup" node
-            // CORRECT: lower == "pickup" exact match
-            // WRONG:   contains("pickup") -- matches "customer pickup instructions"
-            if (restaurant == null && lower == "pickup" && i + 1 < texts.size) {
+            // Restaurant: node immediately after "pickup" or "retail pickup" node
+            // CORRECT: match both variants — DoorDash uses "Pickup" for food, "Retail pickup" for Wawa/7-Eleven
+            // WRONG:   lower == "pickup" exact only — misses all retail delivery restaurants
+            if (restaurant == null && (lower == "pickup" || lower == "retail pickup") && i + 1 < texts.size) {
                 val candidate = texts[i + 1].trim()
                 if (candidate.length >= 2
                     && !deliverByRegex.containsMatchIn(candidate)

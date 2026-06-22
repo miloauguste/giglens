@@ -61,6 +61,17 @@ object PinDetectionTownEstimator {
         Log.d(TAG, "estimate: driver→pickup=${driverToPickupPx}px pickup→dropoff=${pickupToDropoffPx}px " +
             "milesPerPixel=$milesPerPixel pickupLeg=${pickupLegMi}mi deliveryLeg=${deliveryMi}mi")
 
+        // Short-trip guard: pins < 80px apart → bearing is unreliable.
+        // A 5px centroid error on a 40-60px span rotates bearing by ~5–8°, which at a 1.5mi
+        // delivery leg displaces the projected dropoff by ~0.18mi — enough to cross a township
+        // boundary. Flag these as "medium" confidence so the driver knows the estimate is rough.
+        val confidence = if (pickupToDropoffPx < 80f) {
+            Log.w(TAG, "estimate: short trip — pickupToDropoffPx=$pickupToDropoffPx px < 80 → confidence=medium")
+            "medium"
+        } else {
+            "high"
+        }
+
         // Step 2: Bearing from pickup pin to dropoff pin.
         // Screen x increases east, screen y increases south — negate dy for north-up bearing.
         val dx         = (dropoff.x - pickup.x).toDouble()
@@ -77,10 +88,10 @@ object PinDetectionTownEstimator {
         val town = reverseGeocodeCity(dropoffLat, dropoffLon)
 
         return if (town != null) {
-            Log.i(TAG, "estimate: town=$town confidence=high method=pin_detection")
+            Log.i(TAG, "estimate: town=$town confidence=$confidence method=pin_detection")
             TownEstimate(
                 town          = town,
-                confidence    = "high",
+                confidence    = confidence,
                 method        = "pin_detection",
                 displayName   = "📍 ~$town",
                 pickupLegMi   = pickupLegMi,
@@ -126,7 +137,7 @@ object PinDetectionTownEstimator {
     private suspend fun reverseGeocodeCity(lat: Double, lon: Double): String? =
         withContext(Dispatchers.IO) {
             try {
-                val url = "$NOMINATIM_REVERSE?lat=$lat&lon=$lon&format=json&zoom=10"
+                val url = "$NOMINATIM_REVERSE?lat=$lat&lon=$lon&format=json&zoom=12"
                 val connection = URL(url).openConnection() as HttpsURLConnection
                 connection.apply {
                     requestMethod = "GET"

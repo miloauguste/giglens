@@ -234,11 +234,13 @@ object OfferParser {
             "township", "borough", "county"
         )
 
-        // Strategy 1: Line immediately after "@ Pickup" or "Pickup"
-        // DoorDash OCR structure: ... → "@ Pickup" → "| McDonald's" → "fy Customer dropoff"
+        // Strategy 1: Line immediately after "@ Pickup", "Pickup", or "Retail pickup"
+        // DoorDash OCR structure (food):   ... → "@ Pickup" → "| McDonald's" → "fy Customer dropoff"
+        // DoorDash OCR structure (retail): ... → "Retail pickup" → "Wawa" → "Customer dropoff"
         for ((i, line) in lines.withIndex()) {
             val cleaned = cleanLine(line).lowercase()
             if (cleaned == "pickup" || cleaned == "pick up"
+                || cleaned == "retail pickup"
                 || cleaned.contains("delivery for")
                 || cleaned.contains("pick up from")
             ) {
@@ -246,9 +248,9 @@ object OfferParser {
                     if (i + j >= lines.size) break
                     val raw = lines[i + j]
                     val candidate = cleanLine(raw)
-                    if (candidate.length in 4..50
+                    if (candidate.length in 2..50
                         && candidate.isNotEmpty()
-                        && candidate[0].isUpperCase()
+                        && (candidate[0].isUpperCase() || candidate[0].isDigit())
                         && candidate.any { it.isLetter() }
                         && !PAY_REGEX.containsMatchIn(candidate)
                         && !DISTANCE_REGEX.containsMatchIn(candidate)
@@ -266,9 +268,9 @@ object OfferParser {
         // Strategy 2: Fallback — scan all lines for restaurant-like text
         for (line in lines) {
             val candidate = cleanLine(line)
-            if (candidate.length in 4..40
+            if (candidate.length in 2..40
                 && candidate.isNotEmpty()
-                && candidate[0].isUpperCase()
+                && (candidate[0].isUpperCase() || candidate[0].isDigit())
                 && !PAY_REGEX.containsMatchIn(candidate)
                 && !DISTANCE_REGEX.containsMatchIn(candidate)
                 && !Regex("""\d{1,2}:\d{2}""").containsMatchIn(candidate)

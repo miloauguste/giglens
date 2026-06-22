@@ -59,6 +59,22 @@ class OfferOverlayService : Service() {
     companion object {
         var isRunning = false
             private set
+
+        @Volatile private var instance: OfferOverlayService? = null
+
+        fun hideForScreenshot() {
+            val svc = instance ?: return
+            Handler(Looper.getMainLooper()).post {
+                svc.rootView?.alpha = 0f
+            }
+        }
+
+        fun showAfterScreenshot() {
+            val svc = instance ?: return
+            Handler(Looper.getMainLooper()).post {
+                svc.rootView?.alpha = 1f
+            }
+        }
     }
 
     private lateinit var windowManager: WindowManager
@@ -110,6 +126,7 @@ class OfferOverlayService : Service() {
     override fun onCreate() {
         super.onCreate()
         isRunning = true
+        instance = this
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         createNotificationChannel()
         // CORRECT: always call startForeground() — service is always started from MainActivity
@@ -275,6 +292,7 @@ class OfferOverlayService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         isRunning = false
+        instance = null
         cancelRevertTimer()
         rootView?.let { try { windowManager.removeView(it) } catch (e: Exception) {} }
         isViewAdded = false
@@ -355,12 +373,24 @@ class OfferOverlayService : Service() {
         }
     }
 
+    // Strips " Township", " Borough", " County" suffixes for compact pill display.
+    private fun abbreviateTown(raw: String): String {
+        val stripped = raw
+            .replace(Regex(" Township$", RegexOption.IGNORE_CASE), "")
+            .replace(Regex(" Borough$", RegexOption.IGNORE_CASE), "")
+            .replace(Regex(" County$", RegexOption.IGNORE_CASE), "")
+            .trim()
+        return if (stripped.length > 14) stripped.take(12) + "…" else stripped
+    }
+
     // ── Pill heading: net value · town on same line (Pro feature) ────────────
     private fun pillTextWithTown(): SpannableString {
         val sign = if (netValue >= 0) "+" else ""
         val net = "$sign$${"%.2f".format(netValue)}"
         val timer = if (secondsRemaining > 0) " ${secondsRemaining}s" else ""
-        val townClean = deliveryTown.removePrefix("📍 ~").removePrefix("📍 ").trim()
+        val townClean = abbreviateTown(
+            deliveryTown.removePrefix("📍 ~").removePrefix("📍 ").trim()
+        )
         val townSegment = " · 📍 $townClean"
         val full = "$net$timer$townSegment"
         val builder = android.text.SpannableStringBuilder(full)

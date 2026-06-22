@@ -235,7 +235,7 @@ object DeliveryTownEstimator {
     private suspend fun reverseGeocodeCity(lat: Double, lon: Double): String? =
         withContext(Dispatchers.IO) {
             try {
-                val url = "$NOMINATIM_REVERSE?lat=$lat&lon=$lon&format=json&zoom=10"
+                val url = "$NOMINATIM_REVERSE?lat=$lat&lon=$lon&format=json&zoom=12"
                 val response = httpGet(url) ?: return@withContext null
                 val json = JSONObject(response)
                 val address = json.optJSONObject("address") ?: return@withContext null

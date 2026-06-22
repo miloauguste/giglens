@@ -15,8 +15,11 @@ private const val TAG = "PinDetector"
 // Scan every Nth pixel in each axis — reduces work by STEP² without losing blob shape
 private const val STEP = 3
 
-// Blob size bounds in original-resolution pixels; divide by STEP² for sampled-pixel counts
-private const val BLOB_MIN_PX = 200
+// Blob size bounds in original-resolution pixels; divide by STEP² for sampled-pixel counts.
+// BLOB_MIN_PX = 50: allows driver dots down to ~8px diameter (area ~50px) which appear in
+// zoomed-out maps (wide area shown = small dots). Prior value of 200 filtered out the driver
+// dot when the Taco Bell offer showed Hainesport→Eastampton (~10mi span) — dot was ~12–15px.
+private const val BLOB_MIN_PX = 50
 private const val BLOB_MAX_PX = 5000
 
 private val NEIGHBORS = listOf(Pair(-1, 0), Pair(1, 0), Pair(0, -1), Pair(0, 1))
