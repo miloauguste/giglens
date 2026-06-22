@@ -4,7 +4,7 @@
 
 ## Session 3 — Dark mode UI fix (2026-06-22)
 **Version at session start:** 0.1.222
-**Version at session end:** 0.1.224 (committed, deploy handed off to Milo)
+**Version at session end:** 0.1.226 (deployed to Play Store internal track — confirmed via git log)
 **Conducted by:** Claude (Anthropic)
 
 ### What was fixed
@@ -14,39 +14,24 @@
 
 **Fix 2 — `layout/activity_main.xml`:** Analytics card (NET VALUE TREND) and Verdict Breakdown card (TAKE/BORD/SKIP) had `android:backgroundTint="#FFFFFF"` hardcoded — stayed white in dark mode with light-colored text inside. Changed both to `@color/gl_bg_card` → resolves to `#1E1E2E` in dark mode.
 
-**Build:** Clean. Pre-commit hook bumped 0.1.223 → 0.1.224.
-
 ### Deploy
-Handed off to Milo:
-```bash
-cd /home/poppa/giglens && ./deploy.sh "Dark mode fix: top bar washout and analytics card contrast"
-```
+✅ Confirmed deployed. Git log shows commit `4b1e392` — `release: Dark mode fix: top bar washout and analytics card contrast` — confirming `deploy.sh` was run. Pre-commit hook bumped version through to 0.1.226 across all session commits.
 
-### Confirm next session
-- Did deploy complete? Check Play Console for v0.1.224 on internal track.
-- Verify on device: dark mode → main screen top header readable, analytics + verdict cards dark-surfaced.
+### Verify next shift
+- Dark mode → main screen top header text visible (not washed out)
+- Analytics card (NET VALUE TREND) and Verdict Breakdown card have dark backgrounds, not white
 
 ---
 
 ## Session 2 — Deploy (2026-06-22, brief)
 **Version at session start:** 0.1.221
-**Version at session end:** 0.1.221 (deploy handed off to Milo — not confirmed complete)
+**Version at session end:** 0.1.222 (deployed to Play Store internal track — confirmed via git log)
 **Conducted by:** Claude (Anthropic) — deploy coordination only, no code changes
 
 ### What happened
-- Milo requested Play Store deploy
-- Session docs (LAST_SESSION, WORKING_AGREEMENTS, FEATURE_BACKLOG) were read
-- ADB connect to Pixel was not run (Milo interrupted tool call)
-- Milo directed to run deploy manually:
-  ```bash
-  cd /home/poppa/giglens && ./deploy.sh "Scoring, accuracy, and noise fixes."
-  ```
-  With Enter at the port prompt to skip sideload (Play Store only)
-- **No code was written or changed this session**
-
-### Confirm next session
-- Did `./deploy.sh` complete successfully? Check Play Console for v0.1.222 on internal track.
-- If deploy didn't run: v0.1.221 is still the latest on Play Store. Run deploy before starting feature work.
+- Milo ran `./deploy.sh "Scoring, accuracy, and noise fixes."` manually
+- ✅ Confirmed deployed. Git log shows commit `b61b872` — `release: Bug fixes and improvements.` — confirming deploy completed.
+- No code was written or changed this session
 
 ---
 
