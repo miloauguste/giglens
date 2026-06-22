@@ -1,0 +1,1 @@
+Dark mode fix: top bar washout and analytics card contrast
