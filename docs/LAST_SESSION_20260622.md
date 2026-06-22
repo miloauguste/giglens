@@ -2,6 +2,33 @@
 
 ---
 
+## Session 5 — deploy.sh version tracking (2026-06-22)
+**Version at session start:** 0.1.231 (no app code changed this session)
+**Version at session end:** 0.1.231
+**Conducted by:** Claude (Anthropic)
+
+### What was changed
+
+**`deploy.sh` — `DEPLOY_VERSION` variable added**
+Added `DEPLOY_VERSION="1.1"` at the top of the script. Shown in two places: interactive menu header and summary footer line.
+
+**Pre-commit hook — auto-bump for deploy.sh**
+Hook now detects when `deploy.sh` is staged and auto-increments its minor version on commit (same pattern as app version bump). Only fires when `deploy.sh` is in the staged diff — commits that don't touch the script leave its version alone. Verified: committed deploy.sh and hook output showed `deploy.sh version bumped: 1.1 -> 1.2`.
+
+**Confirmed: Play Store internal track matches Pixel (functionally)**
+Play Store internal = v0.1.226 (release). Pixel sideload = v0.1.231 (debug). All commits between 226 and 231 are tooling-only (deploy.sh, pre-commit hook, docs) — zero app code changed. APK behavior is identical.
+
+### deploy.sh version history
+- v1.0 — original script (always Play Store + sideload)
+- v1.1 — mode selection added (--playstore / --sideload / --both / interactive menu)
+- v1.2 — auto-bump via pre-commit hook (this session)
+
+### Next Session — Start Here
+
+All items from Session 3 carry forward. Top priority: **scoring redesign (GREEN/YELLOW/RED configurable thresholds)** — no app code written across Sessions 4 or 5.
+
+---
+
 ## Session 4 — deploy.sh mode selection (2026-06-22)
 **Version at session start:** 0.1.226 (no version bump this session — sideload only)
 **Version at session end:** 0.1.226
