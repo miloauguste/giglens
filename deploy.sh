@@ -5,6 +5,8 @@
 # Changelog message is only used for Play Store deploys.
 set -e
 
+DEPLOY_VERSION="1.2"
+
 PACKAGE_NAME="com.augusteenterprise.giglens"
 JSON_KEY="$HOME/giglens/google-play-api-key.json"
 AAB_PATH="app/build/outputs/bundle/release/app-release.aab"
@@ -32,7 +34,7 @@ done
 if [ -z "$MODE" ]; then
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "  GigLens Deploy"
+    echo "  GigLens Deploy  (deploy.sh v$DEPLOY_VERSION)"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
     echo "  1) Play Store only   — bump version, build AAB, upload"
@@ -143,9 +145,9 @@ fi
 # ── Summary ───────────────────────────────────────────────────────────────────
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 if [ -n "$VERSION_CODE" ]; then
-    echo "  GigLens v$VERSION_CODE — deploy complete"
+    echo "  GigLens v$VERSION_CODE — deploy complete  (deploy.sh v$DEPLOY_VERSION)"
 else
-    echo "  GigLens — sideload complete"
+    echo "  GigLens — sideload complete  (deploy.sh v$DEPLOY_VERSION)"
 fi
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
