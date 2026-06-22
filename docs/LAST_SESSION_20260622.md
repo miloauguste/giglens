@@ -1,5 +1,30 @@
 # GigLens — Session Handover (2026-06-22)
-**Date:** 2026-06-22
+
+---
+
+## Session 2 — Deploy (2026-06-22, brief)
+**Version at session start:** 0.1.221
+**Version at session end:** 0.1.221 (deploy handed off to Milo — not confirmed complete)
+**Conducted by:** Claude (Anthropic) — deploy coordination only, no code changes
+
+### What happened
+- Milo requested Play Store deploy
+- Session docs (LAST_SESSION, WORKING_AGREEMENTS, FEATURE_BACKLOG) were read
+- ADB connect to Pixel was not run (Milo interrupted tool call)
+- Milo directed to run deploy manually:
+  ```bash
+  cd /home/poppa/giglens && ./deploy.sh "Scoring, accuracy, and noise fixes."
+  ```
+  With Enter at the port prompt to skip sideload (Play Store only)
+- **No code was written or changed this session**
+
+### Confirm next session
+- Did `./deploy.sh` complete successfully? Check Play Console for v0.1.222 on internal track.
+- If deploy didn't run: v0.1.221 is still the latest on Play Store. Run deploy before starting feature work.
+
+---
+
+## Session 1 — Bug triage + accuracy fixes (2026-06-22)
 **Version at session start:** 0.1.211 (Play Store internal)
 **Version at session end:** 0.1.216 (Play Store internal + Pixel sideload)
 **Conducted by:** Claude (Anthropic) — post-shift bug triage + screenshot noise/accuracy fixes
