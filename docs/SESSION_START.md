@@ -4,7 +4,7 @@ Copy and paste everything below this line into Claude Code at the start of every
 ---
 
 Read these files before we do anything:
-- docs/LAST_SESSION_20260620.md
+- docs/LAST_SESSION_20260622.md
 - docs/WORKING_AGREEMENTS.md  
 - docs/FEATURE_BACKLOG.md
 
