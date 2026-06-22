@@ -49,6 +49,7 @@ const val EXTRA_MINUTES_ON_JOB = "minutes_on_job"
 const val EXTRA_SCORE          = "score"
 const val EXTRA_COST_PER_MILE  = "cost_per_mile"
 const val EXTRA_DELIVERY_TOWN  = "delivery_town"   // estimated delivery city/town
+const val EXTRA_PROFIT_PCT     = "profit_pct"       // (netValue / payAmount) × 100
 const val ACTION_SHOW_CAMERA   = "com.augusteenterprise.giglens.SHOW_CAMERA"
 const val ACTION_HIDE_CAMERA   = "com.augusteenterprise.giglens.HIDE_CAMERA"
 
@@ -108,6 +109,7 @@ class OfferOverlayService : Service() {
     private var totalCost    = 0.0
     private var minutesOnJob = 0.0
     private var score        = 0
+    private var profitPct    = 0.0
     private var costPerMile  = 0.90
 
     // Configurable auto-revert timer — result pill reverts to IDLE if no new offer
@@ -311,6 +313,7 @@ class OfferOverlayService : Service() {
         totalCost    = intent.getDoubleExtra(EXTRA_TOTAL_COST,     0.0)
         minutesOnJob = intent.getDoubleExtra(EXTRA_MINUTES_ON_JOB, 0.0)
         score        = intent.getIntExtra(EXTRA_SCORE,             0)
+        profitPct    = intent.getDoubleExtra(EXTRA_PROFIT_PCT,     0.0)
         costPerMile  = intent.getDoubleExtra(EXTRA_COST_PER_MILE,  0.90)
         deliveryTown = intent.getStringExtra(EXTRA_DELIVERY_TOWN) ?: "📍 ---"
         Log.d(TAG, "Result: verdict=$verdict net=$netValue restaurant=$restaurant")
@@ -689,15 +692,14 @@ class OfferOverlayService : Service() {
                 drawer.addView(tv(deliveryTown, 11f, Color.parseColor("#00C9A7"), padTop = 2))
                 drawer.addView(divider())
                 drawer.addView(rowLayout("Pay", "$${"%.2f".format(payAmount)}"))
-                drawer.addView(rowLayout("To pickup", "${"%.1f".format(pickupMiles)} mi"))
+                drawer.addView(rowLayout("To pickup", if (pickupMiles > 0.0) "${"%.1f".format(pickupMiles)} mi" else "— mi"))
                 drawer.addView(rowLayout("Est. total", "${"%.1f".format(totalMiles)} mi"))
                 drawer.addView(divider())
                 drawer.addView(rowLayout("Gas cost", "$${"%.2f".format(gasCost)}"))
                 drawer.addView(rowLayout("Wear & tear", "$${"%.2f".format(wearTearCost)}"))
                 drawer.addView(rowLayout("Total cost", "$${"%.2f".format(gasCost + wearTearCost)}"))
                 drawer.addView(divider())
-                drawer.addView(rowLayout("Delivery town", deliveryTown, Color.parseColor("#00C9A7")))
-                drawer.addView(rowLayout("Net value", netLabel(), color))
+                drawer.addView(rowLayout("Profit", "${"%.1f".format(profitPct)}%", color))
                 drawer.addView(rowLayout("Score", "$score / 100"))
                 drawer.addView(tv("tap to close", 8f,
                     Color.parseColor("#444444"), padTop = 10))

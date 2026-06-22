@@ -210,6 +210,10 @@ class SettingsActivity : AppCompatActivity() {
                 val screenshotDelayMs = appDao.getValue(AppConfigKeys.SCREENSHOT_DELAY_MS)?.toLongOrNull() ?: 1500L
             val mpg = scorerDao.getValue(ScorerConfigKeys.MPG) ?: 30.0
             val gasPrice = scorerDao.getValue(ScorerConfigKeys.GAS_PRICE) ?: 3.20
+            val thresholdGreenPct  = scorerDao.getValue(ScorerConfigKeys.THRESHOLD_GREEN_PCT)  ?: 75.0
+            val thresholdYellowPct = scorerDao.getValue(ScorerConfigKeys.THRESHOLD_YELLOW_PCT) ?: 50.0
+            val floorPayPerMile    = scorerDao.getValue(ScorerConfigKeys.FLOOR_PAY_PER_MILE)   ?: 1.50
+            val floorTotalPay      = scorerDao.getValue(ScorerConfigKeys.FLOOR_TOTAL_PAY)      ?: 6.00
             val dataSharing = appDao.getValue(AppConfigKeys.DATA_SHARING) ?: "none"
             val widgetEnabled = appDao.getValue(AppConfigKeys.WIDGET_ENABLED) == "true"
             val captureMode = appDao.getValue(AppConfigKeys.AUTO_CAPTURE_MODE) ?: "off"
@@ -243,6 +247,10 @@ class SettingsActivity : AppCompatActivity() {
                 binding.switchPinDetectionEnabled.isChecked = pinDetectionEnabled
                 binding.etMpg.setText("%.1f".format(mpg))
                 binding.etGasPrice.setText("%.2f".format(gasPrice))
+                binding.etThresholdGreenPct.setText("%.0f".format(thresholdGreenPct))
+                binding.etThresholdYellowPct.setText("%.0f".format(thresholdYellowPct))
+                binding.etFloorPayPerMile.setText("%.2f".format(floorPayPerMile))
+                binding.etFloorTotalPay.setText("%.2f".format(floorTotalPay))
                 when (dataSharing) {
                     "aggregate" -> binding.rbSharingAggregate.isChecked = true
                     "individual" -> binding.rbSharingIndividual.isChecked = true
@@ -292,6 +300,14 @@ class SettingsActivity : AppCompatActivity() {
             scorerDao.updateValue(ScorerConfigKeys.RESULT_DISPLAY_SECONDS, resultDuration)
             scorerDao.updateValue(ScorerConfigKeys.MPG, mpg)
             scorerDao.updateValue(ScorerConfigKeys.GAS_PRICE, gasPrice)
+            val thresholdGreenPct  = binding.etThresholdGreenPct.text.toString().toDoubleOrNull()?.coerceIn(1.0, 100.0)  ?: 75.0
+            val thresholdYellowPct = binding.etThresholdYellowPct.text.toString().toDoubleOrNull()?.coerceIn(1.0, 100.0) ?: 50.0
+            val floorPayPerMile    = binding.etFloorPayPerMile.text.toString().toDoubleOrNull()?.coerceIn(0.0, 10.0)     ?: 1.50
+            val floorTotalPay      = binding.etFloorTotalPay.text.toString().toDoubleOrNull()?.coerceIn(0.0, 50.0)       ?: 6.00
+            scorerDao.updateValue(ScorerConfigKeys.THRESHOLD_GREEN_PCT,  thresholdGreenPct)
+            scorerDao.updateValue(ScorerConfigKeys.THRESHOLD_YELLOW_PCT, thresholdYellowPct)
+            scorerDao.updateValue(ScorerConfigKeys.FLOOR_PAY_PER_MILE,   floorPayPerMile)
+            scorerDao.updateValue(ScorerConfigKeys.FLOOR_TOTAL_PAY,      floorTotalPay)
             
             val savedMode = captureMode
             runOnUiThread {

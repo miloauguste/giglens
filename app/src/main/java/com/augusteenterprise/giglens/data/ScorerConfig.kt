@@ -52,6 +52,9 @@ object ScorerConfigKeys {
     // Simplified v4 weights (net value + true $/mile only)
     const val WEIGHT_NET_VALUE        = "weight_net_value"
     const val WEIGHT_TRUE_PER_MILE_V4 = "weight_true_per_mile_v4"
+    // Profit-% verdict thresholds (driver-configurable)
+    const val THRESHOLD_GREEN_PCT     = "threshold_green_pct"
+    const val THRESHOLD_YELLOW_PCT    = "threshold_yellow_pct"
 }
 
 fun defaultScorerConfig(): List<ScorerConfig> = listOf(
@@ -89,5 +92,8 @@ fun defaultScorerConfig(): List<ScorerConfig> = listOf(
     ScorerConfig(ScorerConfigKeys.WEAR_TEAR_PER_MILE,       0.13,  "Wear and tear cost per mile driven ($0.11-$0.18 range)"),
     // v4 simplified weights
     ScorerConfig(ScorerConfigKeys.WEIGHT_NET_VALUE,         0.70,  "Weight: net value after costs (70%)"),
-    ScorerConfig(ScorerConfigKeys.WEIGHT_TRUE_PER_MILE_V4,  0.30,  "Weight: true $/mile after full trip (30%)")
+    ScorerConfig(ScorerConfigKeys.WEIGHT_TRUE_PER_MILE_V4,  0.30,  "Weight: true $/mile after full trip (30%)"),
+    // Profit-% verdict thresholds (driver-configurable)
+    ScorerConfig(ScorerConfigKeys.THRESHOLD_GREEN_PCT,      75.0,  "Profit % >= this → GREEN (take the offer)"),
+    ScorerConfig(ScorerConfigKeys.THRESHOLD_YELLOW_PCT,     50.0,  "Profit % >= this → YELLOW (borderline offer)")
 )
