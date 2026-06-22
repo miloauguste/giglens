@@ -2,6 +2,39 @@
 
 ---
 
+## Session 4 — deploy.sh mode selection (2026-06-22)
+**Version at session start:** 0.1.226 (no version bump this session — sideload only)
+**Version at session end:** 0.1.226
+**Conducted by:** Claude (Anthropic)
+
+### What was changed
+
+**`deploy.sh` — mode selection added**
+
+Script previously always ran both Play Store deploy and Pixel sideload in sequence. Updated to support three discrete modes selectable via flag or interactive menu.
+
+**Flag usage:**
+```bash
+./deploy.sh --playstore "changelog"   # bump version, build AAB, upload to Play Store
+./deploy.sh --sideload                # build debug APK, push to Pixel 10 only
+./deploy.sh --both "changelog"        # both paths (previous default behavior)
+./deploy.sh "changelog"               # interactive 1/2/3 menu
+```
+
+**Behavior differences by mode:**
+- `--sideload`: skips version bump, git commit, AAB build, and fastlane entirely — debug APK only
+- `--playstore`: skips Pixel connection attempt entirely
+- `--both`: identical to old behavior
+- Post-deploy summary scoped to what ran (Play Store install instructions only print when Play Store was included)
+
+**Verified:** `./deploy.sh --sideload` — build clean (902ms), APK installed on Pixel 10 at 10.0.0.110:42975.
+
+### Next Session — Start Here
+
+All items from Session 3 carry forward unchanged. Top priority remains **scoring redesign (GREEN/YELLOW/RED configurable thresholds)** — no code was written toward it this session.
+
+---
+
 ## Session 3 — Dark mode UI fix (2026-06-22)
 **Version at session start:** 0.1.222
 **Version at session end:** 0.1.226 (deployed to Play Store internal track — confirmed via git log)
