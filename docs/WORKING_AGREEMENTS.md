@@ -97,6 +97,23 @@ that it actually gets read.*
 
 ---
 
+## Branch Strategy
+
+**Small fixes (single session, ~1hr or less):** commit directly to `main`.
+Quick bug fixes, UI tweaks, and doc updates don't need a branch — the deploy
+is always manual, so there's no risk of accidentally shipping from `main`.
+
+**Multi-session features:** use a feature branch (`feat/scoring-redesign`,
+`feat/registration`, etc.) and merge to `main` only when the feature is
+shippable end-to-end. This prevents a half-finished feature from being
+accidentally deployed mid-build.
+
+**The signal:** if a feature is listed in FEATURE_BACKLOG.md as spanning
+more than one session, it gets a branch. If it's a fix that can be built,
+tested, and deployed in one sitting, commit directly to `main`.
+
+---
+
 ## ADB Session Start — Always Connect First
 
 Before executing ANY adb command in a session, always run:
