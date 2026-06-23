@@ -1,0 +1,1 @@
+Fix: auto-capture toggle on home screen now works — tap to enable fully automatic offer detection. Settings page stays in sync.

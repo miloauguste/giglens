@@ -1,0 +1,1 @@
+Fix: enabling auto-capture from the home screen now correctly syncs the Settings page toggle and capture mode.
