@@ -188,27 +188,21 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
                         action = ACTION_SHOW_CAMERA
                     })
                 }
-                // Cooldown gates signalCapture() only — not SHOW_CAMERA
+                // Cooldown gates capture only — not SHOW_CAMERA
                 if (now - lastCaptureTime < CAPTURE_COOLDOWN_MS) return
                 lastCaptureTime = now
-                signalCapture()
 
-                // TEST ONLY — confirms AccessibilityService.takeScreenshot() works on this device
-                // CORRECT: gated by same looksLikeOfferScreen() confirmation — only fires on real DD offer screen
-                // WRONG:   calling on every accessibility event — would fire on every screen, not just offers
-                // CORRECT: API 30+ check — takeScreenshot() unavailable below Android 11
-                // WRONG:   calling unconditionally — crashes on minSdk 26 devices
-                // CORRECT: 1500ms delay via Handler.postDelayed() — gives Mapbox tile rendering time
-                //          to complete before screenshot fires. Without this delay, the screenshot
-                //          captures the map before pins are rendered, producing images with only
-                //          the route line and driver dot but no pickup/dropoff pin icons —
-                //          confirmed from real shift screenshots (2026-06-18/19). 1500ms is the
-                //          starting value; tune based on whether next shift screenshots show
-                //          fully-rendered pins. If pins still missing, increase to 2000ms.
-                //          If pins always present at 1500ms, try reducing to 1000ms.
-                // WRONG:   calling testTakeScreenshot() synchronously — fires before Mapbox
-                //          finishes rendering, produces incomplete screenshots
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                // CORRECT: extract from accessibility tree NOW before the screenshot delay —
+                //          rootInActiveWindow is guaranteed valid here; may be stale 1500ms later.
+                //          Screenshot → PinDetector must run BEFORE the offer broadcast so that
+                //          PinDetector.latestResult is populated when DeliveryTownEstimator reads it
+                //          in AccessibilityOfferReceiver. The previous order (broadcast then screenshot)
+                //          always read a null latestResult → estimatedTownMethod=unavailable every offer.
+                // WRONG:   signalCapture() then testTakeScreenshot() — latestResult null at estimateTown time
+                val earlyExtracted = extractOfferFromNodes(rootNode)
+
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R && earlyExtracted != null) {
+                    // Screenshot path: delay for map render → screenshot → PinDetector → broadcast
                     // CORRECT: read delay from DB so it can be tuned in Settings without rebuild
                     // WRONG:   hardcoding 1500L — forces a rebuild to adjust timing per device
                     kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
@@ -222,11 +216,13 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
                         }
                         kotlinx.coroutines.delay(delayMs)
                         OfferOverlayService.hideForScreenshot()
-                        kotlinx.coroutines.delay(50L)  // one frame for hide to render before screenshot fires
-                        testTakeScreenshot()
+                        kotlinx.coroutines.delay(50L)
+                        takeScreenshotThenBroadcast(earlyExtracted)
                     }
                 } else {
-                    Log.w(TAG, "testTakeScreenshot skipped — requires Android 11+ (API 30), device is API ${android.os.Build.VERSION.SDK_INT}")
+                    // Fallback: API < 30 (no takeScreenshot API) or accessibility extraction failed
+                    Log.w(TAG, "screenshot path skipped — api=${android.os.Build.VERSION.SDK_INT} earlyExtracted=${earlyExtracted != null}; falling back to signalCapture()")
+                    signalCapture()
                 }
             } else {
                 // No offer screen detected — hide camera button if it was showing
@@ -341,25 +337,16 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
     }
 
     /**
-     * Signals the overlay widget to morph to camera button.
-     * If mode is accessibility or both, also auto-triggers capture.
-     *
-     * CORRECT: morph widget first, then conditionally auto-capture
-     * WRONG:   always triggering capture regardless of mode setting
+     * Takes a screenshot, runs PinDetector, then broadcasts the offer.
+     * CORRECT: screenshot → PinDetector → broadcast in that order so PinDetector.latestResult
+     *          is populated when DeliveryTownEstimator.estimateTown() reads it.
+     * WRONG:   broadcast before screenshot — estimateTown sees null latestResult → unavailable
      */
-    /**
-     * TEST ONLY — confirms AccessibilityService.takeScreenshot() captures the DoorDash offer
-     * screen with no MediaProjection dialog, no persistent notification. Only ever called from
-     * inside the looksLikeOfferScreen() == true branch — guarantees this NEVER fires on any
-     * screen other than a confirmed DoorDash offer screen.
-     * Saves bitmap to app's debug folder for visual inspection. Remove once confirmed working
-     * and replaced with real OpenCV pin-detection pipeline.
-     */
-    private fun testTakeScreenshot() {
-        Log.i(TAG, "testTakeScreenshot() called — attempting silent screenshot via AccessibilityService")
+    private fun takeScreenshotThenBroadcast(extracted: com.augusteenterprise.giglens.ocr.ParsedOffer) {
+        Log.i(TAG, "takeScreenshotThenBroadcast: taking screenshot for PinDetector")
         takeScreenshot(
             android.view.Display.DEFAULT_DISPLAY,
-            android.content.Context::class.java.let { java.util.concurrent.Executors.newSingleThreadExecutor() },
+            java.util.concurrent.Executors.newSingleThreadExecutor(),
             object : TakeScreenshotCallback {
                 override fun onSuccess(result: ScreenshotResult) {
                     try {
@@ -367,46 +354,40 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
                             result.hardwareBuffer, result.colorSpace
                         )
                         if (bitmap == null) {
-                            Log.e(TAG, "testTakeScreenshot: wrapHardwareBuffer returned null")
+                            Log.e(TAG, "takeScreenshotThenBroadcast: wrapHardwareBuffer null")
                             result.hardwareBuffer.close()
+                            broadcastExtractedOffer(extracted)
                             return
                         }
-                        // Hardware bitmaps can't be saved directly — copy to software bitmap first
                         val softwareBitmap = bitmap.copy(android.graphics.Bitmap.Config.ARGB_8888, false)
                         result.hardwareBuffer.close()
 
                         val dir = java.io.File(GigLensApp.instance.getExternalFilesDir(null), "debug")
                         dir.mkdirs()
-                        val timestamp = System.currentTimeMillis()
-                        val file = java.io.File(dir, "offer_screenshot_$timestamp.png")
+                        val ts = System.currentTimeMillis()
+                        val file = java.io.File(dir, "offer_screenshot_$ts.png")
                         java.io.FileOutputStream(file).use { out ->
                             softwareBitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, out)
                         }
-                        Log.i(TAG, "testTakeScreenshot SUCCESS — saved to ${file.absolutePath} (${softwareBitmap.width}x${softwareBitmap.height})")
-                        FirebaseCrashlytics.getInstance().log("testTakeScreenshot: saved ${file.name}")
+                        Log.i(TAG, "Screenshot saved: ${file.name} (${softwareBitmap.width}x${softwareBitmap.height})")
+                        FirebaseCrashlytics.getInstance().log("screenshot: saved ${file.name}")
 
-                        // Crop to map region only — top 8% skips status bar + top of HUN banner.
-                        // 38% height (bottom = 46%) covers the full DoorDash map regardless of
-                        // where the driver dot sits in the map. The map can occupy 9–46% of screen
-                        // when a HUN notification is visible; the previous 24% (→32%) cut off the
-                        // driver dot when it fell in the lower half of the map (observed ID 22:
-                        // driver dot at ~33-35%, crop only reached 32% → driverDot=null → unavailable).
-                        // The offer sheet consistently starts at ~47-48%, so 46% is still map-only.
                         val cropTopPx    = (softwareBitmap.height * 0.08).toInt()
                         val cropHeightPx = (softwareBitmap.height * 0.38).toInt()
                             .coerceAtMost(softwareBitmap.height - cropTopPx)
                         val mapBitmap = android.graphics.Bitmap.createBitmap(
                             softwareBitmap, 0, cropTopPx, softwareBitmap.width, cropHeightPx
                         )
-                        Log.d(TAG, "Map crop: y=$cropTopPx..${cropTopPx + cropHeightPx} of ${softwareBitmap.height}px (${mapBitmap.width}x${mapBitmap.height})")
+                        Log.d(TAG, "Map crop: y=$cropTopPx..${cropTopPx + cropHeightPx} of ${softwareBitmap.height}px")
 
-                        // Run pin detection on the cropped map frame
                         val pinResult = PinDetector.detect(mapBitmap)
                         mapBitmap.recycle()
                         OfferOverlayService.showAfterScreenshot()
-                        Log.i(TAG, "PinDetector: driverDot=${pinResult.driverDot} " +
+
+                        Log.i(TAG, "PinDetector: success=${pinResult.success} " +
+                            "driverDot=${pinResult.driverDot} " +
                             "briefcase=${pinResult.briefcasePins.size} " +
-                            "house=${pinResult.housePins.size} success=${pinResult.success}")
+                            "house=${pinResult.housePins.size}")
                         FirebaseCrashlytics.getInstance().log(
                             "PinDetector: success=${pinResult.success} " +
                             "driverDot=${pinResult.driverDot} " +
@@ -414,18 +395,43 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
                             "house=${pinResult.housePins.size}"
                         )
                     } catch (e: Exception) {
-                        Log.e(TAG, "testTakeScreenshot: error processing result: ${e.message}", e)
+                        Log.e(TAG, "takeScreenshotThenBroadcast: error: ${e.message}", e)
                         OfferOverlayService.showAfterScreenshot()
                     }
+                    // CORRECT: broadcast AFTER PinDetector.detect() sets latestResult
+                    // WRONG:   broadcast inside try{} before mapBitmap.recycle() — skipped on exception
+                    broadcastExtractedOffer(extracted)
                 }
 
                 override fun onFailure(errorCode: Int) {
-                    Log.e(TAG, "testTakeScreenshot FAILED — errorCode=$errorCode")
-                    FirebaseCrashlytics.getInstance().log("testTakeScreenshot failed: errorCode=$errorCode")
+                    Log.e(TAG, "Screenshot failed errorCode=$errorCode — broadcasting without pin data")
+                    FirebaseCrashlytics.getInstance().log("screenshot failed: errorCode=$errorCode")
                     OfferOverlayService.showAfterScreenshot()
+                    broadcastExtractedOffer(extracted)
                 }
             }
         )
+    }
+
+    private fun broadcastExtractedOffer(extracted: com.augusteenterprise.giglens.ocr.ParsedOffer) {
+        val fingerprint = "${extracted.payAmount}:${extracted.distance}"
+        val now = System.currentTimeMillis()
+        if (fingerprint == lastOfferFingerprint && (now - lastOfferBroadcastMs) < OFFER_DEDUP_WINDOW_MS) {
+            Log.d(TAG, "broadcastExtractedOffer: duplicate suppressed fingerprint=$fingerprint")
+            return
+        }
+        lastOfferFingerprint = fingerprint
+        lastOfferBroadcastMs = now
+        Log.i(TAG, "broadcastExtractedOffer: fingerprint=$fingerprint — sending ACTION_OFFER_EXTRACTED")
+        val intent = Intent(ACTION_OFFER_EXTRACTED).apply {
+            setPackage(packageName)
+            putExtra(EXTRA_PAY, extracted.payAmount ?: 0.0)
+            putExtra(EXTRA_DISTANCE, extracted.distance ?: 0.0)
+            putExtra(EXTRA_RESTAURANT, extracted.restaurant ?: "")
+            putExtra(EXTRA_DELIVER_BY, extracted.rawText)
+            putExtra(EXTRA_SOURCE, "accessibility")
+        }
+        sendBroadcast(intent)
     }
 
     private fun signalCapture() {
