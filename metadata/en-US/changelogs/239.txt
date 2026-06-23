@@ -1,0 +1,1 @@
+New: Offer History — browse all captured offers by Day, Week, or Month. Tap any offer for full detail. Stability: 7 threading fixes.
