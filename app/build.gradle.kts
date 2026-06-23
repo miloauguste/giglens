@@ -39,8 +39,8 @@ android {
         applicationId = "com.augusteenterprise.giglens"
         minSdk = 26
         targetSdk = 35
-        versionCode = 249
-        versionName = "0.1.249"
+        versionCode = 250
+        versionName = "0.1.250"
 
         // SMTP credentials intentionally NOT in defaultConfig -- see buildTypes.debug
         // and buildTypes.release below for per-variant buildConfigField calls.
