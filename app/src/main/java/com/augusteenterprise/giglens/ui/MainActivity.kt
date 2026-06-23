@@ -190,6 +190,10 @@ class MainActivity : AppCompatActivity() {
         binding.rowSettings.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
+        binding.rowStopGigLens.setOnClickListener {
+            stopAllServices()
+            finish()
+        }
 
 
 
@@ -412,6 +416,21 @@ class MainActivity : AppCompatActivity() {
         } else {
             showAutoModeDialog()
         }
+    }
+
+    private fun stopAllServices() {
+        if (ScreenCaptureService.isRunning)
+            stopService(Intent(this, ScreenCaptureService::class.java))
+        if (OfferOverlayService.isRunning)
+            stopService(Intent(this, OfferOverlayService::class.java))
+        lifecycleScope.launch {
+            val appDao = GigLensApp.instance.database.appConfigDao()
+            appDao.setValue(AppConfigKeys.WIDGET_ENABLED, "false")
+            appDao.setValue(AppConfigKeys.AUTO_CAPTURE_MODE, "off")
+        }
+        getSharedPreferences("giglens_ui", MODE_PRIVATE).edit()
+            .putBoolean("floating_button_enabled", false).apply()
+        stopLiveBadgeAnimation()
     }
 
     private fun updateUI() {

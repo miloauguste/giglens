@@ -394,6 +394,57 @@
                     android:textSize="18sp"
                     android:textColor="@color/gl_text_chevron" />
             </LinearLayout>
+
+            <!-- Divider -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/gl_divider" />
+
+            <!-- Row 5 - Stop GigLens -->
+            <LinearLayout
+                android:id="@+id/rowStopGigLens"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="18dp"
+                android:paddingEnd="18dp"
+                android:paddingTop="14dp"
+                android:paddingBottom="14dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:text="⏹"
+                    android:textSize="16sp"
+                    android:gravity="center"
+                    android:background="#EF4444"
+                    android:alpha="0.10" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="14dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Stop GigLens"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="#EF4444" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Stop all services and exit"
+                        android:textSize="11sp"
+                        android:textColor="@color/gl_text_secondary" />
+                </LinearLayout>
+            </LinearLayout>
         </LinearLayout>
 
         <!-- SECTION LABEL: TODAY -->
