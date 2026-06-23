@@ -168,17 +168,19 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Auto capture — blocked on Android 16, show tooltip
-        // CORRECT: disable + reset to off when tapped
-        // WRONG:   leaving enabled — confuses driver when nothing happens
-        binding.switchAutoCapture.isEnabled = false
-        binding.switchAutoCapture.alpha = 0.5f
         binding.switchAutoCapture.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                binding.switchAutoCapture.isChecked = false
-                Toast.makeText(this,
-                    "Auto capture requires Play Store approval on Android 16",
-                    Toast.LENGTH_LONG).show()
+            if (isChecked && !OfferOverlayService.isRunning) {
+                showCaptureOnboardingFlow()
+            } else if (!isChecked) {
+                if (ScreenCaptureService.isRunning)
+                    stopService(Intent(this, ScreenCaptureService::class.java))
+                if (OfferOverlayService.isRunning)
+                    stopService(Intent(this, OfferOverlayService::class.java))
+                lifecycleScope.launch {
+                    val appDao = GigLensApp.instance.database.appConfigDao()
+                    appDao.setValue(AppConfigKeys.WIDGET_ENABLED, "false")
+                    appDao.setValue(AppConfigKeys.AUTO_CAPTURE_MODE, "off")
+                }
             }
         }
 
@@ -439,9 +441,26 @@ class MainActivity : AppCompatActivity() {
             binding.tvLiveBadge.alpha = 1f
         }
 
-        // Sync toggle — use SharedPreferences as source of truth
-        // CORRECT: prefs persist across onResume/onPause cycles
-        // WRONG:   using isRunning as sole source — service may not be up yet
+        // Sync auto-capture toggle
+        binding.switchAutoCapture.setOnCheckedChangeListener(null)
+        binding.switchAutoCapture.isChecked = captureActive
+        binding.switchAutoCapture.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked && !OfferOverlayService.isRunning) {
+                showCaptureOnboardingFlow()
+            } else if (!isChecked) {
+                if (ScreenCaptureService.isRunning)
+                    stopService(Intent(this, ScreenCaptureService::class.java))
+                if (OfferOverlayService.isRunning)
+                    stopService(Intent(this, OfferOverlayService::class.java))
+                lifecycleScope.launch {
+                    val appDao = GigLensApp.instance.database.appConfigDao()
+                    appDao.setValue(AppConfigKeys.WIDGET_ENABLED, "false")
+                    appDao.setValue(AppConfigKeys.AUTO_CAPTURE_MODE, "off")
+                }
+            }
+        }
+
+        // Sync floating button toggle
         val prefs = getSharedPreferences("giglens_ui", MODE_PRIVATE)
         val userWantsCapture = prefs.getBoolean("floating_button_enabled", false)
         binding.switchFloatingButton.setOnCheckedChangeListener(null)
