@@ -1,0 +1,1 @@
+Stability: fixed 7 threading race conditions — duplicate offer detection, atomic map-pin reads, Nominatim rate-limit serialization, and stale GPS rejection (fixes >30s old cached location).

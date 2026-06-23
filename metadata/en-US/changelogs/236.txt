@@ -1,0 +1,1 @@
+Town detection timing fix: screenshot before broadcast so PinDetector result is ready; HIGH/MED/LOW verdict labels; pin blob size + compactness filter improvements

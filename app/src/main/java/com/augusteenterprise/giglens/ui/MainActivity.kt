@@ -177,7 +177,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.rowOfferHistory.setOnClickListener {
-            Toast.makeText(this, "Offer history coming soon", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, OfferHistoryActivity::class.java))
         }
         binding.rowSettings.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
@@ -186,7 +186,7 @@ class MainActivity : AppCompatActivity() {
 
 
         binding.tvSeeAll.setOnClickListener {
-            Toast.makeText(this, "Offer history coming soon", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, OfferHistoryActivity::class.java))
         }
 
         // Chart tabs

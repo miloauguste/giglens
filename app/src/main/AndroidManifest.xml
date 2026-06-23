@@ -49,6 +49,11 @@
             android:label="Settings"
             android:parentActivityName=".ui.MainActivity" />
         <activity
+            android:name=".ui.OfferHistoryActivity"
+            android:label="Offer History"
+            android:exported="false"
+            android:parentActivityName=".ui.MainActivity" />
+        <activity
             android:name=".ui.AccessibilityDisclosureActivity"
             android:label="Accessibility Permission"
             android:exported="false"
