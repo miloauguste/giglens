@@ -1,7 +1,8 @@
 # GigLens — Latest Session Handover
 
-**Most recent session:** 2026-06-22 → see [LAST_SESSION_20260622.md](LAST_SESSION_20260622.md)
-**Previous session:** 2026-06-21 → see [HANDOVER_2026_06_21.md](HANDOVER_2026_06_21.md) (dedup full fix, town bearing overhaul, pill heading town, Play Store deploy v0.1.211)
+**Most recent session:** 2026-06-23 → see [LAST_SESSION_20260623.md](LAST_SESSION_20260623.md)
+**Previous session:** 2026-06-22 → see [LAST_SESSION_20260622.md](LAST_SESSION_20260622.md)
+**2026-06-21:** [HANDOVER_2026_06_21.md](HANDOVER_2026_06_21.md) (dedup full fix, town bearing overhaul, pill heading town, Play Store deploy v0.1.211)
 **2026-06-20:** [LAST_SESSION_20260620.md](LAST_SESSION_20260620.md)
 **2026-06-19:** [LAST_SESSION_20260619.md](LAST_SESSION_20260619.md)
 
