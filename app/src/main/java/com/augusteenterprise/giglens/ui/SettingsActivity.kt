@@ -180,7 +180,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         binding.btnGrantAccessibility.setOnClickListener {
-            startActivity(android.content.Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+            openAccessibilitySettings()
         }
 
         binding.btnLookupMpg.setOnClickListener {
@@ -342,6 +342,16 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
     
+    private fun openAccessibilitySettings() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            try {
+                startActivity(android.content.Intent("android.settings.ACCESSIBILITY_DETAILS_SETTINGS"))
+                return
+            } catch (_: Exception) { }
+        }
+        startActivity(android.content.Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+    }
+
     private fun isAccessibilityEnabled(): Boolean {
         // Author: Claude (Anthropic) - May 26 2026: Fix relative vs fully-qualified service name mismatch
         // CORRECT: match both relative and fully-qualified forms

@@ -331,19 +331,32 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun openAccessibilitySettings() {
+        // Android 13+: deep-link directly to GigLens accessibility settings page
+        // Android 12-: open the general accessibility list
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            try {
+                startActivity(android.content.Intent("android.settings.ACCESSIBILITY_DETAILS_SETTINGS"))
+                return
+            } catch (_: Exception) { }
+        }
+        startActivity(android.content.Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS))
+    }
+
     private fun showAccessibilityDialog() {
+        val msg = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            "GigLens needs the Accessibility Service to detect DoorDash offer screens " +
+            "and show the capture button automatically.\n\nTap Enable to open GigLens settings directly."
+        } else {
+            "GigLens needs the Accessibility Service to detect DoorDash offer screens " +
+            "and show the capture button automatically.\n\nTap Enable, then scroll to find GigLens and turn it on."
+        }
         androidx.appcompat.app.AlertDialog.Builder(this)
             .setTitle("Enable Accessibility Service")
-            .setMessage(
-                "GigLens needs the Accessibility Service to detect DoorDash offer screens " +
-                "and show the capture button automatically.\n\n" +
-                "Tap Enable to open Accessibility Settings, then find GigLens and turn it on."
-            )
+            .setMessage(msg)
             .setPositiveButton("Enable") { _, _ ->
                 pendingAccessibilityEnable = true
-                startActivity(android.content.Intent(
-                    android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS
-                ))
+                openAccessibilitySettings()
             }
             .setNegativeButton("Not now") { _, _ ->
                 // Reset toggle — user declined accessibility
