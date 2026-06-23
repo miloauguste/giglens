@@ -103,6 +103,12 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             val appDao = GigLensApp.instance.database.appConfigDao()
             appDao.setValue(AppConfigKeys.WIDGET_ENABLED, "true")
+            // CORRECT: also save AUTO_CAPTURE_MODE so SettingsActivity reflects the active state
+            // WRONG:   only saving WIDGET_ENABLED — Settings shows switchWidget ON but mode = "Off"
+            val currentMode = appDao.getValue(AppConfigKeys.AUTO_CAPTURE_MODE)
+            if (currentMode.isNullOrBlank() || currentMode == "off") {
+                appDao.setValue(AppConfigKeys.AUTO_CAPTURE_MODE, "accessibility")
+            }
         }
         Toast.makeText(this, "GigLens active", Toast.LENGTH_SHORT).show()
         // CORRECT: delay updateUI so OfferOverlayService.isRunning flips true before badge check
