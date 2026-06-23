@@ -1001,7 +1001,7 @@
                     <TextView
                         android:layout_width="52dp"
                         android:layout_height="wrap_content"
-                        android:text="TAKE"
+                        android:text="HIGH"
                         android:textSize="11sp"
                         android:textStyle="bold"
                         android:textColor="#00C9A7" />
@@ -1044,7 +1044,7 @@
                     <TextView
                         android:layout_width="52dp"
                         android:layout_height="wrap_content"
-                        android:text="BORD"
+                        android:text="MED"
                         android:textSize="11sp"
                         android:textStyle="bold"
                         android:textColor="#F59E0B" />
@@ -1086,7 +1086,7 @@
                     <TextView
                         android:layout_width="52dp"
                         android:layout_height="wrap_content"
-                        android:text="SKIP"
+                        android:text="LOW"
                         android:textSize="11sp"
                         android:textStyle="bold"
                         android:textColor="#EF4444" />

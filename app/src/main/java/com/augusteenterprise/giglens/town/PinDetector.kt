@@ -19,8 +19,15 @@ private const val STEP = 3
 // BLOB_MIN_PX = 50: allows driver dots down to ~8px diameter (area ~50px) which appear in
 // zoomed-out maps (wide area shown = small dots). Prior value of 200 filtered out the driver
 // dot when the Taco Bell offer showed Hainesport→Eastampton (~10mi span) — dot was ~12–15px.
+// BLOB_MAX_PX = 30000: delivery pin icons are ~120px diameter (~11300px) on a 1.7mi zoomed-in
+// map (ID 22). Old value of 5000 (≈80px diameter) always filtered out the actual pins on short
+// trips, causing detection to fall back to tiny notification-text blobs instead.
+// BLOB_COMPACTNESS_MIN = 0.15: the DoorDash route line forms an elongated blob with ~4% fill
+// even when its pixel count passes the size filter. Delivery pin icons are compact circles with
+// 50–65% fill. Threshold at 15% cleanly rejects the route line while passing all pin shapes.
 private const val BLOB_MIN_PX = 50
-private const val BLOB_MAX_PX = 5000
+private const val BLOB_MAX_PX = 30000
+private const val BLOB_COMPACTNESS_MIN = 0.15f
 
 private val NEIGHBORS = listOf(Pair(-1, 0), Pair(1, 0), Pair(0, -1), Pair(0, 1))
 
@@ -73,9 +80,9 @@ object PinDetector {
         val maxBlob = BLOB_MAX_PX / (STEP * STEP)
 
         val blueBlobs  = findBlobs(blueGridPts).filter  { it.size in minBlob..maxBlob }
-        val whiteBlobs = findBlobs(whiteGridPts).filter { it.size in minBlob..maxBlob }
+        val whiteBlobs = findBlobs(whiteGridPts).filter { it.size in minBlob..maxBlob && blobCompactness(it) >= BLOB_COMPACTNESS_MIN }
 
-        Log.d(TAG, "detect: blueBlobs=${blueBlobs.size} whiteBlobs=${whiteBlobs.size} (sampled bounds $minBlob..$maxBlob)")
+        Log.d(TAG, "detect: blueBlobs=${blueBlobs.size} whiteBlobs=${whiteBlobs.size} (sampled bounds $minBlob..$maxBlob compactness>=$BLOB_COMPACTNESS_MIN)")
 
         // Driver dot = the single qualifying blue blob (take largest if multiple)
         val driverDot = blueBlobs.maxByOrNull { it.size }?.let { gridCentroid(it) }
@@ -145,6 +152,17 @@ object PinDetector {
             blobs.add(blob)
         }
         return blobs
+    }
+
+    // Bounding-box fill ratio — compact shapes (circles) score 0.50–0.75; elongated shapes
+    // (route lines) score < 0.10. Operates on grid coordinates; ratio is scale-invariant.
+    private fun blobCompactness(pts: List<Pair<Int, Int>>): Float {
+        val minX = pts.minOf { it.first }
+        val maxX = pts.maxOf { it.first }
+        val minY = pts.minOf { it.second }
+        val maxY = pts.maxOf { it.second }
+        val bboxArea = ((maxX - minX + 1) * (maxY - minY + 1)).toFloat()
+        return if (bboxArea > 0f) pts.size / bboxArea else 0f
     }
 
     // Returns centroid in original bitmap pixel coordinates

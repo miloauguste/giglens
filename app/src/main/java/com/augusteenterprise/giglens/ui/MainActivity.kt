@@ -587,7 +587,9 @@ class MainActivity : AppCompatActivity() {
             else         -> android.graphics.Color.parseColor("#EF4444")
         }
         tvVerdict.text = when (offer.verdict) {
-            "BORDERLINE" -> "BORD"
+            "TAKE"       -> "HIGH"
+            "BORDERLINE" -> "MED"
+            "SKIP"       -> "LOW"
             else         -> offer.verdict ?: "?"
         }
         tvVerdict.setTextColor(verdictColor)

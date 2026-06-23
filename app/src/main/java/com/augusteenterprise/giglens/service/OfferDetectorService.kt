@@ -385,13 +385,15 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
                         Log.i(TAG, "testTakeScreenshot SUCCESS — saved to ${file.absolutePath} (${softwareBitmap.width}x${softwareBitmap.height})")
                         FirebaseCrashlytics.getInstance().log("testTakeScreenshot: saved ${file.name}")
 
-                        // Crop to map region only — top 8% = status bar + notification banner,
-                        // 24% height captures the full DoorDash map (typically 9–27% of screen).
-                        // Keeps PinDetector away from offer-text characters (bottom) and the
-                        // DoorDash heads-up notification (top), both of which produce false
-                        // white blobs that can be misclassified as delivery pins.
+                        // Crop to map region only — top 8% skips status bar + top of HUN banner.
+                        // 38% height (bottom = 46%) covers the full DoorDash map regardless of
+                        // where the driver dot sits in the map. The map can occupy 9–46% of screen
+                        // when a HUN notification is visible; the previous 24% (→32%) cut off the
+                        // driver dot when it fell in the lower half of the map (observed ID 22:
+                        // driver dot at ~33-35%, crop only reached 32% → driverDot=null → unavailable).
+                        // The offer sheet consistently starts at ~47-48%, so 46% is still map-only.
                         val cropTopPx    = (softwareBitmap.height * 0.08).toInt()
-                        val cropHeightPx = (softwareBitmap.height * 0.24).toInt()
+                        val cropHeightPx = (softwareBitmap.height * 0.38).toInt()
                             .coerceAtMost(softwareBitmap.height - cropTopPx)
                         val mapBitmap = android.graphics.Bitmap.createBitmap(
                             softwareBitmap, 0, cropTopPx, softwareBitmap.width, cropHeightPx
