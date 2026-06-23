@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.PointF
 import android.util.Log
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.sqrt
 
 private const val TAG = "PinDetector"
@@ -40,10 +41,10 @@ data class PinDetectionResult(
 
 object PinDetector {
 
-    // CORRECT: @Volatile so the write from the takeScreenshot executor thread is
-    //          immediately visible to the coroutine reading it in estimateTown()
-    // WRONG:   plain var — JVM may cache stale value on reading thread
-    @Volatile var latestResult: PinDetectionResult? = null
+    // CORRECT: AtomicReference so the read-and-clear in estimateTown() is one atomic op —
+    //          @Volatile alone allows two concurrent callers to both read the same result
+    //          before either clears it. getAndSet(null) collapses the read + clear into one.
+    val latestResult = AtomicReference<PinDetectionResult?>(null)
 
     fun detect(bitmap: Bitmap): PinDetectionResult {
         val w = bitmap.width
@@ -90,7 +91,7 @@ object PinDetector {
         if (driverDot == null || whiteBlobs.isEmpty()) {
             Log.w(TAG, "detect: driverDot=$driverDot whiteBlobs=${whiteBlobs.size} — success=false")
             val result = PinDetectionResult(driverDot, emptyList(), emptyList(), false)
-            latestResult = result
+            latestResult.set(result)
             return result
         }
 
@@ -109,7 +110,7 @@ object PinDetector {
             housePins     = housePins,
             success       = true
         )
-        latestResult = result
+        latestResult.set(result)
         return result
     }
 

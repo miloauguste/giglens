@@ -53,13 +53,14 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
         // DoorDash package
         private const val DOORDASH_PACKAGE = "com.doordash.driverapp"
 
-        var isRunning = false
+        @Volatile var isRunning = false
             private set
     }
 
     private var lastCaptureTime = 0L
-    private var lastOfferFingerprint = ""  // detects new vs same offer screen
-    private var lastOfferBroadcastMs = 0L        // timestamp of last offer broadcast for dedup window
+    private var lastScreenFingerprint = ""            // screen-level dedup — accessibility thread only
+    @Volatile private var lastBroadcastFingerprint = "" // broadcast-level dedup — written by executor thread
+    @Volatile private var lastBroadcastMs = 0L          // timestamp of last broadcast — written by executor thread
     private val accessibilityOfferReceiver = com.augusteenterprise.giglens.service.AccessibilityOfferReceiver()
 
     // CORRECT: cache DB config values at connect time — read once, not on every accessibility event
@@ -124,12 +125,12 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
         val eventPackage = event.packageName?.toString() ?: return
         if (eventPackage != DOORDASH_PACKAGE) {
             // Non-DoorDash event -- hide pill if it was showing
-            if (lastOfferFingerprint.isNotEmpty()) {
+            if (lastScreenFingerprint.isNotEmpty()) {
                 Log.d(TAG, "Non-DoorDash package=$eventPackage -- sending HIDE_CAMERA")
                 startService(android.content.Intent(applicationContext, OfferOverlayService::class.java).apply {
                     action = ACTION_HIDE_CAMERA
                 })
-                lastOfferFingerprint = ""
+                lastScreenFingerprint = ""
             }
             return
         }
@@ -172,12 +173,12 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
         try {
             if (looksLikeOfferScreen(rootNode)) {
                 val fingerprint = buildOfferFingerprint(rootNode)
-                if (fingerprint == lastOfferFingerprint) {
+                if (fingerprint == lastScreenFingerprint) {
                     // Same offer still on screen — don't re-trigger
                     return
                 }
                 Log.i(TAG, "NEW offer screen detected — signaling capture")
-                lastOfferFingerprint = fingerprint
+                lastScreenFingerprint = fingerprint
                 // CORRECT: send SHOW_CAMERA only on confirmed new offer screen
                 // WRONG: sending SHOW_CAMERA on every window event — camera blinks randomly
                 val now2 = System.currentTimeMillis()
@@ -228,12 +229,12 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
                 // No offer screen detected — hide camera button if it was showing
                 // CORRECT: send HIDE_CAMERA when offer screen gone — camera button clears
                 // WRONG: leaving camera button visible after offer dismissed — confuses driver
-                if (lastOfferFingerprint.isNotEmpty()) {
+                if (lastScreenFingerprint.isNotEmpty()) {
                     Log.d(TAG, "Offer screen gone — sending HIDE_CAMERA")
                     startService(Intent(applicationContext, OfferOverlayService::class.java).apply {
                         action = ACTION_HIDE_CAMERA
                     })
-                    lastOfferFingerprint = ""
+                    lastScreenFingerprint = ""
                 }
             }
         } finally {
@@ -416,12 +417,12 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
     private fun broadcastExtractedOffer(extracted: com.augusteenterprise.giglens.ocr.ParsedOffer) {
         val fingerprint = "${extracted.payAmount}:${extracted.distance}"
         val now = System.currentTimeMillis()
-        if (fingerprint == lastOfferFingerprint && (now - lastOfferBroadcastMs) < OFFER_DEDUP_WINDOW_MS) {
+        if (fingerprint == lastBroadcastFingerprint && (now - lastBroadcastMs) < OFFER_DEDUP_WINDOW_MS) {
             Log.d(TAG, "broadcastExtractedOffer: duplicate suppressed fingerprint=$fingerprint")
             return
         }
-        lastOfferFingerprint = fingerprint
-        lastOfferBroadcastMs = now
+        lastBroadcastFingerprint = fingerprint
+        lastBroadcastMs = now
         Log.i(TAG, "broadcastExtractedOffer: fingerprint=$fingerprint — sending ACTION_OFFER_EXTRACTED")
         val intent = Intent(ACTION_OFFER_EXTRACTED).apply {
             setPackage(packageName)
@@ -449,12 +450,12 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
                     // WRONG: broadcasting every accessibility event — causes duplicate analytics
                     val fingerprint = "${extracted.payAmount}:${extracted.distance}"
                     val now = System.currentTimeMillis()
-                    if (fingerprint == lastOfferFingerprint && (now - lastOfferBroadcastMs) < OFFER_DEDUP_WINDOW_MS) {
+                    if (fingerprint == lastBroadcastFingerprint && (now - lastBroadcastMs) < OFFER_DEDUP_WINDOW_MS) {
                         Log.d(TAG, "signalCapture: duplicate suppressed fingerprint=$fingerprint")
                         return
                     }
-                    lastOfferFingerprint = fingerprint
-                    lastOfferBroadcastMs = now
+                    lastBroadcastFingerprint = fingerprint
+                    lastBroadcastMs = now
                     Log.i(TAG, "signalCapture: new offer fingerprint=$fingerprint — broadcasting")
 
                     val broadcastIntent = Intent(ACTION_OFFER_EXTRACTED).apply {

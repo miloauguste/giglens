@@ -68,7 +68,7 @@ class ScreenCaptureService : Service() {
         const val EXTRA_RESULT_CODE = "result_code"
         const val EXTRA_RESULT_DATA = "result_data"
 
-        var isRunning = false
+        @Volatile var isRunning = false
             private set
     }
 

@@ -21,6 +21,7 @@ import kotlin.coroutines.resume
 
 private const val TAG = "LocationHelper"
 private const val TIMEOUT_MS = 5000L
+private const val MAX_LOCATION_AGE_MS = 30_000L
 
 object LocationHelper {
 
@@ -57,9 +58,12 @@ object LocationHelper {
 
             try {
                 fusedClient.lastLocation.addOnSuccessListener { location ->
-                    if (location != null && !cont.isCompleted) {
-                        Log.d(TAG, "Using last known location: ${location.latitude}, ${location.longitude}")
+                    val ageMs = System.currentTimeMillis() - (location?.time ?: 0L)
+                    if (location != null && !cont.isCompleted && ageMs <= MAX_LOCATION_AGE_MS) {
+                        Log.d(TAG, "Using last known location: ${location.latitude}, ${location.longitude} age=${ageMs}ms")
                         cont.resume(location)
+                    } else if (location != null) {
+                        Log.d(TAG, "lastLocation stale (age=${ageMs}ms > ${MAX_LOCATION_AGE_MS}ms) — waiting for fresh fix")
                     }
                 }
             } catch (e: SecurityException) {

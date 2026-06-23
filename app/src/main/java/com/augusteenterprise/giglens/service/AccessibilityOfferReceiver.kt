@@ -83,8 +83,8 @@ class AccessibilityOfferReceiver : BroadcastReceiver() {
         // CORRECT: dedup at receiver level — survives OfferDetectorService restarts
         // WRONG:   dedup only in OfferDetectorService — resets on service restart, duplicates persist
         private const val DEDUP_WINDOW_MS = 120_000L  // 2 min — 30s let a 60s gap through
-        private var lastFingerprint: String = ""
-        private var lastInsertMs: Long = 0L
+        @Volatile private var lastFingerprint: String = ""
+        @Volatile private var lastInsertMs: Long = 0L
     }
 
     override fun onReceive(context: Context?, intent: Intent?) {

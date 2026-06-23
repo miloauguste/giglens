@@ -18,6 +18,8 @@ import com.augusteenterprise.giglens.data.AppConfigKeys
 import com.augusteenterprise.giglens.town.PinDetector
 import com.augusteenterprise.giglens.town.PinDetectionTownEstimator
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
@@ -48,6 +50,10 @@ data class TownEstimate(
 )
 
 object DeliveryTownEstimator {
+
+    // Nominatim enforces 1 req/sec. Back-to-back offers (decline → new offer) fire two concurrent
+    // estimateTown() calls; without serialization the second request gets 429 → unavailable.
+    private val nominatimMutex = Mutex()
 
     /**
      * Main entry point. Estimates delivery town from offer data.
@@ -99,11 +105,10 @@ object DeliveryTownEstimator {
                 false
             }
         }
-        // CORRECT: always consume latestResult here — stale pins from a prior offer must
-        //          not bleed into the next offer, regardless of which path we take below
-        // WRONG:   only consuming inside the success==true branch — lets stale pins persist
-        val pinResult = PinDetector.latestResult
-        PinDetector.latestResult = null
+        // CORRECT: getAndSet(null) atomically reads and clears — prevents two concurrent
+        //          estimateTown() calls from both seeing the same result before either clears it
+        // WRONG:   separate read + write — non-atomic, concurrent callers can double-consume
+        val pinResult = PinDetector.latestResult.getAndSet(null)
 
         // Full pin detection path — driver dot + pickup + dropoff all found
         if (pinDetectionEnabled && pinResult?.success == true) {
@@ -284,8 +289,8 @@ object DeliveryTownEstimator {
         return Pair(Math.toDegrees(destLatRad), Math.toDegrees(destLonRad))
     }
 
-    private fun httpGet(url: String): String? {
-        return try {
+    private suspend fun httpGet(url: String): String? = nominatimMutex.withLock {
+        try {
             val connection = URL(url).openConnection() as HttpsURLConnection
             connection.apply {
                 requestMethod = "GET"
