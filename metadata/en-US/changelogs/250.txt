@@ -1,0 +1,1 @@
+New: Stop GigLens button on home screen — stops all services and exits the app cleanly.

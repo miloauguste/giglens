@@ -1,0 +1,1 @@
+Improvement: enabling accessibility now deep-links directly to GigLens settings on Android 13+ — no more scrolling through the full list.
