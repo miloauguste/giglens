@@ -38,6 +38,14 @@
 | Pill heading town | ✅ Built (Pro) | `+$X.XX 45s · 📍 Burlington` inline, teal #00C9A7 80% size — `pillTextWithTown()` |
 | Play Store internal testing deploy | ✅ Deployed | v0.1.211 on internal track + Pixel sideload |
 
+## ✅ Completed 2026-06-24 Session (v0.1.253 → v0.1.254)
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| GPS warning strip (main screen) | ✅ Built | Amber strip in onResume; FIX button → app settings; auto-hides on grant — v254 |
+| Pill "📍 no GPS" signal | ✅ Built | Overrides "📍 ---" when permission is specific cause — v254 |
+| Global restaurant geocoding blocked | ✅ Fixed | `resolveByCity` returns null when no city context; prevents Spain-class errors — v254 |
+
 ## ✅ Completed 2026-06-23 Session (v0.1.251 → v0.1.252)
 
 | Feature | Status | Notes |
