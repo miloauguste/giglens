@@ -156,4 +156,46 @@
         android:paddingBottom="16dp"
         android:clipToPadding="false" />
 
+    <!-- Export / Import bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:orientation="horizontal"
+        android:background="@color/gl_bg_header"
+        android:gravity="center_vertical">
+
+        <Button
+            android:id="@+id/btnExportCsv"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="↑ Export CSV"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#00C9A7"
+            android:background="@android:color/transparent"
+            android:stateListAnimator="@null"
+            android:insetTop="0dp"
+            android:insetBottom="0dp" />
+
+        <View
+            android:layout_width="1dp"
+            android:layout_height="24dp"
+            android:background="#3A3A50" />
+
+        <Button
+            android:id="@+id/btnImportCsv"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="↓ Import CSV"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#00C9A7"
+            android:background="@android:color/transparent"
+            android:stateListAnimator="@null"
+            android:insetTop="0dp"
+            android:insetBottom="0dp" />
+    </LinearLayout>
+
 </LinearLayout>

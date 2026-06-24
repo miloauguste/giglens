@@ -5,7 +5,7 @@
 # Changelog message is only used for Play Store deploys.
 set -e
 
-DEPLOY_VERSION="1.2"
+DEPLOY_VERSION="1.3"
 
 PACKAGE_NAME="com.augusteenterprise.giglens"
 JSON_KEY="$HOME/giglens/google-play-api-key.json"
@@ -136,9 +136,27 @@ fi
 if [ -n "$PIXEL_DEVICE" ] && { [ "$MODE" = "sideload" ] || [ "$MODE" = "both" ]; }; then
     echo "🔨 Building debug APK for sideload..."
     ./gradlew assembleDebug
-    adb -s "$PIXEL_DEVICE" install -r "$APK_PATH" \
-        && echo "✅ Sideload complete — GigLens installed on Pixel 10" \
-        || echo "⚠️  Sideload failed — try: adb -s $PIXEL_DEVICE uninstall $PACKAGE_NAME"
+    INSTALL_OUT=$(adb -s "$PIXEL_DEVICE" install -r "$APK_PATH" 2>&1)
+    if echo "$INSTALL_OUT" | grep -q "Success"; then
+        echo "✅ Sideload complete — GigLens installed on Pixel 10"
+    elif echo "$INSTALL_OUT" | grep -q "INSTALL_FAILED_UPDATE_INCOMPATIBLE"; then
+        echo ""
+        echo "⚠️  Signature mismatch — device has Play Store build (Google re-signs with their delivery key)."
+        echo "   Uninstalling Play Store version and reinstalling with upload key..."
+        echo "   ⚠️  LOCAL DB WILL BE WIPED — export your offer history first if needed."
+        echo ""
+        read -p "   Proceed with uninstall + reinstall? [y/N]: " CONFIRM
+        if [ "$CONFIRM" = "y" ] || [ "$CONFIRM" = "Y" ]; then
+            adb -s "$PIXEL_DEVICE" uninstall "$PACKAGE_NAME"
+            adb -s "$PIXEL_DEVICE" install "$APK_PATH" \
+                && echo "✅ Sideload complete — GigLens installed on Pixel 10 (fresh install)" \
+                || echo "❌ Install failed after uninstall — check adb output above"
+        else
+            echo "   Sideload cancelled."
+        fi
+    else
+        echo "❌ Sideload failed: $INSTALL_OUT"
+    fi
     echo ""
 fi
 

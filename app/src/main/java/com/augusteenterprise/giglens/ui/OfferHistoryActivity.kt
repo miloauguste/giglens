@@ -3,13 +3,20 @@ package com.augusteenterprise.giglens.ui
 // Author: Claude (Anthropic) - 2026-06-23
 // Full offer history screen: Day (with prev/next navigation) / Week / Month tabs.
 // Tapping a row opens a bottom sheet with all captured offer fields.
+// Export: all offers → CSV via share sheet. Import: CSV → merge (skip duplicate timestamps).
 
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
+import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.augusteenterprise.giglens.GigLensApp
@@ -18,6 +25,7 @@ import com.augusteenterprise.giglens.data.OfferCapture
 import com.augusteenterprise.giglens.databinding.ActivityOfferHistoryBinding
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.coroutines.launch
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -29,11 +37,30 @@ class OfferHistoryActivity : AppCompatActivity() {
     private lateinit var adapter: OfferHistoryAdapter
 
     private var activeTab = "day"
-    private val selectedDay = Calendar.getInstance()   // day displayed in Day tab
-    private val today       = Calendar.getInstance()   // reference point — never mutated
+    private val selectedDay = Calendar.getInstance()
+    private val today       = Calendar.getInstance()
 
     private val dayLabelFmt   = SimpleDateFormat("EEE, MMM d", Locale.US)
     private val detailDateFmt = SimpleDateFormat("EEE MMM d, h:mm a", Locale.US)
+
+    companion object {
+        private const val TAG = "OfferHistory"
+        private const val AUTHORITY = "com.augusteenterprise.giglens.fileprovider"
+        // driverLat/driverLon intentionally excluded — location data stays on device
+        private const val CSV_HEADER =
+            "id,timestamp,platform,payAmount,distance,distanceUnit," +
+            "restaurant,accepted,score,verdict,payPerMile,vsPersonalAvg," +
+            "pickupDistance,deliveryDistance,totalDistance,truePayPerMile," +
+            "vehicleCost,netValue,estimatedMinutes,timeCost,minutesOnJob," +
+            "estimatedTown,estimatedTownMethod,confirmedTown,townAccurate"
+        private const val CSV_COL_COUNT = 25
+    }
+
+    private val importLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) lifecycleScope.launch { importCsv(uri) }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,8 +88,172 @@ class OfferHistoryActivity : AppCompatActivity() {
             loadOffers()
         }
 
+        binding.btnExportCsv.setOnClickListener { exportCsv() }
+        binding.btnImportCsv.setOnClickListener {
+            importLauncher.launch(arrayOf("text/*", "application/octet-stream", "*/*"))
+        }
+
         setTab("day")
     }
+
+    // ── Export ────────────────────────────────────────────────────────────────
+
+    private fun exportCsv() {
+        lifecycleScope.launch {
+            val dao = GigLensApp.instance.database.offerCaptureDao()
+            val offers = dao.getAll()
+            if (offers.isEmpty()) {
+                runOnUiThread { Toast.makeText(this@OfferHistoryActivity, "No offers to export", Toast.LENGTH_SHORT).show() }
+                return@launch
+            }
+            val csv = buildCsv(offers)
+            val ts  = SimpleDateFormat("yyyyMMdd_HHmm", Locale.US).format(Date())
+            val file = File(cacheDir, "giglens_export_$ts.csv")
+            file.writeText(csv)
+            Log.i(TAG, "exportCsv: wrote ${offers.size} rows to ${file.name}")
+            val uri = FileProvider.getUriForFile(this@OfferHistoryActivity, AUTHORITY, file)
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/csv"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                putExtra(Intent.EXTRA_SUBJECT, "GigLens Offer Export $ts")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            runOnUiThread {
+                startActivity(Intent.createChooser(intent, "Share CSV (${offers.size} offers)"))
+            }
+        }
+    }
+
+    private fun buildCsv(offers: List<OfferCapture>): String {
+        val sb = StringBuilder()
+        sb.appendLine(CSV_HEADER)
+        for (o in offers) {
+            sb.appendLine(
+                listOf(
+                    o.id.toString(),
+                    o.timestamp.toString(),
+                    csvEscape(o.platform),
+                    o.payAmount?.toString() ?: "",
+                    o.distance?.toString() ?: "",
+                    csvEscape(o.distanceUnit),
+                    csvEscape(o.restaurant ?: ""),
+                    o.accepted?.toString() ?: "",
+                    o.score?.toString() ?: "",
+                    csvEscape(o.verdict ?: ""),
+                    o.payPerMile?.toString() ?: "",
+                    o.vsPersonalAvg?.toString() ?: "",
+                    o.pickupDistance?.toString() ?: "",
+                    o.deliveryDistance?.toString() ?: "",
+                    o.totalDistance?.toString() ?: "",
+                    o.truePayPerMile?.toString() ?: "",
+                    o.vehicleCost?.toString() ?: "",
+                    o.netValue?.toString() ?: "",
+                    o.estimatedMinutes?.toString() ?: "",
+                    o.timeCost?.toString() ?: "",
+                    o.minutesOnJob?.toString() ?: "",
+                    csvEscape(o.estimatedTown ?: ""),
+                    csvEscape(o.estimatedTownMethod ?: ""),
+                    csvEscape(o.confirmedTown ?: ""),
+                    o.townAccurate?.toString() ?: ""
+                ).joinToString(",")
+            )
+        }
+        return sb.toString()
+    }
+
+    private fun csvEscape(value: String): String {
+        return if (value.contains(',') || value.contains('"') || value.contains('\n')) {
+            "\"${value.replace("\"", "\"\"")}\""
+        } else value
+    }
+
+    // ── Import ────────────────────────────────────────────────────────────────
+
+    private suspend fun importCsv(uri: Uri) {
+        val dao = GigLensApp.instance.database.offerCaptureDao()
+        val existing = dao.getAllTimestamps().toHashSet()
+        var inserted = 0
+        var skipped  = 0
+        try {
+            val lines = contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readLines() } ?: emptyList()
+            for (line in lines.drop(1)) {  // skip header
+                if (line.isBlank()) continue
+                val cols = parseCsvLine(line)
+                if (cols.size < CSV_COL_COUNT) { skipped++; continue }
+                val ts = cols[1].toLongOrNull()
+                if (ts == null) { skipped++; continue }
+                if (ts in existing) { skipped++; continue }
+                val offer = OfferCapture(
+                    id                  = 0,
+                    timestamp           = ts,
+                    platform            = cols[2].ifBlank { "DoorDash" },
+                    payAmount           = cols[3].toDoubleOrNull(),
+                    distance            = cols[4].toDoubleOrNull(),
+                    distanceUnit        = cols[5].ifBlank { "mi" },
+                    restaurant          = cols[6].ifBlank { null },
+                    accepted            = cols[7].toBooleanStrictOrNull(),
+                    score               = cols[8].toIntOrNull(),
+                    verdict             = cols[9].ifBlank { null },
+                    payPerMile          = cols[10].toDoubleOrNull(),
+                    vsPersonalAvg       = cols[11].toDoubleOrNull(),
+                    pickupDistance      = cols[12].toDoubleOrNull(),
+                    deliveryDistance    = cols[13].toDoubleOrNull(),
+                    totalDistance       = cols[14].toDoubleOrNull(),
+                    truePayPerMile      = cols[15].toDoubleOrNull(),
+                    vehicleCost         = cols[16].toDoubleOrNull(),
+                    netValue            = cols[17].toDoubleOrNull(),
+                    estimatedMinutes    = cols[18].toIntOrNull(),
+                    timeCost            = cols[19].toDoubleOrNull(),
+                    minutesOnJob        = cols[20].toDoubleOrNull(),
+                    estimatedTown       = cols[21].ifBlank { null },
+                    estimatedTownMethod = cols[22].ifBlank { null },
+                    confirmedTown       = cols[23].ifBlank { null },
+                    townAccurate        = cols[24].toBooleanStrictOrNull()
+                )
+                dao.insert(offer)
+                existing.add(ts)
+                inserted++
+            }
+            Log.i(TAG, "importCsv: inserted=$inserted skipped=$skipped")
+            runOnUiThread {
+                Toast.makeText(
+                    this@OfferHistoryActivity,
+                    "Imported $inserted offer${if (inserted == 1) "" else "s"}" +
+                        if (skipped > 0) " ($skipped skipped)" else "",
+                    Toast.LENGTH_LONG
+                ).show()
+                loadOffers()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "importCsv: failed", e)
+            runOnUiThread {
+                Toast.makeText(this@OfferHistoryActivity, "Import failed: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun parseCsvLine(line: String): List<String> {
+        val result  = mutableListOf<String>()
+        val current = StringBuilder()
+        var inQuotes = false
+        var i = 0
+        while (i < line.length) {
+            when {
+                line[i] == '"' && !inQuotes -> inQuotes = true
+                line[i] == '"' && inQuotes && i + 1 < line.length && line[i + 1] == '"' -> {
+                    current.append('"'); i++
+                }
+                line[i] == '"' && inQuotes -> inQuotes = false
+                line[i] == ',' && !inQuotes -> { result.add(current.toString()); current.clear() }
+                else -> current.append(line[i])
+            }
+            i++
+        }
+        result.add(current.toString())
+        return result
+    }
+
+    // ── Tab / list logic (unchanged) ─────────────────────────────────────────
 
     private fun setTab(tab: String) {
         activeTab = tab
@@ -84,15 +275,14 @@ class OfferHistoryActivity : AppCompatActivity() {
 
     private fun refreshDayNav() {
         if (activeTab != "day") return
-
         val label = when {
-            sameDay(selectedDay, today)                               -> "Today, ${dayLabelFmt.format(selectedDay.time).substringAfter(", ")}"
-            sameDay(selectedDay, Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }) -> "Yesterday, ${dayLabelFmt.format(selectedDay.time).substringAfter(", ")}"
-            else                                                      -> dayLabelFmt.format(selectedDay.time)
+            sameDay(selectedDay, today) ->
+                "Today, ${dayLabelFmt.format(selectedDay.time).substringAfter(", ")}"
+            sameDay(selectedDay, Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }) ->
+                "Yesterday, ${dayLabelFmt.format(selectedDay.time).substringAfter(", ")}"
+            else -> dayLabelFmt.format(selectedDay.time)
         }
         binding.tvDayLabel.text = label
-
-        // Disable next-day button when already on today
         val isToday = sameDay(selectedDay, today)
         binding.btnNextDay.isEnabled = !isToday
         binding.btnNextDay.alpha = if (isToday) 0.3f else 1f
@@ -113,7 +303,6 @@ class OfferHistoryActivity : AppCompatActivity() {
     }
 
     private fun dateRangeForTab(): Pair<Long, Long> {
-        val cal = Calendar.getInstance()
         return when (activeTab) {
             "day" -> {
                 val start = Calendar.getInstance().apply {
@@ -136,7 +325,7 @@ class OfferHistoryActivity : AppCompatActivity() {
                 }
                 start.timeInMillis to System.currentTimeMillis()
             }
-            else -> { // month
+            else -> {
                 val start = Calendar.getInstance().apply {
                     set(Calendar.DAY_OF_MONTH, 1)
                     set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
@@ -194,17 +383,17 @@ class OfferHistoryActivity : AppCompatActivity() {
             }
         }
 
-        row(R.id.rowPayPerMile,  "Pay / mile",      offer.payPerMile?.let  { String.format(Locale.US, "$%.2f/mi", it) })
-        row(R.id.rowTruePerMile, "True $/mile",     offer.truePayPerMile?.let { String.format(Locale.US, "$%.2f/mi", it) })
-        row(R.id.rowVehicleCost, "Vehicle cost",    offer.vehicleCost?.let { String.format(Locale.US, "-$%.2f", it) })
-        row(R.id.rowTimeCost,    "Time cost",       offer.timeCost?.let    { String.format(Locale.US, "-$%.2f", it) })
-        row(R.id.rowMinutes,     "Est. minutes",    offer.minutesOnJob?.let { String.format(Locale.US, "%.0f min", it) })
-        row(R.id.rowScore,       "Score",           offer.score?.let { "$it / 100" })
-        row(R.id.rowPickupMi,    "Pickup leg",      offer.pickupDistance?.let   { String.format(Locale.US, "%.1f mi", it) })
-        row(R.id.rowDeliveryMi,  "Delivery leg",    offer.deliveryDistance?.let { String.format(Locale.US, "%.1f mi", it) })
-        row(R.id.rowTown,        "Est. town",       offer.estimatedTown)
-        row(R.id.rowTownMethod,  "Town method",     offer.estimatedTownMethod)
-        row(R.id.rowPlatform,    "Platform",        offer.platform.takeIf { it.isNotBlank() })
+        row(R.id.rowPayPerMile,  "Pay / mile",  offer.payPerMile?.let  { String.format(Locale.US, "$%.2f/mi", it) })
+        row(R.id.rowTruePerMile, "True $/mile", offer.truePayPerMile?.let { String.format(Locale.US, "$%.2f/mi", it) })
+        row(R.id.rowVehicleCost, "Vehicle cost", offer.vehicleCost?.let { String.format(Locale.US, "-$%.2f", it) })
+        row(R.id.rowTimeCost,    "Time cost",    offer.timeCost?.let    { String.format(Locale.US, "-$%.2f", it) })
+        row(R.id.rowMinutes,     "Est. minutes", offer.minutesOnJob?.let { String.format(Locale.US, "%.0f min", it) })
+        row(R.id.rowScore,       "Score",        offer.score?.let { "$it / 100" })
+        row(R.id.rowPickupMi,    "Pickup leg",   offer.pickupDistance?.let   { String.format(Locale.US, "%.1f mi", it) })
+        row(R.id.rowDeliveryMi,  "Delivery leg", offer.deliveryDistance?.let { String.format(Locale.US, "%.1f mi", it) })
+        row(R.id.rowTown,        "Est. town",    offer.estimatedTown)
+        row(R.id.rowTownMethod,  "Town method",  offer.estimatedTownMethod)
+        row(R.id.rowPlatform,    "Platform",     offer.platform.takeIf { it.isNotBlank() })
 
         sheet.show()
     }

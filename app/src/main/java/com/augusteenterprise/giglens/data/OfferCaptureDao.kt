@@ -97,4 +97,8 @@ interface OfferCaptureDao {
     // Recent offers (new method name)
     @Query("SELECT * FROM offer_captures ORDER BY timestamp DESC LIMIT :limit")
     suspend fun getRecentOffers(limit: Int): List<OfferCapture>
+
+    // All timestamps — used for dedup during CSV import
+    @Query("SELECT timestamp FROM offer_captures")
+    suspend fun getAllTimestamps(): List<Long>
 }
