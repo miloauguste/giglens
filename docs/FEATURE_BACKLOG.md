@@ -10,7 +10,6 @@
 | 1 | **Scoring redesign** | GREEN/YELLOW/RED profit verdict, configurable thresholds in Settings, no hardcoded ceiling | 1.5hr | Free |
 | 2 | **Pill header polish** | Refine net profit + town layout once accuracy data confirms approach | 30min | Free |
 | 3 | **Voice/hands-free** | Android TTS reads offer aloud on pill appear — profit, distance, color, town | 1.5hr | Free/Paid |
-| 4 | **Analytics export** | CSV export of offer/shift history via Android share sheet | 1hr | Free/Paid |
 
 ---
 
@@ -38,6 +37,15 @@
 | Town bearing overhaul (3-tier) | ✅ Built | Full pin → partial pin → unavailable — no GPS bearing fallback; stale result cleared on entry |
 | Pill heading town | ✅ Built (Pro) | `+$X.XX 45s · 📍 Burlington` inline, teal #00C9A7 80% size — `pillTextWithTown()` |
 | Play Store internal testing deploy | ✅ Deployed | v0.1.211 on internal track + Pixel sideload |
+
+## ✅ Completed 2026-06-23 Session (v0.1.251 → v0.1.252)
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| CSV export (Offer History) | ✅ Built | All-time history → share sheet; excludes location fields — v252 |
+| CSV import (Offer History) | ✅ Built | File picker, timestamp dedup, merge — v252 |
+| FileProvider | ✅ Added | Required for cache-dir file sharing — v252 |
+| deploy.sh signature mismatch guard | ✅ Fixed | Detects Play App Signing key conflict, prompts before DB wipe — v1.3 |
 
 ## ✅ Completed 2026-06-22 Session (v0.1.212 → v0.1.216)
 

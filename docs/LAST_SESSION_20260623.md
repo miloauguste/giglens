@@ -2,7 +2,55 @@
 
 ---
 
-## Session Summary — Town detection timing fix + race condition audit (2026-06-23)
+## Session 2 — CSV Export/Import + deploy.sh signing fix (2026-06-23)
+**Version at session start:** 0.1.251
+**Version at session end:** 0.1.252
+**Conducted by:** Claude (Anthropic)
+
+### What Was Built
+
+**CSV Export** (`ui/OfferHistoryActivity.kt`, `res/layout/activity_offer_history.xml`)
+- Bottom action bar added to Offer History screen: "↑ Export CSV" / "↓ Import CSV"
+- Exports all-time history via Android share sheet (`ACTION_SEND`, `text/csv`) — Files, email, Google Sheets
+- **Excluded:** `screenshotPath`, `rawOcrText`, `driverLat`, `driverLon` (location stays on device)
+- 25 CSV columns: all other OfferCapture fields preserved for full restore fidelity
+
+**CSV Import**
+- File picker (`ActivityResultContracts.OpenDocument`) → parses quoted CSV → dedup by `timestamp` HashSet → insert new rows only
+- Toast: "Imported X offers (Y skipped)"
+- Kotlin note: `continue` inside `use {}` is experimental in Kotlin 1.9 — fixed by reading all lines first (`bufferedReader().use { it.readLines() }`), then looping outside the lambda
+
+**FileProvider** (`res/xml/file_paths.xml`, `AndroidManifest.xml`)
+- Required for sharing `cacheDir` files on Android 7+ — raw `file://` URIs are OS-blocked
+- Authority: `com.augusteenterprise.giglens.fileprovider`
+
+**deploy.sh v1.3 — signature mismatch handling**
+- Root cause: Google Play App Signing re-signs the distributed APK with Google's delivery key — our upload key will never match it for `install -r`
+- Old: silently failed with `INSTALL_FAILED_UPDATE_INCOMPATIBLE`
+- New: detects the error, warns about DB wipe, prompts `[y/N]` before uninstalling
+- Standing pattern: sideload for dev iteration; Play Store internal track for driver testing without data loss
+
+**Device note:** DB was wiped this session — had to uninstall Play Store build before sideloading. Current `.pixel_port`: `44993`.
+
+### Files Changed
+| File | Change |
+|------|--------|
+| `ui/OfferHistoryActivity.kt` | Export + import + CSV builder + line parser + ActivityResultLauncher |
+| `res/layout/activity_offer_history.xml` | Bottom action bar (Export/Import buttons) |
+| `data/OfferCaptureDao.kt` | Added `getAllTimestamps()` for import dedup |
+| `AndroidManifest.xml` | FileProvider declaration |
+| `res/xml/file_paths.xml` | New — FileProvider cache-path config |
+| `deploy.sh` | Signature mismatch detection + prompt before uninstall |
+
+### Next Session — Start Here
+1. **Top priority: Scoring redesign** — GREEN/YELLOW/RED configurable thresholds. Still unstarted (Phase 1 #1). No app code written toward it across Sessions 3–5 on 2026-06-22 or this session.
+2. **Test export/import round-trip** — share a CSV from Offer History, re-import it, verify count matches and no duplicates.
+3. **Race conditions from Session 1 today** — `@Volatile` on fingerprint fields, split `lastOfferFingerprint` into screen vs broadcast namespaces.
+4. **Town accuracy** — `townAccurate` null on all rows; tap Yes/No on notifications next shift.
+
+---
+
+## Session 1 — Town detection timing fix + race condition audit (2026-06-23)
 **Version at session start:** 0.1.233  
 **Version at session end:** 0.1.234  
 **Conducted by:** Claude (Anthropic)
