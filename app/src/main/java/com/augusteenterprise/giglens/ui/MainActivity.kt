@@ -4,7 +4,12 @@ package com.augusteenterprise.giglens.ui
 // Last modified: DeepSeek (Ollama) - June 02 2026 - Full analytics UI rebuild
 // Main activity: analytics dashboard with controls, earnings, chart, verdict breakdown
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.provider.Settings
 import android.util.Log
+import android.view.View
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import android.animation.ObjectAnimator
 import android.app.Activity
@@ -18,6 +23,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.augusteenterprise.giglens.GigLensApp
 import com.augusteenterprise.giglens.data.DailyNetValue
@@ -195,6 +201,12 @@ class MainActivity : AppCompatActivity() {
             finish()
         }
 
+        binding.btnFixGps.setOnClickListener {
+            startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = Uri.fromParts("package", packageName, null)
+            })
+        }
+
 
 
         binding.tvSeeAll.setOnClickListener {
@@ -220,6 +232,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+
+        // Show GPS warning strip when location permission is not granted
+        val locationGranted = ContextCompat.checkSelfPermission(
+            this, Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        binding.layoutGpsWarning.visibility = if (locationGranted) View.GONE else View.VISIBLE
 
         // CORRECT: read WIDGET_ENABLED from DB — single source of truth shared with SettingsActivity
         // WRONG: reading from SharedPreferences("giglens_ui") — SettingsActivity writes to DB, not prefs

@@ -4,14 +4,17 @@ package com.augusteenterprise.giglens.service
 // Receives ACTION_OFFER_EXTRACTED from OfferDetectorService (accessibility path)
 // and runs the same scoring pipeline as ScreenCaptureService without OCR/screenshot.
 
+import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
+import androidx.core.content.ContextCompat
 import androidx.core.app.NotificationCompat
 import com.augusteenterprise.giglens.GigLensApp
 import com.augusteenterprise.giglens.geocoding.DeliveryTownEstimator
@@ -127,19 +130,27 @@ class AccessibilityOfferReceiver : BroadcastReceiver() {
                 val configDao  = db.scorerConfigDao()
                 val scorer     = OfferScorer(configDao)
 
-                // CORRECT: get GPS fix before scoring — used for town estimation + DB record
-                // WRONG:   skipping GPS — driverLat/driverLon stay null, town estimation unavailable
+                // CORRECT: check permission explicitly — distinguishes "denied" from "timed out"
+                //          so the pill can show "📍 no GPS" instead of "📍 ---" when permission is the cause
+                val locationGranted = ContextCompat.checkSelfPermission(
+                    GigLensApp.instance, Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+
                 val driverLocation = LocationHelper.getCurrentLocation(GigLensApp.instance)
-                Log.d(TAG, "GPS fix: ${driverLocation?.latitude}, ${driverLocation?.longitude} bearing=${driverLocation?.bearing}")
+                Log.d(TAG, "GPS fix: granted=$locationGranted ${driverLocation?.latitude}, ${driverLocation?.longitude} bearing=${driverLocation?.bearing}")
 
                 // Estimate delivery town from restaurant name + driver GPS + distance
                 val townEstimate = if (restaurant.isNotBlank() && distance != null) {
-                    DeliveryTownEstimator.estimateTown(
+                    val estimate = DeliveryTownEstimator.estimateTown(
                         restaurantName  = restaurant,
                         totalDistanceMi = distance,
                         driverLocation  = driverLocation,
                         useGpsMethod    = true
                     )
+                    // Override display name when permission denial is the specific cause
+                    if (!locationGranted && estimate.method == "unavailable") {
+                        estimate.copy(displayName = "📍 no GPS")
+                    } else estimate
                 } else null
                 Log.i(TAG, "Town estimate: ${townEstimate?.displayName} confidence=${townEstimate?.confidence}")
 

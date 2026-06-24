@@ -210,14 +210,19 @@ object DeliveryTownEstimator {
 
     /**
      * Option 2: Search restaurant by city name — fallback when GPS unavailable.
+     * Requires a non-null city to avoid unconstrained global searches that return
+     * a random worldwide result (e.g. "McDonald's" → McDonald's in Spain).
      */
     private suspend fun resolveByCity(
         name: String,
         city: String?
     ): Pair<Double, Double>? = withContext(Dispatchers.IO) {
+        if (city == null) {
+            Log.w(TAG, "resolveByCity: no city context — skipping to prevent global search")
+            return@withContext null
+        }
         try {
-            val query = if (city != null) "$name, $city" else name
-            val encoded = URLEncoder.encode(query, "UTF-8")
+            val encoded = URLEncoder.encode("$name, $city", "UTF-8")
             val url = "$NOMINATIM_SEARCH?q=$encoded&format=json&limit=1"
 
             val response = httpGet(url) ?: return@withContext null

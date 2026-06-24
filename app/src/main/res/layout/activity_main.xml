@@ -152,6 +152,45 @@
                 android:alpha="0.06" />
         </LinearLayout>
 
+        <!-- GPS warning strip — visible only when location permission is not granted -->
+        <LinearLayout
+            android:id="@+id/layoutGpsWarning"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="#F59E0B"
+            android:gravity="center_vertical"
+            android:paddingStart="14dp"
+            android:paddingEnd="10dp"
+            android:paddingTop="9dp"
+            android:paddingBottom="9dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="⚠ Location off — town detection unavailable"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="#1A1A2E" />
+
+            <Button
+                android:id="@+id/btnFixGps"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="FIX"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#1A1A2E"
+                android:background="#FFFFFF"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:stateListAnimator="@null"
+                android:insetTop="0dp"
+                android:insetBottom="0dp" />
+        </LinearLayout>
+
         <!-- BLOCK 2: CONTROLS CARD -->
         <LinearLayout
             android:layout_width="match_parent"
