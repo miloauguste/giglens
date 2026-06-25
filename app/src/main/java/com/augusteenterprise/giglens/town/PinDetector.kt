@@ -88,6 +88,12 @@ object PinDetector {
         // Driver dot = the single qualifying blue blob (take largest if multiple)
         val driverDot = blueBlobs.maxByOrNull { it.size }?.let { gridCentroid(it) }
 
+        Log.d(TAG, "driverDot: pos=(${driverDot?.x?.toInt()},${driverDot?.y?.toInt()}) blueBlobs=${blueBlobs.size}")
+        blueBlobs.forEachIndexed { i, blob ->
+            val c = gridCentroid(blob)
+            Log.d(TAG, "blueBlob[$i]: pos=(${c.x.toInt()},${c.y.toInt()}) sampledPx=${blob.size} distFromDriver=${driverDot?.let { pixelDist(c, it).toInt() }}")
+        }
+
         if (driverDot == null || whiteBlobs.isEmpty()) {
             Log.w(TAG, "detect: driverDot=$driverDot whiteBlobs=${whiteBlobs.size} — success=false")
             val result = PinDetectionResult(driverDot, emptyList(), emptyList(), false)
@@ -95,13 +101,51 @@ object PinDetector {
             return result
         }
 
-        // Sort white blob centroids by distance from driver dot
-        val whiteCentroids = whiteBlobs.map { gridCentroid(it) }
-            .sortedBy { pixelDist(it, driverDot) }
+        // Sort blobs and centroids together so size is preserved alongside position for logging
+        val sortedBlobsWithCentroids = whiteBlobs
+            .map { blob -> Pair(blob, gridCentroid(blob)) }
+            .sortedBy { (_, centroid) -> pixelDist(centroid, driverDot) }
+        val whiteCentroids = sortedBlobsWithCentroids.map { it.second }
 
-        // Closest = briefcase (pickup); farthest = house (dropoff)
-        val briefcasePins = if (whiteCentroids.size == 1) whiteCentroids else whiteCentroids.dropLast(1)
-        val housePins     = listOf(whiteCentroids.last())
+        sortedBlobsWithCentroids.forEachIndexed { i, (blob, c) ->
+            Log.d(TAG, "whiteBlob[$i]: pos=(${c.x.toInt()},${c.y.toInt()}) sampledPx=${blob.size} distFromDriver=${pixelDist(c, driverDot).toInt()}px")
+        }
+
+        val briefcasePins: List<PointF>
+        val housePins: List<PointF>
+
+        if (whiteCentroids.size == 1) {
+            briefcasePins = whiteCentroids
+            housePins     = whiteCentroids
+        } else {
+            val closest  = whiteCentroids.first()
+            val farthest = whiteCentroids.last()
+
+            // Dot product of (driver→closest) · (closest→farthest).
+            // Positive = route goes in one direction (driver → pickup → dropoff).
+            //   Closest blob is the pickup — standard case.
+            // Negative = route doubles back: the dropoff is between the driver and
+            //   the pickup on screen, so the dropoff blob appears closer to the driver
+            //   dot than the pickup blob does. This happens when the driver is south,
+            //   the restaurant is north, and the customer is south (between them) —
+            //   the route goes north then reverses south. Closest-to-driver heuristic
+            //   swaps pickup and dropoff in this case; dot product catches the swap.
+            val v1x = (closest.x  - driverDot.x).toDouble()
+            val v1y = (closest.y  - driverDot.y).toDouble()
+            val v2x = (farthest.x - closest.x).toDouble()
+            val v2y = (farthest.y - closest.y).toDouble()
+            val dot = v1x * v2x + v1y * v2y
+
+            if (dot >= 0.0) {
+                Log.d(TAG, "classify: dot=${dot.toLong()} ≥ 0 — forward route, pickup=closest dropoff=farthest")
+                briefcasePins = whiteCentroids.dropLast(1)
+                housePins     = listOf(farthest)
+            } else {
+                Log.w(TAG, "classify: dot=${dot.toLong()} < 0 — route doubles back, pickup=farthest dropoff=closest")
+                briefcasePins = listOf(farthest)
+                housePins     = listOf(closest)
+            }
+        }
 
         Log.i(TAG, "detect: driverDot=$driverDot briefcase=${briefcasePins.size} house=${housePins.size} — success=true")
         val result = PinDetectionResult(
