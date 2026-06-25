@@ -14,6 +14,7 @@ package com.augusteenterprise.giglens.town
 import android.graphics.PointF
 import android.util.Log
 import com.augusteenterprise.giglens.geocoding.TownEstimate
+import com.augusteenterprise.giglens.logging.ShiftLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -60,6 +61,7 @@ object PinDetectionTownEstimator {
 
         Log.d(TAG, "estimate: driver→pickup=${driverToPickupPx}px pickup→dropoff=${pickupToDropoffPx}px " +
             "milesPerPixel=$milesPerPixel pickupLeg=${pickupLegMi}mi deliveryLeg=${deliveryMi}mi")
+        ShiftLogger.d(TAG, "px: driver→pickup=${driverToPickupPx.toInt()} pickup→dropoff=${pickupToDropoffPx.toInt()} mpp=${"%.4f".format(milesPerPixel)} pickupLeg=${"%.2f".format(pickupLegMi)}mi deliveryLeg=${"%.2f".format(deliveryMi)}mi")
 
         // Short-trip guard: pins < 80px apart → bearing is unreliable.
         // A 5px centroid error on a 40-60px span rotates bearing by ~5–8°, which at a 1.5mi
@@ -79,16 +81,19 @@ object PinDetectionTownEstimator {
         val bearingDeg = (Math.toDegrees(atan2(dx, -dy)) + 360.0) % 360.0
 
         Log.d(TAG, "estimate: bearing=$bearingDeg° (dx=$dx dy=$dy)")
+        ShiftLogger.d(TAG, "bearing=${"%.1f".format(bearingDeg)}° dx=${"%.1f".format(dx)} dy=${"%.1f".format(dy)}")
 
         // Step 3: Project deliveryMi from restaurant GPS at bearing
         val (dropoffLat, dropoffLon) = projectPoint(restaurantLat, restaurantLng, deliveryMi, bearingDeg)
         Log.d(TAG, "estimate: projected dropoff → $dropoffLat, $dropoffLon")
+        ShiftLogger.d(TAG, "projected dropoff → ${"%.5f".format(dropoffLat)}, ${"%.5f".format(dropoffLon)}")
 
         // Step 4: Reverse geocode
         val town = reverseGeocodeCity(dropoffLat, dropoffLon)
 
         return if (town != null) {
             Log.i(TAG, "estimate: town=$town confidence=$confidence method=pin_detection")
+            ShiftLogger.i(TAG, "RESULT town=$town confidence=$confidence")
             TownEstimate(
                 town          = town,
                 confidence    = confidence,
@@ -99,6 +104,7 @@ object PinDetectionTownEstimator {
             )
         } else {
             Log.w(TAG, "estimate: reverse geocode returned null")
+            ShiftLogger.w(TAG, "RESULT unavailable — reverse geocode null")
             TownEstimate(null, "low", "unavailable", "📍 ---",
                 pickupLegMi = pickupLegMi, deliveryLegMi = deliveryMi)
         }

@@ -9,6 +9,7 @@ import android.os.Build
 import androidx.appcompat.app.AppCompatDelegate
 import com.augusteenterprise.giglens.data.OfferDatabase
 import com.augusteenterprise.giglens.geocoding.GeocodingHelper
+import com.augusteenterprise.giglens.logging.ShiftLogger
 
 class GigLensApp : Application() {
 
@@ -28,6 +29,7 @@ class GigLensApp : Application() {
         instance = this
         database = OfferDatabase.getInstance(this)
         GeocodingHelper.loadStateNameMap(this)
+        ShiftLogger.init()
         createNotificationChannel()
     }
 

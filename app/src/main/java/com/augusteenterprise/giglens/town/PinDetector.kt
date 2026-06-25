@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.PointF
 import android.util.Log
+import com.augusteenterprise.giglens.logging.ShiftLogger
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.sqrt
 
@@ -75,6 +76,7 @@ object PinDetector {
         }
 
         Log.d(TAG, "detect: blue=${blueGridPts.size} white=${whiteGridPts.size} grid pts (bitmap=${w}x${h} step=$STEP)")
+        ShiftLogger.d(TAG, "--- new offer --- bitmap=${w}x${h} blueGridPts=${blueGridPts.size} whiteGridPts=${whiteGridPts.size}")
 
         // Blob size in sampled-pixel units
         val minBlob = BLOB_MIN_PX / (STEP * STEP)
@@ -84,18 +86,22 @@ object PinDetector {
         val whiteBlobs = findBlobs(whiteGridPts).filter { it.size in minBlob..maxBlob && blobCompactness(it) >= BLOB_COMPACTNESS_MIN }
 
         Log.d(TAG, "detect: blueBlobs=${blueBlobs.size} whiteBlobs=${whiteBlobs.size} (sampled bounds $minBlob..$maxBlob compactness>=$BLOB_COMPACTNESS_MIN)")
+        ShiftLogger.d(TAG, "blobs after filter: blue=${blueBlobs.size} white=${whiteBlobs.size}")
 
         // Driver dot = the single qualifying blue blob (take largest if multiple)
         val driverDot = blueBlobs.maxByOrNull { it.size }?.let { gridCentroid(it) }
 
         Log.d(TAG, "driverDot: pos=(${driverDot?.x?.toInt()},${driverDot?.y?.toInt()}) blueBlobs=${blueBlobs.size}")
+        ShiftLogger.d(TAG, "driverDot: pos=(${driverDot?.x?.toInt()},${driverDot?.y?.toInt()})")
         blueBlobs.forEachIndexed { i, blob ->
             val c = gridCentroid(blob)
             Log.d(TAG, "blueBlob[$i]: pos=(${c.x.toInt()},${c.y.toInt()}) sampledPx=${blob.size} distFromDriver=${driverDot?.let { pixelDist(c, it).toInt() }}")
+            ShiftLogger.d(TAG, "blueBlob[$i]: pos=(${c.x.toInt()},${c.y.toInt()}) sampledPx=${blob.size}")
         }
 
         if (driverDot == null || whiteBlobs.isEmpty()) {
             Log.w(TAG, "detect: driverDot=$driverDot whiteBlobs=${whiteBlobs.size} — success=false")
+            ShiftLogger.w(TAG, "success=false driverDot=${driverDot != null} whiteBlobs=${whiteBlobs.size}")
             val result = PinDetectionResult(driverDot, emptyList(), emptyList(), false)
             latestResult.set(result)
             return result
@@ -109,6 +115,7 @@ object PinDetector {
 
         sortedBlobsWithCentroids.forEachIndexed { i, (blob, c) ->
             Log.d(TAG, "whiteBlob[$i]: pos=(${c.x.toInt()},${c.y.toInt()}) sampledPx=${blob.size} distFromDriver=${pixelDist(c, driverDot).toInt()}px")
+            ShiftLogger.d(TAG, "whiteBlob[$i]: pos=(${c.x.toInt()},${c.y.toInt()}) sampledPx=${blob.size} distFromDriver=${pixelDist(c, driverDot).toInt()}px")
         }
 
         val briefcasePins: List<PointF>
@@ -138,16 +145,19 @@ object PinDetector {
 
             if (dot >= 0.0) {
                 Log.d(TAG, "classify: dot=${dot.toLong()} ≥ 0 — forward route, pickup=closest dropoff=farthest")
+                ShiftLogger.d(TAG, "classify: dot=${dot.toLong()} forward — pickup=(${closest.x.toInt()},${closest.y.toInt()}) dropoff=(${farthest.x.toInt()},${farthest.y.toInt()})")
                 briefcasePins = whiteCentroids.dropLast(1)
                 housePins     = listOf(farthest)
             } else {
                 Log.w(TAG, "classify: dot=${dot.toLong()} < 0 — route doubles back, pickup=farthest dropoff=closest")
+                ShiftLogger.w(TAG, "classify: dot=${dot.toLong()} DOUBLED BACK — pickup=(${farthest.x.toInt()},${farthest.y.toInt()}) dropoff=(${closest.x.toInt()},${closest.y.toInt()})")
                 briefcasePins = listOf(farthest)
                 housePins     = listOf(closest)
             }
         }
 
         Log.i(TAG, "detect: driverDot=$driverDot briefcase=${briefcasePins.size} house=${housePins.size} — success=true")
+        ShiftLogger.i(TAG, "success=true driverDot=(${driverDot.x.toInt()},${driverDot.y.toInt()}) briefcase=${briefcasePins.size} house=${housePins.size}")
         val result = PinDetectionResult(
             driverDot     = driverDot,
             briefcasePins = briefcasePins,
