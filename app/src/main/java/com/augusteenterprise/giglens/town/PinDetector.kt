@@ -27,9 +27,18 @@ private const val STEP = 3
 // BLOB_COMPACTNESS_MIN = 0.15: the DoorDash route line forms an elongated blob with ~4% fill
 // even when its pixel count passes the size filter. Delivery pin icons are compact circles with
 // 50–65% fill. Threshold at 15% cleanly rejects the route line while passing all pin shapes.
+// BLOB_MIN_DIM_GRID = 10: both bounding-box dimensions (width AND height) must span at least
+// 10 grid units = 30px. Kills road text labels (15–25px tall at all zoom levels) and thin
+// route segments without cutting off small pins on zoomed-out maps (~30–40px at 5+mi span).
+// NOTIFICATION_ZONE_X/Y: the DoorDash notification badge (circular icon at top-left of the
+// cropped bitmap) is a 99×66px white blob that passes all other filters. Exclude anything
+// whose bounding-box center falls in the top-left corner: x<25% of width AND y<15% of height.
 private const val BLOB_MIN_PX = 50
 private const val BLOB_MAX_PX = 30000
 private const val BLOB_COMPACTNESS_MIN = 0.15f
+private const val BLOB_MIN_DIM_GRID = 14       // 42px minimum in each axis
+private const val NOTIFICATION_ZONE_X_FRAC = 0.25f   // left 25% of bitmap width
+private const val NOTIFICATION_ZONE_Y_FRAC = 0.22f   // top 22% of cropped bitmap height
 
 private val NEIGHBORS = listOf(Pair(-1, 0), Pair(1, 0), Pair(0, -1), Pair(0, 1))
 
@@ -83,10 +92,29 @@ object PinDetector {
         val maxBlob = BLOB_MAX_PX / (STEP * STEP)
 
         val blueBlobs  = findBlobs(blueGridPts).filter  { it.size in minBlob..maxBlob }
-        val whiteBlobs = findBlobs(whiteGridPts).filter { it.size in minBlob..maxBlob && blobCompactness(it) >= BLOB_COMPACTNESS_MIN }
+        val notifZoneX = (w * NOTIFICATION_ZONE_X_FRAC).toInt()
+        val notifZoneY = (h * NOTIFICATION_ZONE_Y_FRAC).toInt()
+        val whiteBlobs = findBlobs(whiteGridPts).filter { blob ->
+            if (blob.size !in minBlob..maxBlob) return@filter false
+            val minX = blob.minOf { it.first };  val maxX = blob.maxOf { it.first }
+            val minY = blob.minOf { it.second }; val maxY = blob.maxOf { it.second }
+            // Both axes must span ≥ BLOB_MIN_DIM_GRID grid units (= 30px at STEP=3).
+            // Kills road text labels (~15–25px tall) and thin route segments.
+            if ((maxX - minX) < BLOB_MIN_DIM_GRID) return@filter false
+            if ((maxY - minY) < BLOB_MIN_DIM_GRID) return@filter false
+            if (blobCompactness(blob) < BLOB_COMPACTNESS_MIN) return@filter false
+            // Reject the DoorDash notification badge (large white circle, top-left of crop).
+            val cx = (minX + maxX) * STEP / 2
+            val cy = (minY + maxY) * STEP / 2
+            if (cx < notifZoneX && cy < notifZoneY) return@filter false
+            true
+        }
 
-        Log.d(TAG, "detect: blueBlobs=${blueBlobs.size} whiteBlobs=${whiteBlobs.size} (sampled bounds $minBlob..$maxBlob compactness>=$BLOB_COMPACTNESS_MIN)")
-        ShiftLogger.d(TAG, "blobs after filter: blue=${blueBlobs.size} white=${whiteBlobs.size}")
+        Log.d(TAG, "detect: blueBlobs=${blueBlobs.size} whiteBlobs=${whiteBlobs.size} " +
+            "(sampled $minBlob..$maxBlob compactness>=$BLOB_COMPACTNESS_MIN " +
+            "minDim>=$BLOB_MIN_DIM_GRID notifZone=${notifZoneX}x${notifZoneY})")
+        ShiftLogger.d(TAG, "blobs after filter: blue=${blueBlobs.size} white=${whiteBlobs.size} " +
+            "notifZone=${notifZoneX}x${notifZoneY}")
 
         // Driver dot = the single qualifying blue blob (take largest if multiple)
         val driverDot = blueBlobs.maxByOrNull { it.size }?.let { gridCentroid(it) }
@@ -114,8 +142,12 @@ object PinDetector {
         val whiteCentroids = sortedBlobsWithCentroids.map { it.second }
 
         sortedBlobsWithCentroids.forEachIndexed { i, (blob, c) ->
-            Log.d(TAG, "whiteBlob[$i]: pos=(${c.x.toInt()},${c.y.toInt()}) sampledPx=${blob.size} distFromDriver=${pixelDist(c, driverDot).toInt()}px")
-            ShiftLogger.d(TAG, "whiteBlob[$i]: pos=(${c.x.toInt()},${c.y.toInt()}) sampledPx=${blob.size} distFromDriver=${pixelDist(c, driverDot).toInt()}px")
+            val minX = blob.minOf { it.first }; val maxX = blob.maxOf { it.first }
+            val minY = blob.minOf { it.second }; val maxY = blob.maxOf { it.second }
+            val bboxW = (maxX - minX + 1) * STEP
+            val bboxH = (maxY - minY + 1) * STEP
+            Log.d(TAG, "whiteBlob[$i]: pos=(${c.x.toInt()},${c.y.toInt()}) bbox=${bboxW}x${bboxH} sampledPx=${blob.size} distFromDriver=${pixelDist(c, driverDot).toInt()}px")
+            ShiftLogger.d(TAG, "whiteBlob[$i]: pos=(${c.x.toInt()},${c.y.toInt()}) bbox=${bboxW}x${bboxH} distFromDriver=${pixelDist(c, driverDot).toInt()}px")
         }
 
         val briefcasePins: List<PointF>
@@ -125,35 +157,20 @@ object PinDetector {
             briefcasePins = whiteCentroids
             housePins     = whiteCentroids
         } else {
+            // With the dimension + notification-zone filters above, only actual delivery
+            // pin blobs survive — the closest is reliably the pickup (briefcase icon) and
+            // the farthest is the dropoff (house icon). A previous dot-product approach
+            // tried to detect "doubled-back routes" but misfired on sharp-turn routes
+            // (e.g. driver at center → Taco Bell upper-right → customer far-left bends
+            // 135°, giving a negative dot product even though pickup IS the closer blob).
+            // ShiftLogger now records bbox for every surviving blob so any future mis-
+            // classification can be diagnosed from post-shift log pulls.
             val closest  = whiteCentroids.first()
             val farthest = whiteCentroids.last()
-
-            // Dot product of (driver→closest) · (closest→farthest).
-            // Positive = route goes in one direction (driver → pickup → dropoff).
-            //   Closest blob is the pickup — standard case.
-            // Negative = route doubles back: the dropoff is between the driver and
-            //   the pickup on screen, so the dropoff blob appears closer to the driver
-            //   dot than the pickup blob does. This happens when the driver is south,
-            //   the restaurant is north, and the customer is south (between them) —
-            //   the route goes north then reverses south. Closest-to-driver heuristic
-            //   swaps pickup and dropoff in this case; dot product catches the swap.
-            val v1x = (closest.x  - driverDot.x).toDouble()
-            val v1y = (closest.y  - driverDot.y).toDouble()
-            val v2x = (farthest.x - closest.x).toDouble()
-            val v2y = (farthest.y - closest.y).toDouble()
-            val dot = v1x * v2x + v1y * v2y
-
-            if (dot >= 0.0) {
-                Log.d(TAG, "classify: dot=${dot.toLong()} ≥ 0 — forward route, pickup=closest dropoff=farthest")
-                ShiftLogger.d(TAG, "classify: dot=${dot.toLong()} forward — pickup=(${closest.x.toInt()},${closest.y.toInt()}) dropoff=(${farthest.x.toInt()},${farthest.y.toInt()})")
-                briefcasePins = whiteCentroids.dropLast(1)
-                housePins     = listOf(farthest)
-            } else {
-                Log.w(TAG, "classify: dot=${dot.toLong()} < 0 — route doubles back, pickup=farthest dropoff=closest")
-                ShiftLogger.w(TAG, "classify: dot=${dot.toLong()} DOUBLED BACK — pickup=(${farthest.x.toInt()},${farthest.y.toInt()}) dropoff=(${closest.x.toInt()},${closest.y.toInt()})")
-                briefcasePins = listOf(farthest)
-                housePins     = listOf(closest)
-            }
+            Log.d(TAG, "classify: closest=pickup=(${closest.x.toInt()},${closest.y.toInt()}) dropoff=(${farthest.x.toInt()},${farthest.y.toInt()})")
+            ShiftLogger.d(TAG, "classify: pickup=(${closest.x.toInt()},${closest.y.toInt()}) dropoff=(${farthest.x.toInt()},${farthest.y.toInt()})")
+            briefcasePins = whiteCentroids.dropLast(1)
+            housePins     = listOf(farthest)
         }
 
         Log.i(TAG, "detect: driverDot=$driverDot briefcase=${briefcasePins.size} house=${housePins.size} — success=true")

@@ -374,7 +374,11 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
                         FirebaseCrashlytics.getInstance().log("screenshot: saved ${file.name}")
 
                         val cropTopPx    = (softwareBitmap.height * 0.08).toInt()
-                        val cropHeightPx = (softwareBitmap.height * 0.38).toInt()
+                        // 0.24 height = y=8%..32% — captures the map area (pins at y≈22-28%)
+                        // without pulling in the offer-UI strip below (pay/restaurant/buttons).
+                        // Old value of 0.38 (8%..46%) included the "$X.XX Guaranteed" text
+                        // block which formed large white blobs that defeated pin classification.
+                        val cropHeightPx = (softwareBitmap.height * 0.24).toInt()
                             .coerceAtMost(softwareBitmap.height - cropTopPx)
                         val mapBitmap = android.graphics.Bitmap.createBitmap(
                             softwareBitmap, 0, cropTopPx, softwareBitmap.width, cropHeightPx
