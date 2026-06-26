@@ -193,7 +193,12 @@ class AccessibilityOfferReceiver : BroadcastReceiver() {
                         distance       = distance,
                         restaurant     = restaurant.ifBlank { null },
                         screenshotPath = null,
-                        rawOcrText     = "source=$source deliverBy=$deliverBy",
+                        // Shadow A/B (2026-06-26): append driver-anchored dropoff coords when present.
+                        // Resolved to a town offline post-shift and scored against confirmedTown.
+                        rawOcrText     = "source=$source deliverBy=$deliverBy" +
+                            (townEstimate?.altLat?.let { la ->
+                                " | altLat=$la altLon=${townEstimate.altLon} altMethod=${townEstimate.altMethod}"
+                            } ?: ""),
                         platform       = "DoorDash",
                         score          = result.score,
                         verdict        = result.verdict.name,

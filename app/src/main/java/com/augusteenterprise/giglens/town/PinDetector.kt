@@ -39,6 +39,13 @@ private const val BLOB_COMPACTNESS_MIN = 0.15f
 private const val BLOB_MIN_DIM_GRID = 14       // 42px minimum in each axis
 private const val NOTIFICATION_ZONE_X_FRAC = 0.25f   // left 25% of bitmap width
 private const val NOTIFICATION_ZONE_Y_FRAC = 0.22f   // top 22% of cropped bitmap height
+// MAPBOX_ZONE: the "⊙ mapbox ⓘ" attribution mark sits at the bottom-left of the map. With the
+// dynamic crop (2026-06-26) the frame now extends low enough to include it — a ~51px white blob
+// that passes the size/dim/compactness filters and was being mis-counted as a delivery pin
+// (confirmed across id7/id8 offline). Exclude any blob whose center is bottom-left:
+// x < 25% of width AND y > 85% of cropped height.
+private const val MAPBOX_ZONE_X_FRAC = 0.25f         // left 25% of bitmap width
+private const val MAPBOX_ZONE_Y_FRAC = 0.85f         // bottom 15% of cropped bitmap height
 
 private val NEIGHBORS = listOf(Pair(-1, 0), Pair(1, 0), Pair(0, -1), Pair(0, 1))
 
@@ -94,6 +101,8 @@ object PinDetector {
         val blueBlobs  = findBlobs(blueGridPts).filter  { it.size in minBlob..maxBlob }
         val notifZoneX = (w * NOTIFICATION_ZONE_X_FRAC).toInt()
         val notifZoneY = (h * NOTIFICATION_ZONE_Y_FRAC).toInt()
+        val mapboxZoneX = (w * MAPBOX_ZONE_X_FRAC).toInt()
+        val mapboxZoneY = (h * MAPBOX_ZONE_Y_FRAC).toInt()
         val whiteBlobs = findBlobs(whiteGridPts).filter { blob ->
             if (blob.size !in minBlob..maxBlob) return@filter false
             val minX = blob.minOf { it.first };  val maxX = blob.maxOf { it.first }
@@ -107,6 +116,8 @@ object PinDetector {
             val cx = (minX + maxX) * STEP / 2
             val cy = (minY + maxY) * STEP / 2
             if (cx < notifZoneX && cy < notifZoneY) return@filter false
+            // Reject the Mapbox attribution mark (small white blob, bottom-left of crop).
+            if (cx < mapboxZoneX && cy > mapboxZoneY) return@filter false
             true
         }
 

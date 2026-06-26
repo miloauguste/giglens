@@ -34,7 +34,12 @@ object PinDetectionTownEstimator {
         result: PinDetectionResult,
         totalDistanceMi: Double,
         restaurantLat: Double,
-        restaurantLng: Double
+        restaurantLng: Double,
+        // Shadow A/B (2026-06-26): driver's known GPS at screenshot time. When present, we also
+        // project the dropoff anchored on the driver-dot pixel (no restaurant geocode → Spain-proof)
+        // and record those coordinates for offline head-to-head scoring. null → shadow skipped.
+        driverLat: Double? = null,
+        driverLng: Double? = null
     ): TownEstimate {
         val driverDot = result.driverDot
         val pickup    = result.briefcasePins.firstOrNull()
@@ -88,7 +93,27 @@ object PinDetectionTownEstimator {
         Log.d(TAG, "estimate: projected dropoff → $dropoffLat, $dropoffLon")
         ShiftLogger.d(TAG, "projected dropoff → ${"%.5f".format(dropoffLat)}, ${"%.5f".format(dropoffLon)}")
 
-        // Step 4: Reverse geocode
+        // Step 3b: Shadow A/B — driver-anchored projection of the same dropoff pin.
+        // Anchors on the KNOWN driver GPS at the driver-dot pixel (vs the geocoded restaurant),
+        // projecting along the driver→dropoff pixel vector at the same milesPerPixel scale. This
+        // never geocodes the restaurant, so the Spain-class failure mode is structurally absent.
+        // Coordinates only — reverse-geocoded offline post-shift to avoid a 2nd Nominatim call
+        // and any added pill latency on-device.
+        var altLat: Double? = null
+        var altLon: Double? = null
+        if (driverLat != null && driverLng != null) {
+            val driverToDropoffMi  = pixelDist(driverDot, dropoff) * milesPerPixel
+            val driverToDropoffDeg = (Math.toDegrees(
+                atan2((dropoff.x - driverDot.x).toDouble(), -(dropoff.y - driverDot.y).toDouble())
+            ) + 360.0) % 360.0
+            val (aLat, aLon) = projectPoint(driverLat, driverLng, driverToDropoffMi, driverToDropoffDeg)
+            altLat = aLat; altLon = aLon
+            Log.i(TAG, "estimate: AB driver-anchored dropoff → $aLat,$aLon (restaurant-anchored=$dropoffLat,$dropoffLon)")
+            ShiftLogger.i(TAG, "AB driver-anchored=${"%.5f".format(aLat)},${"%.5f".format(aLon)} " +
+                "restaurant-anchored=${"%.5f".format(dropoffLat)},${"%.5f".format(dropoffLon)}")
+        }
+
+        // Step 4: Reverse geocode (primary = restaurant-anchored)
         val town = reverseGeocodeCity(dropoffLat, dropoffLon)
 
         return if (town != null) {
@@ -100,13 +125,18 @@ object PinDetectionTownEstimator {
                 method        = "pin_detection",
                 displayName   = "📍 ~$town",
                 pickupLegMi   = pickupLegMi,
-                deliveryLegMi = deliveryMi
+                deliveryLegMi = deliveryMi,
+                altLat        = altLat,
+                altLon        = altLon,
+                altMethod     = if (altLat != null) "driver_anchored" else null
             )
         } else {
             Log.w(TAG, "estimate: reverse geocode returned null")
             ShiftLogger.w(TAG, "RESULT unavailable — reverse geocode null")
             TownEstimate(null, "low", "unavailable", "📍 ---",
-                pickupLegMi = pickupLegMi, deliveryLegMi = deliveryMi)
+                pickupLegMi = pickupLegMi, deliveryLegMi = deliveryMi,
+                altLat = altLat, altLon = altLon,
+                altMethod = if (altLat != null) "driver_anchored" else null)
         }
     }
 

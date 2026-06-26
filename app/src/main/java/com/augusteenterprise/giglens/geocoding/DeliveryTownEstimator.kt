@@ -46,7 +46,14 @@ data class TownEstimate(
     //          root cause of null pickupDistance/deliveryDistance columns in the
     //          offer_captures DB, found during 2026-06-18 post-shift analysis
     val pickupLegMi: Double = 0.0,
-    val deliveryLegMi: Double = 0.0
+    val deliveryLegMi: Double = 0.0,
+    // Shadow A/B (2026-06-26): driver-anchored projection of the dropoff, recorded as raw
+    // coordinates only (resolved to a town offline post-shift). Lets the next shift's Yes/No
+    // confirmations score driver-anchored vs the restaurant-anchored `town` head-to-head,
+    // with no extra on-device Nominatim call and no pill latency. null when driver GPS absent.
+    val altLat: Double? = null,
+    val altLon: Double? = null,
+    val altMethod: String? = null
 )
 
 object DeliveryTownEstimator {
@@ -117,7 +124,9 @@ object DeliveryTownEstimator {
                 result          = pinResult,
                 totalDistanceMi = totalDistanceMi,
                 restaurantLat   = restaurantCoords.first,
-                restaurantLng   = restaurantCoords.second
+                restaurantLng   = restaurantCoords.second,
+                driverLat       = driverLocation?.latitude,
+                driverLng       = driverLocation?.longitude
             )
         }
 

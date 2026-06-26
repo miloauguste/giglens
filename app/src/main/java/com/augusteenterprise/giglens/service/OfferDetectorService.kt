@@ -26,6 +26,7 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.augusteenterprise.giglens.ocr.ParsedOffer
 import com.augusteenterprise.giglens.BuildConfig
 import com.augusteenterprise.giglens.town.PinDetector
+import com.augusteenterprise.giglens.logging.ShiftLogger
 
 class OfferDetectorService : AccessibilityService() {
     private var lastShowCameraMs = 0L
@@ -343,6 +344,73 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
      *          is populated when DeliveryTownEstimator.estimateTown() reads it.
      * WRONG:   broadcast before screenshot — estimateTown sees null latestResult → unavailable
      */
+
+    /**
+     * Detect the vertical band of the DoorDash map = the longest contiguous run of "navy map"
+     * rows. Mapbox's dark theme renders the map with a blue cast (B channel > R), while the
+     * notification banner above and the offer card below are near-neutral gray (B ≈ R). Returns
+     * (cropTopPx, cropHeightPx) with small margins, or null if no convincing band is found
+     * (caller then uses the fixed fallback window). Validated offline on id1–id8 (2026-06-26).
+     */
+    private fun detectMapBand(bmp: android.graphics.Bitmap): Pair<Int, Int>? {
+        val w = bmp.width
+        val h = bmp.height
+        val colStep = 8
+        val rowStep = 4
+        val row = IntArray(w)
+        val isMap = BooleanArray(h)
+        var y = 0
+        while (y < h) {
+            bmp.getPixels(row, 0, w, 0, y, w, 1)
+            var sumExcess = 0L; var sumV = 0L; var n = 0
+            var x = 0
+            while (x < w) {
+                val c = row[x]
+                val r = (c shr 16) and 0xFF
+                val g = (c shr 8) and 0xFF
+                val b = c and 0xFF
+                sumExcess += (b - r)
+                sumV += maxOf(r, g, b)
+                n++
+                x += colStep
+            }
+            val excess = sumExcess.toDouble() / n
+            val v = sumV.toDouble() / n
+            val isM = excess > 7.0 && v in 30.0..150.0
+            var yy = y
+            val end = minOf(y + rowStep, h)
+            while (yy < end) { isMap[yy] = isM; yy++ }
+            y += rowStep
+        }
+        // Longest contiguous map run, tolerating internal gaps up to GAP rows (road labels,
+        // route line, light parks can briefly break the blue-cast test).
+        val gapTol = 16
+        var bestStart = -1; var bestLen = 0
+        var curStart = -1; var curEnd = -1; var gap = 0
+        for (yy in 0 until h) {
+            if (isMap[yy]) {
+                if (curStart < 0) curStart = yy
+                curEnd = yy; gap = 0
+            } else if (curStart >= 0) {
+                gap++
+                if (gap > gapTol) {
+                    val len = curEnd - curStart
+                    if (len > bestLen) { bestLen = len; bestStart = curStart }
+                    curStart = -1; gap = 0
+                }
+            }
+        }
+        if (curStart >= 0) {
+            val len = curEnd - curStart
+            if (len > bestLen) { bestLen = len; bestStart = curStart }
+        }
+        // Require the band to span at least 12% of screen height to trust it.
+        if (bestStart < 0 || bestLen < h * 0.12) return null
+        val top = (bestStart - 10).coerceAtLeast(0)
+        val bottom = (bestStart + bestLen + 5).coerceAtMost(h)
+        return Pair(top, bottom - top)
+    }
+
     private fun takeScreenshotThenBroadcast(extracted: com.augusteenterprise.giglens.ocr.ParsedOffer) {
         Log.i(TAG, "takeScreenshotThenBroadcast: taking screenshot for PinDetector")
         takeScreenshot(
@@ -373,17 +441,33 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
                         Log.i(TAG, "Screenshot saved: ${file.name} (${softwareBitmap.width}x${softwareBitmap.height})")
                         FirebaseCrashlytics.getInstance().log("screenshot: saved ${file.name}")
 
-                        val cropTopPx    = (softwareBitmap.height * 0.08).toInt()
-                        // 0.24 height = y=8%..32% — captures the map area (pins at y≈22-28%)
-                        // without pulling in the offer-UI strip below (pay/restaurant/buttons).
-                        // Old value of 0.38 (8%..46%) included the "$X.XX Guaranteed" text
-                        // block which formed large white blobs that defeated pin classification.
-                        val cropHeightPx = (softwareBitmap.height * 0.24).toInt()
-                            .coerceAtMost(softwareBitmap.height - cropTopPx)
+                        // Dynamic map-band crop (2026-06-26). The old fixed 8%..32% window
+                        // assumed the map occupied a fixed screen fraction; on taller-map offers
+                        // the DoorDash map runs to ~55% and the driver dot / dropoff pin fell
+                        // below the 32% cut (validated offline across id1–id8: driver dot recovered
+                        // 2/8 → 8/8). We instead detect the navy-map band (blue-excess rows between
+                        // the banner above and the dark offer card below) and crop to it. Falls back
+                        // to the old fixed window if detection fails.
+                        val band = detectMapBand(softwareBitmap)
+                        val cropTopPx: Int
+                        val cropHeightPx: Int
+                        if (band != null) {
+                            cropTopPx = band.first
+                            cropHeightPx = band.second
+                            Log.d(TAG, "Map crop: DYNAMIC y=$cropTopPx..${cropTopPx + cropHeightPx} " +
+                                "of ${softwareBitmap.height}px")
+                        } else {
+                            cropTopPx = (softwareBitmap.height * 0.08).toInt()
+                            cropHeightPx = (softwareBitmap.height * 0.24).toInt()
+                                .coerceAtMost(softwareBitmap.height - cropTopPx)
+                            Log.w(TAG, "Map crop: FIXED fallback y=$cropTopPx..${cropTopPx + cropHeightPx} " +
+                                "of ${softwareBitmap.height}px (band detection failed)")
+                        }
+                        ShiftLogger.d(TAG, "crop y=$cropTopPx..${cropTopPx + cropHeightPx} " +
+                            "of ${softwareBitmap.height} (${if (band != null) "dynamic" else "fixed"})")
                         val mapBitmap = android.graphics.Bitmap.createBitmap(
                             softwareBitmap, 0, cropTopPx, softwareBitmap.width, cropHeightPx
                         )
-                        Log.d(TAG, "Map crop: y=$cropTopPx..${cropTopPx + cropHeightPx} of ${softwareBitmap.height}px")
 
                         val pinResult = PinDetector.detect(mapBitmap)
                         mapBitmap.recycle()
