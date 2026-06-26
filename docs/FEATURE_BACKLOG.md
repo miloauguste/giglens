@@ -1,5 +1,21 @@
 # GigLens — Feature Backlog
-**Last updated:** 2026-06-22 (v0.1.216)
+**Last updated:** 2026-06-26 (v0.1.259)
+
+---
+
+## ✅ Completed 2026-06-26 Session (v0.1.257 → v0.1.259) — branch `feat/driver-anchored-ab`
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Dynamic map-band crop | ✅ Built | `OfferDetectorService.detectMapBand()` — fixes driver dot cropped out of frame on tall maps; offline-validated 2/8→8/8 dot recovery — v259 |
+| Mapbox attribution filter | ✅ Built | `PinDetector` MAPBOX_ZONE — bottom-left exclusion kills false "mapbox" logo pin — v259 |
+| Driver-anchored town A/B (shadow) | ✅ Built | Projects dropoff from known driver GPS (Spain-proof); coords logged in rawOcrText for offline scoring; primary unchanged — v259 |
+| Standing rule: testing CTAs | ✅ Added | WORKING_AGREEMENTS.md — every wrap-up/handover must enumerate testing needed |
+
+**⚠️ NOT YET VALIDATED IN THE WILD** — branch not merged. Next shift must collect
+confirmation taps + verify dynamic crop + A/B logging. See `docs/LAST_SESSION_20260626.md`
+"TESTING NEEDED / CALLS TO ACTION" for the exact checklist. Post-shift: score
+driver-anchored vs restaurant-anchored against `confirmedTown`, decide primary.
 
 ---
 

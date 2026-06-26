@@ -114,6 +114,20 @@ tested, and deployed in one sitting, commit directly to `main`.
 
 ---
 
+## Always Include Testing Calls-to-Action
+
+Every wrap-up — a fix, a feature, and especially a session handover — must end
+with a detailed **"Testing Needed / Calls to Action"** block. Don't just say
+"test on the next shift." Enumerate the specific checks: what to test, the exact
+command or tap sequence, what output/signal means pass vs. fail, and why it
+matters. Milo validates on a physical device during real DoorDash shifts —
+offline and build-time checks can't cover everything, and a future session (or a
+fresh Claude with no memory) picks up from these docs. Specific testing CTAs are
+what keep validation from falling through the cracks between sessions.
+(Standing rule added 2026-06-26.)
+
+---
+
 ## ADB Session Start — Always Connect First
 
 Before executing ANY adb command in a session, always run:
