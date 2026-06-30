@@ -10,6 +10,9 @@ import android.content.Intent
 import android.app.ActivityManager
 import com.augusteenterprise.giglens.service.ACTION_SHOW_CAMERA
 import com.augusteenterprise.giglens.service.ACTION_HIDE_CAMERA
+import com.augusteenterprise.giglens.service.ACTION_SHOW_PROCESSING
+import com.augusteenterprise.giglens.service.EXTRA_PROCESSING_MS
+import com.augusteenterprise.giglens.service.EXTRA_PROCESSING_PAY
 import com.augusteenterprise.giglens.GigLensApp
 import com.augusteenterprise.giglens.data.AppConfigKeys
 import com.augusteenterprise.giglens.data.PlatformRegistry
@@ -216,6 +219,13 @@ private const val SHOW_CAMERA_COOLDOWN_MS = 2000L
                             Log.w(TAG, "Could not read SCREENSHOT_DELAY_MS — using default 1500ms")
                             1500L
                         }
+                        // Show the pill immediately with a live countdown of the delay, so the
+                        // driver knows town detection is pending while the DoorDash banner clears.
+                        startService(Intent(applicationContext, OfferOverlayService::class.java).apply {
+                            action = ACTION_SHOW_PROCESSING
+                            putExtra(EXTRA_PROCESSING_MS, delayMs)
+                            putExtra(EXTRA_PROCESSING_PAY, earlyExtracted.payAmount ?: 0.0)
+                        })
                         kotlinx.coroutines.delay(delayMs)
                         OfferOverlayService.hideForScreenshot()
                         kotlinx.coroutines.delay(50L)

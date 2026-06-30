@@ -12,9 +12,11 @@ import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
@@ -67,7 +69,11 @@ class OfferHistoryActivity : AppCompatActivity() {
         binding = ActivityOfferHistoryBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        adapter = OfferHistoryAdapter(emptyList()) { offer -> showDetail(offer) }
+        adapter = OfferHistoryAdapter(
+            emptyList(),
+            onItemClick   = { offer -> showDetail(offer) },
+            onTownConfirm = { offer, accurate -> onTownConfirm(offer, accurate) }
+        )
         binding.recyclerOffers.layoutManager = LinearLayoutManager(this)
         binding.recyclerOffers.adapter = adapter
 
@@ -339,6 +345,57 @@ class OfferHistoryActivity : AppCompatActivity() {
     private fun sameDay(a: Calendar, b: Calendar): Boolean =
         a.get(Calendar.YEAR) == b.get(Calendar.YEAR) &&
         a.get(Calendar.DAY_OF_YEAR) == b.get(Calendar.DAY_OF_YEAR)
+
+    // ── Town confirmation (post-shift ground truth) ──────────────────────────
+    // Yes → confirmedTown = estimate, accurate = true.
+    // No  → prompt for the actual town, accurate = false (blank still records false).
+    // This is the only point the driver knows the true destination, so it is the
+    // sole source of confirmedTown / townAccurate for accuracy + A/B scoring.
+    private fun onTownConfirm(offer: OfferCapture, accurate: Boolean) {
+        if (accurate) {
+            saveTownAccuracy(offer.id, confirmedTown = offer.estimatedTown, accurate = true)
+        } else {
+            promptActualTown(offer)
+        }
+    }
+
+    private fun promptActualTown(offer: OfferCapture) {
+        val input = EditText(this).apply {
+            hint = "Actual town (optional)"
+            setSingleLine()
+        }
+        val pad = (16 * resources.displayMetrics.density).toInt()
+        val container = android.widget.FrameLayout(this).apply {
+            setPadding(pad, pad / 2, pad, 0)
+            addView(input)
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Where was it actually?")
+            .setMessage("Estimated ${offer.estimatedTown}. Enter the correct town, or leave blank to just mark it wrong.")
+            .setView(container)
+            .setPositiveButton("Save") { _, _ ->
+                val actual = input.text.toString().trim().ifBlank { null }
+                saveTownAccuracy(offer.id, confirmedTown = actual, accurate = false)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun saveTownAccuracy(id: Long, confirmedTown: String?, accurate: Boolean) {
+        lifecycleScope.launch {
+            val dao = GigLensApp.instance.database.offerCaptureDao()
+            dao.updateTownAccuracy(id, confirmedTown = confirmedTown, accurate = accurate)
+            Log.i(TAG, "town confirm — id=$id accurate=$accurate confirmedTown=$confirmedTown")
+            runOnUiThread {
+                Toast.makeText(
+                    this@OfferHistoryActivity,
+                    if (accurate) "Town confirmed ✓" else "Marked wrong ✗",
+                    Toast.LENGTH_SHORT
+                ).show()
+                loadOffers()
+            }
+        }
+    }
 
     private fun showDetail(offer: OfferCapture) {
         val sheet = BottomSheetDialog(this)

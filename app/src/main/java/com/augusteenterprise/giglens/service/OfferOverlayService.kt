@@ -52,6 +52,12 @@ const val EXTRA_DELIVERY_TOWN  = "delivery_town"   // estimated delivery city/to
 const val EXTRA_PROFIT_PCT     = "profit_pct"       // (netValue / payAmount) × 100
 const val ACTION_SHOW_CAMERA   = "com.augusteenterprise.giglens.SHOW_CAMERA"
 const val ACTION_HIDE_CAMERA   = "com.augusteenterprise.giglens.HIDE_CAMERA"
+// Auto-capture processing pill: shown the instant an offer is detected, before the
+// screenshot delay. Heading carries a live countdown of SCREENSHOT_DELAY_MS so the
+// driver sees a delay is in progress (banner clearing + town detection), not a hang.
+const val ACTION_SHOW_PROCESSING = "com.augusteenterprise.giglens.SHOW_PROCESSING"
+const val EXTRA_PROCESSING_MS    = "processing_ms"
+const val EXTRA_PROCESSING_PAY   = "processing_pay"
 
 private enum class SheetState { IDLE, CAMERA, PROCESSING, PILL, MINI, FULL, CAPTURE_DEAD }
 
@@ -118,6 +124,11 @@ class OfferOverlayService : Service() {
     private var tickRunnable: Runnable? = null
     private var secondsRemaining = 60
     private var blinkVisible = true  // toggles each tick when countdown < 10s
+
+    // Processing countdown (auto-capture) — ticks down SCREENSHOT_DELAY_MS before the screenshot.
+    private var processingSeconds = 0
+    private var processingPay      = 0.0
+    private var processingRunnable: Runnable? = null
     private fun revertDelaySeconds(): Int = runBlocking {
         (GigLensApp.instance.database.scorerConfigDao()
             .getValue(ScorerConfigKeys.RESULT_DISPLAY_SECONDS) ?: 60.0).toInt()
@@ -200,10 +211,24 @@ class OfferOverlayService : Service() {
                 // CORRECT: do NOT stopSelf() -- overlay must stay alive entire shift
                 // WRONG: stopSelf(startId) -- kills service between offers, pill disappears
                 if (sheetState == SheetState.CAMERA || sheetState == SheetState.PROCESSING) {
+                    cancelProcessingTimer()  // offer dismissed mid-countdown — stop ticking
                     sheetState = if (verdict == "UNKNOWN") SheetState.IDLE else SheetState.PILL
                     if (isViewAdded) updateWidget() else { showWidget(); updateWidget() }
                     Log.d(TAG, "Widget morphed back from CAMERA to $sheetState")
                 }
+            }
+            ACTION_SHOW_PROCESSING -> {
+                // Auto-capture: show the pill immediately with a live countdown of the
+                // screenshot delay so the driver knows town detection is pending.
+                captureWasEverRunning = true
+                cancelRevertTimer()
+                processingPay = intent.getDoubleExtra(EXTRA_PROCESSING_PAY, 0.0)
+                val ms = intent.getLongExtra(EXTRA_PROCESSING_MS, 0L)
+                processingSeconds = Math.ceil(ms / 1000.0).toInt().coerceAtLeast(1)
+                sheetState = SheetState.PROCESSING
+                if (isViewAdded) updateWidget() else { showWidget(); updateWidget() }
+                startProcessingTimer()
+                Log.d(TAG, "Processing pill shown — countdown ${processingSeconds}s pay=$processingPay")
             }
             else -> {
                 // CORRECT: only show CAPTURE_DEAD when explicitly signaled via ACTION_CAPTURE_DEAD intent
@@ -211,6 +236,8 @@ class OfferOverlayService : Service() {
                 //        accessibility extraction works without ScreenCaptureService -- no reason to block
                 if (intent?.hasExtra(EXTRA_NET_VALUE) == true) {
                     captureWasEverRunning = true
+                    cancelProcessingTimer()   // countdown done — real result is here
+                    processingSeconds = 0
                     loadExtras(intent)
                     sheetState = SheetState.PILL
                     startRevertTimer()
@@ -256,6 +283,24 @@ class OfferOverlayService : Service() {
         tickRunnable?.let { revertHandler.removeCallbacks(it) }
         revertRunnable = null
         tickRunnable = null
+    }
+
+    // ── Processing countdown (auto-capture, before screenshot) ────────────────
+    private fun startProcessingTimer() {
+        cancelProcessingTimer()
+        processingRunnable = object : Runnable {
+            override fun run() {
+                processingSeconds--
+                if (isViewAdded) updateWidget()
+                // Keep ticking until 0; at 0 hold — the result broadcast morphs PROCESSING → PILL.
+                if (processingSeconds > 0) revertHandler.postDelayed(this, 1000L)
+            }
+        }
+        revertHandler.postDelayed(processingRunnable!!, 1000L)
+    }
+    private fun cancelProcessingTimer() {
+        processingRunnable?.let { revertHandler.removeCallbacks(it) }
+        processingRunnable = null
     }
 
 
@@ -362,6 +407,7 @@ class OfferOverlayService : Service() {
         return TextView(this).apply {
             text = when {
                 sheetState == SheetState.IDLE -> SpannableString("GL")
+                sheetState == SheetState.PROCESSING -> processingTextSpannable()
                 // PRO FEATURE: delivery town in pill heading — gated to Pro tier
                 // Free tier sees net value only; Pro tier sees net value + estimated town
                 sheetState == SheetState.PILL && deliveryTown != "📍 ---" -> pillTextWithTown()
@@ -405,6 +451,19 @@ class OfferOverlayService : Service() {
         builder.setSpan(
             ForegroundColorSpan(Color.parseColor("#00C9A7")),
             townStart, full.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        return SpannableString.valueOf(builder)
+    }
+
+    // ── Processing pill: pay + live countdown of the screenshot delay ─────────
+    // Tells the driver town detection is pending (banner clearing) — not a hang.
+    private fun processingTextSpannable(): SpannableString {
+        val payStr = if (processingPay > 0) "$${"%.2f".format(processingPay)}  " else ""
+        val full = "$payStr⏳ ${processingSeconds}s"
+        val builder = android.text.SpannableStringBuilder(full)
+        builder.setSpan(
+            ForegroundColorSpan(Color.parseColor("#FFD24B")),
+            payStr.length, full.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
         )
         return SpannableString.valueOf(builder)
     }
@@ -555,18 +614,24 @@ class OfferOverlayService : Service() {
             }
 
             SheetState.PROCESSING -> {
-                // Processing indicator — capture triggered
-                val camColor = Color.parseColor("#00BFA5")
-                val btn = TextView(this).apply {
-                    text = "⏳"
-                    textSize = 20f
-                    setPadding(24, 18, 24, 18)
-                    background = GradientDrawable().apply {
-                        setColor(camColor)
-                        cornerRadius = 50f
+                if (processingSeconds > 0) {
+                    // Auto-capture: pill with pay + live countdown of the screenshot delay,
+                    // so the driver sees town detection is pending (not a hang).
+                    root.addView(buildPill(color, false))
+                } else {
+                    // Manual camera tap: simple processing indicator (no countdown).
+                    val camColor = Color.parseColor("#00BFA5")
+                    val btn = TextView(this).apply {
+                        text = "⏳"
+                        textSize = 20f
+                        setPadding(24, 18, 24, 18)
+                        background = GradientDrawable().apply {
+                            setColor(camColor)
+                            cornerRadius = 50f
+                        }
                     }
+                    root.addView(btn)
                 }
-                root.addView(btn)
             }
 
             SheetState.PILL -> {
