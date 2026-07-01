@@ -4,6 +4,12 @@
 **Branch:** `feat/platform-registry`
 **Drivers:** maintainability (each gig platform has different challenges) + privacy/trust.
 
+> **Interim rule (2026-06-30):** Mapping/scoring improvements land in the EXISTING
+> architecture until the logic is proven on real shifts. Do NOT start the modular
+> refactor below on the strength of unproven code — **validate first, relocate later.**
+> The sequence is: validate → improve mapping/scoring in place → (later, at platform #2)
+> lift the *proven* logic into the registry/module structure.
+
 > This is a design-direction note, not a spec. It records *decisions* so a future
 > session doesn't re-litigate them. Implementation scope is deliberately small for now.
 
