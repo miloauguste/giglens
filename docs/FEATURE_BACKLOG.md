@@ -29,6 +29,18 @@ driver-anchored vs restaurant-anchored against `confirmedTown`, decide primary.
 
 ---
 
+## 🏛️ Architecture Direction — Platform Registry & Per-Platform Modularity
+
+Agreed 2026-06-30 (brainstorm), branch `feat/platform-registry`. Explicit registry of
+supported platforms (DoorDash only for now) as the single source of truth, driving both
+the OS-level accessibility `packageNames` filter (structurally blind to non-gig apps) and
+a Settings "supported apps" surface with an on-device / not-monitoring reassurance.
+Detect platform by **package name**, not OCR text. Per-platform module split deferred
+until platform #2. No future/coming-soon platforms shown. Full rationale + decisions:
+**`docs/ARCHITECTURE_PLATFORM_REGISTRY.md`**.
+
+---
+
 ## ✅ Completed 2026-06-20 Session (v0.1.192 → v0.1.205)
 
 | Feature | Status | Notes |
